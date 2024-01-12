@@ -5,9 +5,12 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import httpStatus from "http-status";
+import banUserModel from "../models/banUser";
 dotenv.config();
 export let login = async (req: express.Request, res: express.Response) => {
-  const { identifier, password } = req.body as LoginBody;
+  let { identifier, password } = req.body as LoginBody;
+  password = password.trim();
+  identifier = identifier.trim();
   const user = await usersModel.findOne({
     $or: [{ email: identifier }, { username: identifier }],
   });
@@ -15,6 +18,14 @@ export let login = async (req: express.Request, res: express.Response) => {
     res
       .status(httpStatus.UNAUTHORIZED)
       .json({ message: "username or email not found" });
+    return;
+  }
+
+  const banUser = await banUserModel.findOne({ email: user.email });
+  if (banUser) {
+    res
+      .status(httpStatus.UNAUTHORIZED)
+      .json({ message: "You are banned, you cannot login" });
     return;
   }
 
@@ -36,21 +47,16 @@ export let login = async (req: express.Request, res: express.Response) => {
 };
 
 export let register = async (req: express.Request, res: express.Response) => {
-  const { name, username, email, password } = req.body as RegisterBody;
-
+  let { name, username, email, password } = req.body as RegisterBody;
+  name = name.trim();
+  username = username.trim();
+  email = email.trim();
+  password = password.trim();
   const user = await usersModel.findOne({ $or: [{ email }, { username }] });
-  const banUser = await usersModel.findOne({ email });
   if (user) {
     res
       .status(httpStatus.UNAUTHORIZED)
       .json({ message: "Username or email already exists" });
-    return;
-  }
-
-  if (banUser) {
-    res
-      .status(httpStatus.UNAUTHORIZED)
-      .json({ message: "You are banned, you cannot register" });
     return;
   }
 

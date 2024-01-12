@@ -190,3 +190,10 @@ export let update = async (req: express.Request, res: express.Response) => {
     .select("-password");
   res.json({ message: "user updated successfully", updatedUser });
 };
+export let getAllAdmin = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  const admins = (await usersModel.find({}).select('-__v -password')).filter((admin) => admin.isAdmin);
+  res.json(admins);
+};

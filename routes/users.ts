@@ -8,6 +8,8 @@ import {
   unban,
   getAllBan,
   getAllAdmin
+  ,
+  getProfile
 } from "../controllers/users";
 import authMiddlewares from "../middlewares/auth";
 import isAdminMiddlewares from "../middlewares/isAdmin";
@@ -27,6 +29,7 @@ router
 router.post("/:id/ban", authMiddlewares, isAdminMiddlewares, ban);
 router.put("/:id/unban", authMiddlewares, isAdminMiddlewares, unban);
 router.get("/ban", authMiddlewares, isAdminMiddlewares, getAllBan);
-router.get('/admin' , authMiddlewares , isAdminMiddlewares , getAllAdmin)
+router.get('/admin', authMiddlewares, isAdminMiddlewares, getAllAdmin)
+router.get('/profile/:name' , authMiddlewares , getProfile)
 router.route("/:id").delete(authMiddlewares, isAdminMiddlewares, remove);
 export default router;

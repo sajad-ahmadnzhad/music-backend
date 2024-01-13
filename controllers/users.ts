@@ -1,10 +1,11 @@
-import express from "express";
+import express, { response } from "express";
 import usersModel from "../models/users";
 import banUserModel from "../models/banUser";
 import { isValidObjectId } from "mongoose";
 import httpStatus from "http-status";
 import { RegisterBody } from "./../interfaces/auth";
 import bcrypt from "bcrypt";
+import path from "path";
 
 export let getAll = async (req: express.Request, res: express.Response) => {
   const users = await usersModel.find({}).lean().select("-password -_id -__v");
@@ -190,10 +191,27 @@ export let update = async (req: express.Request, res: express.Response) => {
     .select("-password");
   res.json({ message: "user updated successfully", updatedUser });
 };
+
 export let getAllAdmin = async (
   req: express.Request,
   res: express.Response
 ) => {
-  const admins = (await usersModel.find({}).select('-__v -password')).filter((admin) => admin.isAdmin);
+  const admins = (await usersModel.find({}).select("-__v -password")).filter(
+    (admin) => admin.isAdmin
+  );
   res.json(admins);
+};
+
+export let getProfile = async (req: express.Request, res: express.Response) => {
+  const { name } = req.params;
+  const { _id } = (req as any).user;
+  const checkProfileName = await usersModel.findOne({ profile: name, _id });
+  if (!checkProfileName) {
+    res
+      .status(httpStatus.NOT_FOUND)
+      .json({ message: "Profile name is not valid" });
+    return;
+  }
+  const pathPhoto = path.join(__dirname, "../", "public", "usersProfile", name);
+  res.sendFile(pathPhoto);
 };

@@ -6,6 +6,7 @@ const schema = new Schema({
   email: { type: String, required: true , unique: true },
   password: { type: String, required: true, trim: true },
   isAdmin: { type: Boolean, default: false },
-  isSuperAdmin: {type: Boolean , default: false}
+  isSuperAdmin: { type: Boolean, default: false },
+  profile: {type:String , required: true}
 });
 export default model('users' , schema)

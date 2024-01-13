@@ -62,6 +62,7 @@ export let register = async (req: express.Request, res: express.Response) => {
 
   const hashedPassword = bcrypt.hashSync(password, 10);
   const users = await usersModel.find();
+
   const newUser = await usersModel.create({
     name,
     username,
@@ -69,6 +70,7 @@ export let register = async (req: express.Request, res: express.Response) => {
     password: hashedPassword,
     isSuperAdmin: users.length == 0,
     isAdmin: users.length == 0,
+    profile: req.file ? req.file.filename : "customProfile.jpg",
   });
   const twoMonths = 60 * 60 * 24 * 60 * 1000;
   const accessToken = jwt.sign(

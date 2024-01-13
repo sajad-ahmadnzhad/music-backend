@@ -104,5 +104,4 @@ export let logout = async (req: express.Request, res: express.Response) => {
     res.json({ message: "You have successfully logged out" });
     return;
   }
-  res.status(httpStatus.NOT_FOUND).json({ message: "User token not found" });
 };

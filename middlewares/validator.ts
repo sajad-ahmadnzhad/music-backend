@@ -2,6 +2,8 @@ import Joi from "joi";
 import httpStatus from "http-status";
 import { RegisterBody } from "./../interfaces/auth";
 import express from "express";
+import fs from "fs";
+import path from "path";
 //validate schema joi middlewares
 export default (schema: Joi.Schema) => {
   return (
@@ -16,6 +18,14 @@ export default (schema: Joi.Schema) => {
           [validateSchema.error.details[0].path[0]]:
             validateSchema.error.message.replace(/"/g, ""),
         };
+
+        if (req.file) {
+          const { filename } = req.file;
+          fs.unlinkSync(
+            path.join(__dirname, "../", "public", "usersProfile", filename)
+          );
+        }
+
         res.status(httpStatus.BAD_REQUEST).json(error);
         return;
       }

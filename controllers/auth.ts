@@ -6,6 +6,8 @@ import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import httpStatus from "http-status";
 import banUserModel from "../models/banUser";
+import fs from "fs";
+import path from "path";
 dotenv.config();
 export let login = async (req: express.Request, res: express.Response) => {
   let { identifier, password } = req.body as LoginBody;
@@ -54,6 +56,13 @@ export let register = async (req: express.Request, res: express.Response) => {
   password = password.trim();
   const user = await usersModel.findOne({ $or: [{ email }, { username }] });
   if (user) {
+    if (req.file) {
+      const { filename } = req.file;
+      fs.unlinkSync(
+        path.join(__dirname, "../", "public", "usersProfile", filename)
+      );
+    }
+
     res
       .status(httpStatus.UNAUTHORIZED)
       .json({ message: "Username or email already exists" });

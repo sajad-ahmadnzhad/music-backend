@@ -6,6 +6,7 @@ import httpStatus from "http-status";
 import { RegisterBody } from "./../interfaces/auth";
 import bcrypt from "bcrypt";
 import path from "path";
+import fs from "fs";
 
 export let getAll = async (req: express.Request, res: express.Response) => {
   const users = await usersModel.find({}).lean().select("-password -_id -__v");
@@ -162,6 +163,12 @@ export let remove = async (req: express.Request, res: express.Response) => {
     return;
   }
 
+  if (!user.profile.includes("customProfile")) {
+    fs.unlinkSync(
+      path.join(__dirname, "../", "public", "usersProfile", user.profile)
+    );
+  }
+
   await usersModel.deleteOne({ _id: id });
 
   res.json({
@@ -175,16 +182,26 @@ export let update = async (req: express.Request, res: express.Response) => {
   username = username.trim();
   email = email.trim();
   password = password.trim();
-  const { _id } = (req as any).user;
+  const { user } = req as any;
+
+  if (req.file) {
+    if (!user.profile?.includes("customProfile")) {
+      fs.unlinkSync(
+        path.join(__dirname, "../", "public", "usersProfile", user.profile)
+      );
+    }
+  }
+
   const hashedPassword = bcrypt.hashSync(password, 10);
   const updatedUser = await usersModel
     .findOneAndUpdate(
-      { _id },
+      { _id: user._id },
       {
         name,
         username,
         email,
         password: hashedPassword,
+        profile: req.file ? req.file.filename : user.profile
       },
       { new: true }
     )

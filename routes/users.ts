@@ -15,7 +15,7 @@ import isAdminMiddlewares from "../middlewares/isAdmin";
 import isSuperAdminMiddlewares from "../middlewares/isSuperAdmin";
 import validatorMiddlewares from "../middlewares/validator";
 import registerValidatorSchema from "../validators/register";
-import profileUploader from "../utils/profileUploader";
+import profileUploader from "../utils/uploader/profile";
 
 const router = express.Router();
 

@@ -4,11 +4,22 @@ import path from "path";
 const storage = multer.diskStorage({
   destination(req, file, cb) {
     const fileExtension = path.extname(file.originalname);
-    let suffixes = [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"];
+    let suffixes = [
+      ".mp3",
+      ".wav",
+      ".flac",
+      ".ogg",
+      ".m4a",
+      ".aiff",
+      ".wma",
+      ".aac",
+      ".opus",
+      ".alac",
+    ];
     if (suffixes.includes(fileExtension)) {
-      cb(null, path.join(__dirname, "../", "public", "usersProfile"));
+      cb(null, path.join(__dirname, "../", "../", "public", "musics"));
     } else {
-      const message = `The extension of the submitted file is not valid. The extension of the submitted files must include: ${suffixes.join(
+      const message = `The extension entered is not valid. The file extension should only include: ${suffixes.join(
         " "
       )}`;
       (cb as any)(new Error(message));
@@ -24,6 +35,6 @@ const storage = multer.diskStorage({
   },
 });
 
-const fileSize = 2 * 1024 * 1024;
+const fileSize = 15 * 1024 * 1024;
 
 export default multer({ storage, limits: { fileSize } });

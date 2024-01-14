@@ -3,7 +3,7 @@ import { login, logout, register } from "../controllers/auth";
 import validatorMiddlewares from "../middlewares/validator";
 import registerValidatorSchema from "../validators/register";
 import loginValidatorSchema from "../validators/login";
-import profileUploader from "../utils/profileUploader";
+import profileUploader from "../utils/uploader/profile";
 import authMiddlewares from "../middlewares/auth";
 const router = express.Router();
 

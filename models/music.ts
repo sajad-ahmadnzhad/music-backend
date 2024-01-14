@@ -6,7 +6,6 @@ const schema = new Schema({
   genre: { type: String, required: true },
   duration: { type: String, required: true },
   release_year: { type: Number, required: true },
-  download_link: { type: String, required: true },
   cover_image: { type: String , required: true},
   description: { type: String },
   rating: { type: Number  , default: 3},

@@ -6,6 +6,6 @@ const mainRouter = express.Router()
 
 mainRouter.use('/v1/auth' , authRouter)
 mainRouter.use('/v1/users' , usersRouter)
-mainRouter.use('/music' , musicRouter)
+mainRouter.use('/v1/music' , musicRouter)
 
 export default mainRouter

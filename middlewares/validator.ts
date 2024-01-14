@@ -20,9 +20,13 @@ export default (schema: Joi.Schema) => {
         };
 
         if (req.file) {
-          const { filename } = req.file;
+          const { filename, fieldname } = req.file;
+          let folderFile = 'musics'
+          if (fieldname === 'profile') {
+            folderFile = 'usersProfile'
+          }
           fs.unlinkSync(
-            path.join(__dirname, "../", "public", "usersProfile", filename)
+            path.join(__dirname, "../", "public", folderFile, filename)
           );
         }
 

@@ -1,5 +1,5 @@
 import express from "express";
-import { create } from "../controllers/music";
+import { create, getAll } from "../controllers/music";
 import authMiddlewares from "../middlewares/auth";
 import isAdminMiddlewares from "../middlewares/isAdmin";
 import validatorMiddlewares from "../middlewares/validator";
@@ -10,10 +10,12 @@ router
   .route("/")
   .post(
     authMiddlewares,
-      isAdminMiddlewares,
-      musicUploader.single('music'),
+    isAdminMiddlewares,
+    musicUploader.single("music"),
     validatorMiddlewares(musicValidator),
     create
   );
+
+router.get("/", authMiddlewares, isAdminMiddlewares, getAll);
 
 export default router;

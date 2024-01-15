@@ -10,18 +10,11 @@ import fs from "fs";
 
 export let myAccount = async (req: express.Request, res: express.Response) => {
   const { user } = req as any;
-  let pathProfile = path.join(__dirname, "../", "public", "usersProfile");
-  user.profile = `${pathProfile}\\${user.profile}`;
   res.json(user);
 };
 
 export let getAll = async (req: express.Request, res: express.Response) => {
   const users = await usersModel.find({}).lean().select("-password -_id -__v");
-  let pathProfile = path.join(__dirname, "../", "public", "usersProfile");
-  users.forEach((user) => {
-    pathProfile += `\\${user.profile}`;
-    user.profile = pathProfile;
-  });
   res.json(users);
 };
 
@@ -213,7 +206,7 @@ export let update = async (req: express.Request, res: express.Response) => {
         username,
         email,
         password: hashedPassword,
-        profile: req.file ? req.file.filename : user.profile,
+        profile: req.file ? `/usersProfile/${req.file.filename}` : user.profile,
       },
       { new: true }
     )
@@ -228,10 +221,5 @@ export let getAllAdmin = async (
   const admins = (await usersModel.find({}).select("-__v -password")).filter(
     (admin) => admin.isAdmin
   );
-  let pathProfile = path.join(__dirname, "../", "public", "usersProfile");
-  admins.forEach((user) => {
-    pathProfile += `\\${user.profile}`;
-    user.profile = pathProfile;
-  });
   res.json(admins);
 };

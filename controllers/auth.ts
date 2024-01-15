@@ -79,7 +79,9 @@ export let register = async (req: express.Request, res: express.Response) => {
     password: hashedPassword,
     isSuperAdmin: users.length == 0,
     isAdmin: users.length == 0,
-    profile: req.file ? req.file.filename : "customProfile.png",
+    profile: req.file
+      ? `/usersProfile/${req.file.filename}`
+      : "/usersProfile/customProfile.png",
   });
   const twoMonths = 60 * 60 * 24 * 60 * 1000;
   const accessToken = jwt.sign(

@@ -45,6 +45,7 @@ export let create = async (req: express.Request, res: express.Response) => {
     description,
     cover_image: files.cover[0].filename,
     music: files.music[0].filename,
+    createBy: (req as any).user._id
   });
   res
     .status(httpStatus.CREATED)

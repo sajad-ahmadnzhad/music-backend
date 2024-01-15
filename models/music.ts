@@ -11,6 +11,7 @@ const schema = new Schema(
     music: { type: String, required: true },
     description: { type: String },
     rating: { type: Number, default: 3 },
+    createBy: {type: Schema.ObjectId , ref: 'users', required: true}
   },
   { timestamps: true }
 );

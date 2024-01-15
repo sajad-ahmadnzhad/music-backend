@@ -3,7 +3,7 @@ import path from "path";
 
 const storage = multer.diskStorage({
   destination(req, file, cb) {
-    const fileExtension = path.extname(file.originalname);
+    const fileExtension = path.extname(file.originalname).toLowerCase();
     let suffixes = [
       ".mp3",
       ".wav",
@@ -16,14 +16,22 @@ const storage = multer.diskStorage({
       ".opus",
       ".alac",
     ];
-    if (suffixes.includes(fileExtension)) {
-      cb(null, path.join(__dirname, "../", "../", "public", "musics"));
-    } else {
-      const message = `The extension entered is not valid. The file extension should only include: ${suffixes.join(
-        " "
-      )}`;
-      (cb as any)(new Error(message));
+    let suffixesImg = [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"];
+    let messageSuffixes = suffixes.join(" ");
+    if (file?.fieldname === "cover") {
+      if (suffixesImg.includes(fileExtension)) {
+        cb(null, path.join(__dirname, "../", "../", "public", "coverMusics"));
+        return;
+      }
+      messageSuffixes = suffixesImg.join(" ");
+    } else if (file?.fieldname === "music") {
+      if (suffixes.includes(fileExtension)) {
+        cb(null, path.join(__dirname, "../", "../", "public", "musics"));
+      }
+      return
     }
+    const message = `The extension entered is not valid. The file extension should only include: ${messageSuffixes}`;
+    (cb as any)(new Error(message));
   },
   filename(req, file, cb) {
     const fileName =

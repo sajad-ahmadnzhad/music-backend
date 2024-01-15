@@ -6,16 +6,23 @@ import validatorMiddlewares from "../middlewares/validator";
 import musicValidator from "./../validators/music";
 import musicUploader from "./../utils/uploader/music";
 const router = express.Router();
-router
-  .route("/")
-  .post(
-    authMiddlewares,
-    isAdminMiddlewares,
-    musicUploader.single("music"),
-    validatorMiddlewares(musicValidator),
-    create
-  );
+router.route("/").post(
+  authMiddlewares,
+  isAdminMiddlewares,
+  musicUploader.fields([
+    {
+      name: "music",
+      maxCount: 1,
+    },
+    {
+      name: "cover",
+      maxCount: 1,
+    },
+  ]),
+  validatorMiddlewares(musicValidator),
+  create
+);
 
-router.get("/", authMiddlewares, isAdminMiddlewares, getAll);
+router.get("/", getAll);
 
 export default router;

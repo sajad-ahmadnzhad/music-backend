@@ -1,14 +1,38 @@
 import express from "express";
 import musicModel from "./../models/music";
-import { MusicBody } from "./../interfaces/music";
+import { MusicBody, MusicFile } from "./../interfaces/music";
 import httpStatus from "http-status";
 import path from "path";
+import fs from "fs";
+
 export let create = async (req: express.Request, res: express.Response) => {
   const { title, artist, genre, duration, release_year, description } =
     req.body as MusicBody;
+  const files = { ...req.files } as MusicFile;
+  const countFiles = Object.entries({ ...files }).length;
 
-  if (!req.file) {
-    res.status(httpStatus.BAD_REQUEST).json({ message: "music is required" });
+  if (!countFiles) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "music and cover is required" });
+    return;
+  }
+
+  if (!files?.music?.length) {
+    if (files?.cover?.length) {
+      fs.unlinkSync(files?.cover[0].path);
+    }
+    res.status(httpStatus.BAD_REQUEST).json({ message: "Music is required" });
+    return;
+  }
+
+  if (!files?.cover?.length) {
+    if (files?.music?.length) {
+      fs.unlinkSync(files?.music[0].path);
+    }
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "Cover music is required" });
     return;
   }
 
@@ -19,7 +43,8 @@ export let create = async (req: express.Request, res: express.Response) => {
     duration,
     release_year,
     description,
-    cover_image: req.file.filename,
+    cover_image: files.cover[0].filename,
+    music: files.music[0].filename,
   });
   res
     .status(httpStatus.CREATED)
@@ -27,14 +52,16 @@ export let create = async (req: express.Request, res: express.Response) => {
 };
 
 export let getAll = async (req: express.Request, res: express.Response) => {
-  let pathMusic = path.join(__dirname, "../", "public", "musics");
+  let pathCover = path.join(__dirname, "../", "public", "coverMusics");
+  let pathMusic = path.join(__dirname , '../' , 'public' , 'musics')
+  const allMusics = await musicModel.find().select("-__v");
 
-  const allMusic = await musicModel.find().select("-__v");
-
-  allMusic.forEach((music) => {
-    pathMusic += `\\${music.cover_image}`;
-    music.cover_image = pathMusic;
+  allMusics.forEach((music) => {
+    pathCover += `\\${music.cover_image}`;
+    music.cover_image = pathCover;
+    pathMusic += `\\${music.music}`;
+    music.music = pathMusic;
   });
 
-  res.json(allMusic);
+  res.json(allMusics);
 };

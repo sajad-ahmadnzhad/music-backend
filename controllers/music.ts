@@ -2,7 +2,6 @@ import express from "express";
 import musicModel from "./../models/music";
 import { MusicBody, MusicFile } from "./../interfaces/music";
 import httpStatus from "http-status";
-import path from "path";
 import fs from "fs";
 
 export let create = async (req: express.Request, res: express.Response) => {
@@ -43,8 +42,8 @@ export let create = async (req: express.Request, res: express.Response) => {
     duration,
     release_year,
     description,
-    cover_image: files.cover[0].filename,
-    music: files.music[0].filename,
+    cover_image: `/coverMusics/${files.cover[0].filename}`,
+    music: `/musics/${files.music[0].filename}`,
     createBy: (req as any).user._id
   });
   res
@@ -53,16 +52,6 @@ export let create = async (req: express.Request, res: express.Response) => {
 };
 
 export let getAll = async (req: express.Request, res: express.Response) => {
-  let pathCover = path.join(__dirname, "../", "public", "coverMusics");
-  let pathMusic = path.join(__dirname , '../' , 'public' , 'musics')
   const allMusics = await musicModel.find().select("-__v");
-
-  allMusics.forEach((music) => {
-    pathCover += `\\${music.cover_image}`;
-    music.cover_image = pathCover;
-    pathMusic += `\\${music.music}`;
-    music.music = pathMusic;
-  });
-
   res.json(allMusics);
 };

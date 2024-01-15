@@ -17,8 +17,7 @@ export default (schema: Joi.Schema) => {
         const error = {
           [validateSchema.error.details[0].path[0]]:
             validateSchema.error.message.replace(/"/g, ""),
-        };
-
+        }
         if (req.file) {
           const { filename, fieldname } = req.file;
           let folderFile = 'musics'

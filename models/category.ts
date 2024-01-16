@@ -3,7 +3,7 @@ import { Schema, model } from "mongoose";
 const schema = new Schema(
   {
     title: { type: String, required: true },
-    parent_id: { type: Schema.ObjectId , ref: 'categoryParent' },
+    parent: { type: Schema.ObjectId , ref: 'categoryParent' },
     description: { type: String },
   },
   { timestamps: true }

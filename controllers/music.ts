@@ -17,21 +17,15 @@ export let create = async (req: express.Request, res: express.Response) => {
     return;
   }
 
-  if (!files?.music?.length) {
-    if (files?.cover?.length) {
-      fs.unlinkSync(files?.cover[0].path);
+  if (countFiles !== 2) {
+    for (let key in files) {
+      const file = (files as any)[key][0];
+      fs.unlinkSync(file.path);
+      const field = file.fieldname == "music" ? "Cover" : "Music";
+      res
+        .status(httpStatus.BAD_REQUEST)
+        .json({ message: `${field} is required` });
     }
-    res.status(httpStatus.BAD_REQUEST).json({ message: "Music is required" });
-    return;
-  }
-
-  if (!files?.cover?.length) {
-    if (files?.music?.length) {
-      fs.unlinkSync(files?.music[0].path);
-    }
-    res
-      .status(httpStatus.BAD_REQUEST)
-      .json({ message: "Cover music is required" });
     return;
   }
 
@@ -44,7 +38,7 @@ export let create = async (req: express.Request, res: express.Response) => {
     description,
     cover_image: `/coverMusics/${files.cover[0].filename}`,
     music: `/musics/${files.music[0].filename}`,
-    createBy: (req as any).user._id
+    createBy: (req as any).user._id,
   });
   res
     .status(httpStatus.CREATED)

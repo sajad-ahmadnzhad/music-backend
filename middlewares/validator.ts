@@ -1,6 +1,7 @@
 import Joi from "joi";
 import httpStatus from "http-status";
 import { RegisterBody } from "./../interfaces/auth";
+import { MusicFile } from "./../interfaces/music";
 import express from "express";
 import fs from "fs";
 import path from "path";
@@ -17,18 +18,9 @@ export default (schema: Joi.Schema) => {
         const error = {
           [validateSchema.error.details[0].path[0]]:
             validateSchema.error.message.replace(/"/g, ""),
-        }
-        if (req.file) {
-          const { filename, fieldname } = req.file;
-          let folderFile = 'musics'
-          if (fieldname === 'profile') {
-            folderFile = 'usersProfile'
-          }
-          fs.unlinkSync(
-            path.join(__dirname, "../", "public", folderFile, filename)
-          );
-        }
-
+        };
+        //Delete files sent by multer after incorrect validation
+        removeFile(req);
         res.status(httpStatus.BAD_REQUEST).json(error);
         return;
       }
@@ -38,3 +30,20 @@ export default (schema: Joi.Schema) => {
     }
   };
 };
+
+function removeFile(req: express.Request) {
+  //Delete user profile when validating incorrectly
+  if (req.file) {
+    fs.unlinkSync(req.file.path);
+  }
+
+  //Removing music and cover when validating incorrectly
+  if (req.files) {
+    const files = { ...req.files } as any;
+    for (let key in files) {
+      if (files[key] && files[key][0]) {
+        fs.unlinkSync(files[key][0].path);
+      }
+    }
+  }
+}

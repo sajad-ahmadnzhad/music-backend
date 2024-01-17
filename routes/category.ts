@@ -1,37 +1,16 @@
 import express from "express";
 import {
   create,
-  createParent,
   getAll,
-  getAllParent,
+  getAllParents,
   remove,
-  removeParent,
   update,
-  updateParent,
 } from "../controllers/category";
 import authMiddlewares from "../middlewares/auth";
 import isAdminMiddlewares from "../middlewares/isAdmin";
-import categoryParentValidator from "../validators/categoryParent";
 import categoryValidator from "../validators/category";
 import validatorMiddlewares from "../middlewares/validator";
 const router = express.Router();
-//router category parent
-router
-  .route("/parent")
-  .post(
-    authMiddlewares,
-    isAdminMiddlewares,
-    validatorMiddlewares(categoryParentValidator),
-    createParent
-  )
-  .get(getAllParent);
-
-router
-  .route("/parent/:parentId")
-  .delete(authMiddlewares, isAdminMiddlewares, removeParent)
-  .put(authMiddlewares, isAdminMiddlewares, updateParent);
-
-//router category
 
 router
   .route("/")
@@ -43,10 +22,17 @@ router
   )
   .get(getAll);
 
+router.get('/parent' , getAllParents)
+
 router
   .route("/:id")
   .delete(authMiddlewares, isAdminMiddlewares, remove)
-  .put(authMiddlewares, isAdminMiddlewares, update);
+  .put(
+    authMiddlewares,
+    isAdminMiddlewares,
+    validatorMiddlewares(categoryValidator),
+    update
+  );
 
 
 export default router;

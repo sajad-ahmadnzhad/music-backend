@@ -1,8 +1,5 @@
-export interface BodyCategoryParent {
+export interface BodyCategory {
     title: string
     description: string
-}
-
-export interface BodyCategory extends BodyCategoryParent {
     parent: string
 }

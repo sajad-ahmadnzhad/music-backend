@@ -1,25 +1,59 @@
 import express from "express";
-import categoryParent from "./../models/categoryParent";
-import { BodyCategory, BodyCategoryParent } from "../interfaces/category";
-import categoryParentModel from "../models/categoryParent";
+import { BodyCategory } from "../interfaces/category";
 import categoryModel from "../models/category";
 import httpStatus from "http-status";
 import { isValidObjectId } from "mongoose";
-//category parent
-export let getAllParent = async (
+
+export let getAll = async (req: express.Request, res: express.Response) => {
+  const categories = await categoryModel
+    .find()
+    .populate("categoryParent", "-__v")
+    .lean()
+    .select("-__v");
+  const filterCategories: any = [];
+
+  categories.forEach((category) => {
+    if (category.parent) {
+      const { parent, ...newCategory } = category;
+      filterCategories.push(newCategory);
+    }
+  });
+  res.json(filterCategories);
+};
+
+export let getAllParents = async (
   req: express.Request,
   res: express.Response
 ) => {
-  const categories = await categoryParent.find().lean().select("-__v");
+  const categories = (await categoryModel.find().select("-__v ")).filter(
+    (category) => !category.parent
+  );
   res.json(categories);
 };
 
-export let createParent = async (
-  req: express.Request,
-  res: express.Response
-) => {
-  const { title, description } = req.body as BodyCategoryParent;
-  const category = await categoryParentModel.findOne({ title }).lean();
+export let create = async (req: express.Request, res: express.Response) => {
+  let { title, description, parent } = req.body as BodyCategory;
+  title = title.trim();
+  description = description?.trim();
+  if (parent && !isValidObjectId(parent)) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "This parent id is not from mongodb" });
+    return;
+  }
+
+  if (parent) {
+    const hasCategoryInDb = await categoryModel.findOne({ _id: parent });
+
+    if (!hasCategoryInDb) {
+      res
+        .status(httpStatus.NOT_FOUND)
+        .json({ message: "Category parent not found" });
+      return;
+    }
+  }
+
+  const category = await categoryModel.findOne({ title }).lean();
 
   if (category) {
     res
@@ -28,77 +62,70 @@ export let createParent = async (
     return;
   }
 
-  await categoryParentModel.create({
+  await categoryModel.create({
     title,
     description,
+    parent,
   });
 
   res
     .status(httpStatus.CREATED)
-    .json({ message: "Create new category parent successfully" });
+    .json({ message: "Create new category successfully" });
 };
 
-export let updateParent = async (
-  req: express.Request,
-  res: express.Response
-) => {
-  const { parentId } = req.params;
-  const { title, description } = req.body as BodyCategoryParent;
-  if (!isValidObjectId(parentId)) {
+export let update = async (req: express.Request, res: express.Response) => {
+  const { id } = req.params;
+  let { title, description, parent } = req.body as BodyCategory;
+  title = title.trim();
+  description = description?.trim();
+
+  if (parent && !isValidObjectId(parent)) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "This parent id is not from mongodb" });
+    return;
+  }
+
+  if (!isValidObjectId(id)) {
     res
       .status(httpStatus.BAD_REQUEST)
       .json({ message: "This id is not from mongodb" });
     return;
   }
-  const category = await categoryParentModel.findOne({ _id: parentId });
-  if (!category) {
+  const hasCategoryInDb = await categoryModel.findOne({ _id: id });
+
+  if (!hasCategoryInDb) {
     res.status(httpStatus.NOT_FOUND).json({ message: "Category not found" });
     return;
   }
-  const updatedCategory = await categoryParentModel.findOneAndUpdate(
-    { _id: parentId },
-    { title, description },
-    { new: true }
+
+  await categoryModel.updateOne(
+    { _id: id },
+    {
+      title,
+      description,
+      parent,
+    }
   );
 
-  res.json({ message: "Category updated successfully", updatedCategory });
+  res.json({ message: "Update Category successfully" });
 };
 
-export let removeParent = async (
-  req: express.Request,
-  res: express.Response
-) => {
-  const { parentId } = req.params;
-  if (!isValidObjectId(parentId)) {
+export let remove = async (req: express.Request, res: express.Response) => {
+  const { id } = req.params;
+  if (!isValidObjectId(id)) {
     res
       .status(httpStatus.BAD_REQUEST)
-      .json({ message: "This id is not from mongodb" });
+      .json({ message: "This parent id is not from mongodb" });
     return;
   }
-  const category = await categoryParentModel.findOne({ _id: parentId });
-  if (!category) {
+  const hasCategoryInDb = await categoryModel.findOne({ _id: id });
+
+  if (!hasCategoryInDb) {
     res.status(httpStatus.NOT_FOUND).json({ message: "Category not found" });
     return;
   }
 
-  await categoryParentModel.deleteOne({ _id: parentId });
-  res.json({ message: "Deleted category parent successfully" });
+  await categoryModel.deleteOne({ _id: id });
+  res.json({ message: "Deleted category successfully" });
 };
-
-//category
-export let getAll = async (req:express.Request , res:express.Response) => {
-  const categories = await categoryModel.find().populate('categoryParent').lean().select('-__v')
-  res.json(categories)
-}
-export let create = async (req:express.Request , res:express.Response) => {
-  const { title, description, parent } = req.body as BodyCategory
-
-
-}
-export let update = async (req:express.Request , res:express.Response) => {
-
-}
-export let remove = async (req:express.Request , res:express.Response) => {
-
-}
-

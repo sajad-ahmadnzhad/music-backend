@@ -1,12 +1,16 @@
 import { Schema, model } from "mongoose";
-
 const schema = new Schema(
   {
     title: { type: String, required: true },
-    parent: { type: Schema.ObjectId , ref: 'categoryParent' },
+    parent: {type: Schema.ObjectId , ref: 'categories'},
     description: { type: String },
-  },
-  { timestamps: true }
+  }
 );
 
-export default model("category", schema);
+schema.virtual('categoryParent', {
+  localField: 'parent',
+  foreignField: '_id',
+  ref: 'categories'
+})
+
+export default model("categories", schema);

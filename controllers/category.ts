@@ -129,3 +129,16 @@ export let remove = async (req: express.Request, res: express.Response) => {
   await categoryModel.deleteOne({ _id: id });
   res.json({ message: "Deleted category successfully" });
 };
+
+export let search = async (req: express.Request, res: express.Response) => {
+  const { category } = req.query;
+
+  const searchCategory = await categoryModel.findOne({ title: category });
+
+  if (!searchCategory) {
+    res.status(httpStatus.NOT_FOUND).json({ message: "Category not found" });
+    return;
+  }
+
+  res.json(searchCategory);
+};

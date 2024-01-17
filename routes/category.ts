@@ -4,6 +4,7 @@ import {
   getAll,
   getAllParents,
   remove,
+  search,
   update,
 } from "../controllers/category";
 import authMiddlewares from "../middlewares/auth";
@@ -22,7 +23,7 @@ router
   )
   .get(getAll);
 
-router.get('/parent' , getAllParents)
+router.get("/parent", getAllParents);
 
 router
   .route("/:id")
@@ -34,5 +35,6 @@ router
     update
   );
 
+router.get("/search", search);
 
 export default router;

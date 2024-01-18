@@ -6,9 +6,9 @@ const schema = new Schema({
   nickname: { type: String },
   photo: { type: String, required: true },
   nationality: { type: String, required: true },
-  countViews: { type: Number, default: 0 },
-  countLike: { type: Number, default: 0 },
+  count_likes: { type: Number, default: 0 },
   musicStyle: { type: Schema.ObjectId, ref: "categories", required: true },
-  albums: { type: [Schema.ObjectId], ref: "albums", required: true },
+  albums: { type: [Schema.ObjectId], ref: "albums" },
 });
+
 export default model("singer", schema);

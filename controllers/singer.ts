@@ -127,4 +127,26 @@ export let update = async (req: express.Request, res: express.Response) => {
 
   res.json({ message: "Updated singer successfully", updatedSinger });
 };
-export let remove = async (req: express.Request, res: express.Response) => {};
+export let remove = async (req: express.Request, res: express.Response) => {
+  const { id } = req.params;
+
+  if (!isValidObjectId(id)) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "This singer id is not from mongodb" });
+    return;
+  }
+
+  const singer = await singerModel.findOne({ _id: id });
+
+  if (!singer) {
+    res.status(httpStatus.NOT_FOUND).json({ message: "Singer not found" });
+    return;
+  }
+
+  fs.unlinkSync(path.join(__dirname, "../", "public", singer.photo));
+
+  await singerModel.deleteOne({ _id: singer._id });
+
+  res.json({ message: "Deleted singer successfully" });
+};

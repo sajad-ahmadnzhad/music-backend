@@ -150,3 +150,14 @@ export let remove = async (req: express.Request, res: express.Response) => {
 
   res.json({ message: "Deleted singer successfully" });
 };
+export let popular = async (req: express.Request, res: express.Response) => {
+  const singers = await singerModel
+    .find({})
+    .select("-__v")
+    .populate("musicStyle", "-__v")
+    .lean();
+  
+  const popularSingers = singers.sort((a, b) => b.count_likes - a.count_likes);
+
+  res.json(popularSingers);
+};

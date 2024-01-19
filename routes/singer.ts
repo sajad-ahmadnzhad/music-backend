@@ -1,5 +1,5 @@
 import express from "express";
-import { create, getAll, remove, search, update } from "../controllers/singer";
+import { create, getAll, popular, remove, search, update } from "../controllers/singer";
 import validatorSinger from "../validators/singer";
 import validatorMiddlewares from "../middlewares/validator";
 import isAdminMiddlewares from "../middlewares/isAdmin";
@@ -28,5 +28,6 @@ router
   .delete(authMiddlewares, isAdminMiddlewares, remove);
 
 router.get("/search", search);
+router.get('/popular' , popular)
 
 export default router;

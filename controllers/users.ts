@@ -223,3 +223,20 @@ export let getAllAdmin = async (
   );
   res.json(admins);
 };
+
+export let search = async (req: express.Request, res: express.Response) => {
+  const { user } = req.query;
+
+  const foundUsers = await usersModel
+    .find({
+      $or: [{ name: user }, { username: user }, { email: user }],
+    })
+    .select("-password");
+
+  if (!foundUsers.length) {
+    res.status(httpStatus.NOT_FOUND).json({ message: "User not found" });
+    return;
+  }
+
+  res.json(foundUsers);
+};

@@ -9,6 +9,7 @@ import {
   getAllBan,
   getAllAdmin,
   myAccount,
+  search,
 } from "../controllers/users";
 import authMiddlewares from "../middlewares/auth";
 import isAdminMiddlewares from "../middlewares/isAdmin";
@@ -37,4 +38,5 @@ router.get("/ban", authMiddlewares, isAdminMiddlewares, getAllBan);
 router.get("/admin", authMiddlewares, isAdminMiddlewares, getAllAdmin);
 router.get("/my-account", authMiddlewares, myAccount);
 router.route("/:id").delete(authMiddlewares, isAdminMiddlewares, remove);
+router.get('/search' , authMiddlewares , isAdminMiddlewares , search)
 export default router;

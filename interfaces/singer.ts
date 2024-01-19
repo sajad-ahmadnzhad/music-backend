@@ -3,4 +3,5 @@ export interface SingerBody {
   nickname: string;
   englishName: string;
   musicStyle: string;
+  nationality:string
 }

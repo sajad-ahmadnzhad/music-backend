@@ -14,8 +14,8 @@ export let getAll = async (req: express.Request, res: express.Response) => {
   res.json(singers);
 };
 export let create = async (req: express.Request, res: express.Response) => {
-  const { fullName, nickname, englishName, musicStyle } =
-        req.body as SingerBody;
+  const { fullName, nickname, englishName, musicStyle, nationality } =
+    req.body as SingerBody;
 
   if (!req.file) {
     res
@@ -50,6 +50,7 @@ export let create = async (req: express.Request, res: express.Response) => {
     nickname,
     englishName,
     musicStyle,
+    nationality,
     photo: `/photoSingers/${req.file.filename}`,
   });
 

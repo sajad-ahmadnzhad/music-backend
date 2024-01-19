@@ -1,5 +1,5 @@
 import express from "express";
-import { create, getAll, search } from "../controllers/singer";
+import { create, getAll, search, update } from "../controllers/singer";
 import validatorSinger from "../validators/singer";
 import validatorMiddlewares from "../middlewares/validator";
 import isAdminMiddlewares from "../middlewares/isAdmin";
@@ -16,8 +16,18 @@ router
     uploaderImage.single("photo"),
     validatorMiddlewares(validatorSinger),
     create
-);
-  
-router.get('/search' , search)
+  );
+
+router
+  .route("/:id")
+  .put(
+    authMiddlewares,
+    isAdminMiddlewares,
+    uploaderImage.single("photo"),
+    validatorMiddlewares(validatorSinger),
+    update
+  );
+
+router.get("/search", search);
 
 export default router;

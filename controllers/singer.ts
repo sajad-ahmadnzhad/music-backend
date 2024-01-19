@@ -5,6 +5,7 @@ import { isValidObjectId } from "mongoose";
 import categoryModel from "../models/category";
 import httpStatus from "http-status";
 import fs from "fs";
+import path from "path";
 export let getAll = async (req: express.Request, res: express.Response) => {
   const singers = await singerModel
     .find()
@@ -89,5 +90,41 @@ export let search = async (req: express.Request, res: express.Response) => {
 
   res.json(foundArtists);
 };
-export let update = async (req: express.Request, res: express.Response) => {};
+export let update = async (req: express.Request, res: express.Response) => {
+  const { id } = req.params;
+  const { englishName, fullName, nationality, nickname } =
+    req.body as SingerBody;
+
+  if (!isValidObjectId(id)) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "This singer id is not from mongodb" });
+    return;
+  }
+
+  const singer = await singerModel.findOne({ _id: id });
+
+  if (!singer) {
+    res.status(httpStatus.NOT_FOUND).json({ message: "Singer not found" });
+    return;
+  }
+
+  if (req.file) {
+    fs.unlinkSync(path.join(__dirname, "../", "public", singer.photo));
+  }
+
+  const updatedSinger = await singerModel.findByIdAndUpdate(
+    id,
+    {
+      englishName,
+      fullName,
+      nationality,
+      nickname,
+      photo: req.file ? `/photoSingers/${req.file.filename}` : singer.photo,
+    },
+    { new: true }
+  );
+
+  res.json({ message: "Updated singer successfully", updatedSinger });
+};
 export let remove = async (req: express.Request, res: express.Response) => {};

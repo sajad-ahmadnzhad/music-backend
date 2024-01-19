@@ -9,6 +9,7 @@ const schema = new Schema(
     cover_image: { type: String, required: true },
     download_link: { type: String, required: true },
     description: { type: String },
+    lyrics: {type: String},
     rating: { type: Number, default: 3 },
     count_views: { type: Number, default: 0 },
     count_likes: { type: Number, default: 0 },

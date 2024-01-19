@@ -25,9 +25,7 @@ export let getAllParents = async (
   req: express.Request,
   res: express.Response
 ) => {
-  const categories = (await categoryModel.find().select("-__v ")).filter(
-    (category) => !category.parent
-  );
+  const categories = await categoryModel.find({parent: {$exists: false}}).select("-__v ");
   res.json(categories);
 };
 
@@ -133,7 +131,7 @@ export let remove = async (req: express.Request, res: express.Response) => {
 export let search = async (req: express.Request, res: express.Response) => {
   const { category } = req.query;
 
-  const searchCategory = await categoryModel.findOne({ title: category });
+  const searchCategory = await categoryModel.findOne({ title: category }).select('-__v');
 
   if (!searchCategory) {
     res.status(httpStatus.NOT_FOUND).json({ message: "Category not found" });

@@ -58,6 +58,36 @@ export let create = async (req: express.Request, res: express.Response) => {
     .status(httpStatus.CREATED)
     .json({ message: "Create new singer successfully" });
 };
-export let search = async (req: express.Request, res: express.Response) => {};
+export let search = async (req: express.Request, res: express.Response) => {
+  const { artist } = req.query;
+
+  if (!artist) {
+    res.status(httpStatus.BAD_REQUEST).json({
+      message: "Please enter a artist name or nickname or english name",
+    });
+    return;
+  }
+
+  const foundArtists = await singerModel
+    .findOne({
+      $or: [
+        { fullName: artist },
+        { nickname: artist },
+        { englishName: artist },
+      ],
+    })
+    .populate("musicStyle", "-__v");
+
+  if (!foundArtists) {
+    res.status(httpStatus.NOT_FOUND).json({ message: "Artist not found" });
+    return;
+  }
+
+  if (foundArtists.albums.length) {
+    await foundArtists.populate("albums", "-__v");
+  }
+
+  res.json(foundArtists);
+};
 export let update = async (req: express.Request, res: express.Response) => {};
 export let remove = async (req: express.Request, res: express.Response) => {};

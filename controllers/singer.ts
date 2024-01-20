@@ -209,24 +209,23 @@ export let like = async (req: express.Request, res: express.Response) => {
   }
 
   const singer = await singerModel.findById(id).lean();
-
   if (!singer) {
     res.status(httpStatus.NOT_FOUND).json({ message: "Singer not found" });
     return;
   }
 
   for (let item of singer.likedBy) {
-    if (item === user._id) {
+    if (item?.toString() === user._id?.toString()) {
       res
         .status(httpStatus.BAD_REQUEST)
         .json({ message: "You have already liked this singer" });
-      return
+      return;
     }
   }
 
   await singerModel.updateOne(
     { _id: id },
-    { count_likes: ++singer.count_likes, $push: { likeBy: user._id } }
+    { $push: { likedBy: user._id }, $inc: { count_likes: 1 } }
   );
 
   res.json({ message: "like singer successfully" });

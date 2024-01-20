@@ -156,8 +156,30 @@ export let popular = async (req: express.Request, res: express.Response) => {
     .select("-__v")
     .populate("musicStyle", "-__v")
     .lean();
-  
+
   const popularSingers = singers.sort((a, b) => b.count_likes - a.count_likes);
 
   res.json(popularSingers);
+};
+export let getOne = async (req: express.Request, res: express.Response) => {
+  const { id } = req.params;
+
+  if (!isValidObjectId(id)) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "This singer id is not from mongodb" });
+    return;
+  }
+
+  const singer = await singerModel
+    .findOne({ _id: id })
+    .populate("musicStyle", "-__v")
+    .select("-__v");
+
+  if (!singer) {
+    res.status(httpStatus.NOT_FOUND).json({ message: "Singer not found" });
+    return;
+  }
+
+  res.json(singer);
 };

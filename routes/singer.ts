@@ -33,6 +33,8 @@ router
   .route("/:id")
   .put(
     uploaderImage.single("photo"),
+    authMiddlewares,
+    isAdminMiddlewares,
     validatorMiddlewares(validatorSinger),
     update
   )

@@ -53,6 +53,7 @@ export let create = async (req: express.Request, res: express.Response) => {
     musicStyle,
     nationality,
     photo: `/photoSingers/${req.file.filename}`,
+    createBy: (req as any).user._id,
   });
 
   res
@@ -92,6 +93,7 @@ export let search = async (req: express.Request, res: express.Response) => {
 };
 export let update = async (req: express.Request, res: express.Response) => {
   const { id } = req.params;
+  const {user} = req as any
   const { englishName, fullName, nationality, nickname } =
     req.body as SingerBody;
 
@@ -109,23 +111,32 @@ export let update = async (req: express.Request, res: express.Response) => {
     return;
   }
 
+  if (singer.createBy !== user._id  && !user.isSuperAdmin) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({
+        message:
+          "This reader can only be modified by the person who created it",
+      });
+    return
+  }
+
   if (req.file) {
     fs.unlinkSync(path.join(__dirname, "../", "public", singer.photo));
   }
 
-  const updatedSinger = await singerModel.findByIdAndUpdate(
-    id,
+   await singerModel.updateOne(
+    {_id:id},
     {
       englishName,
       fullName,
       nationality,
       nickname,
       photo: req.file ? `/photoSingers/${req.file.filename}` : singer.photo,
-    },
-    { new: true }
+    }
   );
 
-  res.json({ message: "Updated singer successfully", updatedSinger });
+  res.json({ message: "Updated singer successfully" });
 };
 export let remove = async (req: express.Request, res: express.Response) => {
   const { id } = req.params;

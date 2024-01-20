@@ -9,7 +9,7 @@ const schema = new Schema(
     nationality: { type: String, required: true },
     count_likes: { type: Number, default: 0 },
     musicStyle: { type: Schema.ObjectId, ref: "categories", required: true },
-    albums: { type: [Schema.ObjectId], ref: "albums", default: [] },
+    albums:[{ type: Schema.ObjectId, ref: "albums", default: [] }],
     likedBy: [{ type: Schema.ObjectId, ref: "users", default: [] }],
     createBy: { type: Schema.ObjectId, ref: "users", required: true },
   },

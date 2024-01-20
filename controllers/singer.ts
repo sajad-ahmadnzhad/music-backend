@@ -10,6 +10,8 @@ export let getAll = async (req: express.Request, res: express.Response) => {
   const singers = await singerModel
     .find()
     .populate("musicStyle", "-__v")
+    .populate("likedBy", "name email profile")
+    .populate("albums" , '-__v')
     .select("-__v")
     .lean();
   res.json(singers);

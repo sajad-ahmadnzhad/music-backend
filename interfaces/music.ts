@@ -6,14 +6,15 @@ export interface MusicBody {
   duration: string;
   release_year: number;
   description: string;
+  lyrics: string;
 }
 
 //Setting the type for the body of the files sent by the admin
 interface propertyMusicFiles {
-  path: string,
-  filename: string,
+  path: string;
+  filename: string;
 }
 export interface MusicFile {
-  cover: propertyMusicFiles[],
-  music: propertyMusicFiles[]
+  cover: propertyMusicFiles[];
+  music: propertyMusicFiles[];
 }

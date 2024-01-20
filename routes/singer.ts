@@ -7,6 +7,7 @@ import {
   search,
   update,
   getOne,
+  like,
 } from "../controllers/singer";
 import validatorSinger from "../validators/singer";
 import validatorMiddlewares from "../middlewares/validator";
@@ -28,7 +29,7 @@ router
 
 router.get("/search", search);
 router.get("/popular", popular);
-
+router.put('/like/:id' ,authMiddlewares, like)
 router
   .route("/:id")
   .put(
@@ -40,5 +41,6 @@ router
   )
   .delete(authMiddlewares, isAdminMiddlewares, remove)
   .get(getOne);
+
 
 export default router;

@@ -93,7 +93,7 @@ export let search = async (req: express.Request, res: express.Response) => {
 };
 export let update = async (req: express.Request, res: express.Response) => {
   const { id } = req.params;
-  const {user} = req as any
+  const { user } = req as any;
   const { englishName, fullName, nationality, nickname } =
     req.body as SingerBody;
 
@@ -111,22 +111,19 @@ export let update = async (req: express.Request, res: express.Response) => {
     return;
   }
 
-  if (singer.createBy !== user._id  && !user.isSuperAdmin) {
-    res
-      .status(httpStatus.BAD_REQUEST)
-      .json({
-        message:
-          "This reader can only be modified by the person who created it",
-      });
-    return
+  if (singer.createBy !== user._id && !user.isSuperAdmin) {
+    res.status(httpStatus.BAD_REQUEST).json({
+      message: "This reader can only be modified by the person who created it",
+    });
+    return;
   }
 
   if (req.file) {
     fs.unlinkSync(path.join(__dirname, "../", "public", singer.photo));
   }
 
-   await singerModel.updateOne(
-    {_id:id},
+  await singerModel.updateOne(
+    { _id: id },
     {
       englishName,
       fullName,
@@ -140,7 +137,7 @@ export let update = async (req: express.Request, res: express.Response) => {
 };
 export let remove = async (req: express.Request, res: express.Response) => {
   const { id } = req.params;
-  const {user} = req as any
+  const { user } = req as any;
   if (!isValidObjectId(id)) {
     res
       .status(httpStatus.BAD_REQUEST)
@@ -200,4 +197,37 @@ export let getOne = async (req: express.Request, res: express.Response) => {
   }
 
   res.json(singer);
+};
+export let like = async (req: express.Request, res: express.Response) => {
+  const { id } = req.params;
+  const { user } = req as any;
+  if (!isValidObjectId(id)) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "This singer id is not from mongodb" });
+    return;
+  }
+
+  const singer = await singerModel.findById(id).lean();
+
+  if (!singer) {
+    res.status(httpStatus.NOT_FOUND).json({ message: "Singer not found" });
+    return;
+  }
+
+  for (let item of singer.likedBy) {
+    if (item === user._id) {
+      res
+        .status(httpStatus.BAD_REQUEST)
+        .json({ message: "You have already liked this singer" });
+      return
+    }
+  }
+
+  await singerModel.updateOne(
+    { _id: id },
+    { count_likes: ++singer.count_likes, $push: { likeBy: user._id } }
+  );
+
+  res.json({ message: "like singer successfully" });
 };

@@ -18,4 +18,5 @@ export default joi.object({
     .max(new Date().getFullYear())
     .required(),
   description: joi.string(),
+  lyrics: joi.string().max(400).min(30),
 });

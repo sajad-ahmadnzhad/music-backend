@@ -213,14 +213,14 @@ export let like = async (req: express.Request, res: express.Response) => {
     res.status(httpStatus.NOT_FOUND).json({ message: "Singer not found" });
     return;
   }
+  
+  const isLikedByCurrentUser = singer.likedBy.find((i) => i.toString() == user._id.toString())
 
-  for (let item of singer.likedBy) {
-    if (item?.toString() === user._id?.toString()) {
-      res
-        .status(httpStatus.BAD_REQUEST)
-        .json({ message: "You have already liked this singer" });
-      return;
-    }
+  if (isLikedByCurrentUser) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "You have already liked this singer" });
+    return;
   }
 
   await singerModel.updateOne(

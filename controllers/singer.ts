@@ -213,13 +213,19 @@ export let like = async (req: express.Request, res: express.Response) => {
     res.status(httpStatus.NOT_FOUND).json({ message: "Singer not found" });
     return;
   }
-  
-  const isLikedByCurrentUser = singer.likedBy.find((i) => i.toString() == user._id.toString())
+
+  const isLikedByCurrentUser = singer.likedBy.find(
+    (i) => i.toString() == user._id.toString()
+  );
 
   if (isLikedByCurrentUser) {
+    await singerModel.updateOne(
+      { _id: id },
+      { $pull: { likedBy: user._id }, $inc: { count_likes: -1 } }
+    );
     res
       .status(httpStatus.BAD_REQUEST)
-      .json({ message: "You have already liked this singer" });
+      .json({ message: "Unlike the singer with success" });
     return;
   }
 
@@ -228,5 +234,5 @@ export let like = async (req: express.Request, res: express.Response) => {
     { $push: { likedBy: user._id }, $inc: { count_likes: 1 } }
   );
 
-  res.json({ message: "like singer successfully" });
+  res.json({ message: "Like singer successfully" });
 };

@@ -140,7 +140,7 @@ export let update = async (req: express.Request, res: express.Response) => {
 };
 export let remove = async (req: express.Request, res: express.Response) => {
   const { id } = req.params;
-
+  const {user} = req as any
   if (!isValidObjectId(id)) {
     res
       .status(httpStatus.BAD_REQUEST)
@@ -152,6 +152,13 @@ export let remove = async (req: express.Request, res: express.Response) => {
 
   if (!singer) {
     res.status(httpStatus.NOT_FOUND).json({ message: "Singer not found" });
+    return;
+  }
+
+  if (singer.createBy !== user._id && !user.isSuperAdmin) {
+    res.status(httpStatus.BAD_REQUEST).json({
+      message: "This reader can only be removed by the person who created it",
+    });
     return;
   }
 

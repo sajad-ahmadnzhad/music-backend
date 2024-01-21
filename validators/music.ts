@@ -2,8 +2,8 @@ import joi from "joi";
 
 export default joi.object({
   title: joi.string().max(100).min(5).required(),
-  artist: joi.string().max(25).min(3).required(),
-  genre: joi.string().max(30).max(3).required(),
+  artist: joi.string().required(),
+  genre: joi.string().required(),
   duration: joi
     .string()
     .regex(/^\d{2}:\d{2}$/)

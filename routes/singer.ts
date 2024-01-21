@@ -8,6 +8,7 @@ import {
   update,
   getOne,
   like,
+  addAlbum,
 } from "../controllers/singer";
 import validatorSinger from "../validators/singer";
 import validatorMiddlewares from "../middlewares/validator";
@@ -29,7 +30,7 @@ router
 
 router.get("/search", search);
 router.get("/popular", popular);
-router.put('/:id/like' ,authMiddlewares, like)
+router.put("/:id/like", authMiddlewares, like);
 router
   .route("/:id")
   .put(
@@ -42,5 +43,11 @@ router
   .delete(authMiddlewares, isAdminMiddlewares, remove)
   .get(getOne);
 
+router.post(
+  "/:singer/:album/album",
+  authMiddlewares,
+  isAdminMiddlewares,
+  addAlbum
+);
 
 export default router;

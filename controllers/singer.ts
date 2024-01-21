@@ -3,6 +3,7 @@ import singerModel from "../models/singer";
 import { SingerBody } from "../interfaces/singer";
 import { isValidObjectId } from "mongoose";
 import categoryModel from "../models/category";
+import albumModel from "../models/album";
 import httpStatus from "http-status";
 import fs from "fs";
 import path from "path";
@@ -11,8 +12,8 @@ export let getAll = async (req: express.Request, res: express.Response) => {
     .find()
     .populate("musicStyle", "-__v")
     .populate("likedBy", "name email profile")
-    .populate("albums" , '-__v')
-    .populate("createBy" , 'name username profile')
+    .populate("albums", "-__v")
+    .populate("createBy", "name username profile")
     .select("-__v")
     .lean();
   res.json(singers);
@@ -238,4 +239,40 @@ export let like = async (req: express.Request, res: express.Response) => {
   );
 
   res.json({ message: "Like singer successfully" });
+};
+export let addAlbum = async (req: express.Request, res: express.Response) => {
+  const { singer, album } = req.params;
+
+  if (!isValidObjectId(album)) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "This album id is not from mongodb" });
+    return;
+  }
+  const foundAlbum = await albumModel.findById(album).lean();
+  if (!foundAlbum) {
+    res.status(httpStatus.NOT_FOUND).json({ message: "Album not found" });
+    return;
+  }
+
+  if (!isValidObjectId(singer)) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "This signer id is not from mongodb" });
+    return;
+  }
+  const foundSinger = await singerModel.findById(singer).lean();
+  if (!foundSinger) {
+    res.status(httpStatus.NOT_FOUND).json({ message: "Singer not found" });
+    return;
+  }
+
+  await singerModel.updateOne(
+    { _id: singer },
+    {
+      $push: { albums: album },
+    }
+  );
+
+  res.json("Added new album successfully");
 };

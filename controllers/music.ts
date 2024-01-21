@@ -118,6 +118,12 @@ export let create = async (req: express.Request, res: express.Response) => {
 };
 
 export let getAll = async (req: express.Request, res: express.Response) => {
-  const allMusics = await musicModel.find().select("-__v");
+  const allMusics = await musicModel
+    .find()
+    .populate("artist", "photo fullName englishName")
+    .populate("genre", "-__v")
+    .populate("createBy", "name username profile")
+    .populate("album", "-__v")
+    .select("-__v");
   res.json(allMusics);
 };

@@ -5,6 +5,7 @@ const schema = new Schema(
     title: { type: String, required: true },
     singer: { type: Schema.ObjectId, ref: "singer", required: true },
     photo: { type: String, required: true },
+    musics: [{type: Schema.ObjectId , ref: 'music' , default: []}],
     description: { type: String },
     duration: { type: String, required: true },
     countMusic: { type: Number, required: true },

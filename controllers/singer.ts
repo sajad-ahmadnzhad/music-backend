@@ -12,6 +12,7 @@ export let getAll = async (req: express.Request, res: express.Response) => {
     .populate("musicStyle", "-__v")
     .populate("likedBy", "name email profile")
     .populate("albums" , '-__v')
+    .populate("createBy" , 'name email profile')
     .select("-__v")
     .lean();
   res.json(singers);

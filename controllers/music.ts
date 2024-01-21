@@ -7,6 +7,7 @@ import albumModel from "../models/album";
 import httpStatus from "http-status";
 import fs from "fs";
 import { isValidObjectId } from "mongoose";
+import path from "path";
 
 export let create = async (req: express.Request, res: express.Response) => {
   const {
@@ -116,7 +117,6 @@ export let create = async (req: express.Request, res: express.Response) => {
     .status(httpStatus.CREATED)
     .json({ message: "Create new music successfully" });
 };
-
 export let getAll = async (req: express.Request, res: express.Response) => {
   const allMusics = await musicModel
     .find()
@@ -126,4 +126,28 @@ export let getAll = async (req: express.Request, res: express.Response) => {
     .populate("album", "-__v")
     .select("-__v");
   res.json(allMusics);
+};
+export let remove = async (req: express.Request, res: express.Response) => {
+  const { id } = req.params;
+
+  if (!isValidObjectId(id)) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "This music id is not from mongodb" });
+    return;
+  }
+
+  const music = await musicModel.findOne({ _id: id });
+
+  if (!music) {
+    res.status(httpStatus.NOT_FOUND).json({ message: "Music not found" });
+    return;
+  }
+
+  fs.unlinkSync(path.join(__dirname, "../", "public", music.cover_image));
+  fs.unlinkSync(path.join(__dirname, "../", "public", music.download_link));
+
+  await musicModel.deleteOne({ _id: id });
+
+  res.json({ message: "Deleted music successfully" });
 };

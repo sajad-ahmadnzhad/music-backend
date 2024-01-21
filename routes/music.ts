@@ -1,5 +1,5 @@
 import express from "express";
-import { create, getAll, remove } from "../controllers/music";
+import { create, getAll, remove, update } from "../controllers/music";
 import authMiddlewares from "../middlewares/auth";
 import isAdminMiddlewares from "../middlewares/isAdmin";
 import validatorMiddlewares from "../middlewares/validator";
@@ -27,5 +27,21 @@ router
 router
   .route("/:id")
   .delete(authMiddlewares, isAdminMiddlewares, remove)
+  .put(
+    authMiddlewares,
+    isAdminMiddlewares,
+    musicUploader.fields([
+      {
+        name: "music",
+        maxCount: 1,
+      },
+      {
+        name: "cover",
+        maxCount: 1,
+      },
+    ]),
+    validatorMiddlewares(musicValidator),
+    update
+  );
 
 export default router;

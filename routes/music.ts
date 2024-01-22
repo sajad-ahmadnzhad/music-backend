@@ -1,5 +1,5 @@
 import express from "express";
-import { create, getAll, like, popular, remove, search, update, view, download } from '../controllers/music';
+import { create, getAll, like, popular, remove, search, update, view, download, getOne } from '../controllers/music';
 import authMiddlewares from "../middlewares/auth";
 import isAdminMiddlewares from "../middlewares/isAdmin";
 import validatorMiddlewares from "../middlewares/validator";
@@ -26,6 +26,12 @@ router
   )
   .get(getAll);
 
+router.get('/search' , search)
+router.get('/popular' , popular)
+router.put('/:id/like' , like)
+router.put('/:id/view' , view)
+router.put('/:id/download', download)
+
 router
   .route("/:id")
   .delete(authMiddlewares, isAdminMiddlewares, remove)
@@ -44,11 +50,7 @@ router
     ]),
     validatorMiddlewares(musicValidator),
     update
-  );
+  ).get(getOne);
 
-router.get('/search' , search)
-router.get('/popular' , popular)
-router.put('/:id/like' , like)
-router.put('/:id/view' , view)
-router.put('/:id/download' , download)
+
 export default router;

@@ -16,7 +16,6 @@ const schema = new Schema(
     count_downloads: { type: Number, default: 0 },
     genre: { type: Schema.ObjectId, ref: "categories", required: true },
     createBy: { type: Schema.ObjectId, ref: "users", required: true },
-    album: { type: Schema.ObjectId, ref: "albums" },
   },
   { timestamps: true }
 );

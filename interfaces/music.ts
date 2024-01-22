@@ -9,7 +9,6 @@ export interface MusicBody {
   release_year: number;
   description: string;
   lyrics: string;
-  album: Schema.Types.ObjectId
 }
 
 //Setting the type for the body of the files sent by the admin

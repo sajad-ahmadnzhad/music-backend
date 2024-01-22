@@ -14,17 +14,6 @@ export default joi.object({
       const artist = await singerModel.findOne({ _id: value });
       if (!artist) return helpers.error("artist not found");
     }),
-  album: joi
-    .string()
-    .regex(/^[0-9a-fA-F]{24}$/)
-    .message("This album id is not from mongodb")
-    .external(async (value, helpers) => {
-      if (value) {
-        const album = await albumModel.findOne({ _id: value });
-        if (!album) return helpers.error("album not found");
-      }
-    })  
-  ,
   genre: joi
     .string()
     .regex(/^[0-9a-fA-F]{24}$/)

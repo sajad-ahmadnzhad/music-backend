@@ -1,6 +1,7 @@
 import express from "express";
 import musicModel from "./../models/music";
 import { MusicBody, MusicFile } from "./../interfaces/music";
+import criticismModel from "../models/criticism";
 import httpStatus from "http-status";
 import fs from "fs";
 import { isValidObjectId } from "mongoose";
@@ -15,7 +16,6 @@ export let create = async (req: express.Request, res: express.Response) => {
     release_year,
     description,
     lyrics,
-    album,
   } = req.body as MusicBody;
   const files = { ...req.files } as MusicFile;
   const countFiles = Object.entries({ ...files }).length;
@@ -60,7 +60,6 @@ export let create = async (req: express.Request, res: express.Response) => {
     release_year,
     description,
     lyrics,
-    album,
     cover_image: `/coverMusics/${files.cover[0].filename}`,
     download_link: `/musics/${files.music[0].filename}`,
     createBy: user._id,
@@ -76,8 +75,8 @@ export let getAll = async (req: express.Request, res: express.Response) => {
     .populate("artist", "photo fullName englishName")
     .populate("genre", "-__v")
     .populate("createBy", "name username profile")
-    .populate("album", "-__v")
     .select("-__v");
+
   res.json(allMusics);
 };
 export let remove = async (req: express.Request, res: express.Response) => {
@@ -121,7 +120,6 @@ export let update = async (req: express.Request, res: express.Response) => {
     release_year,
     description,
     lyrics,
-    album,
   } = req.body as MusicBody;
   const { user } = req as any;
   const files = { ...req.files } as MusicFile;
@@ -178,7 +176,6 @@ export let update = async (req: express.Request, res: express.Response) => {
       release_year,
       description,
       lyrics,
-      album,
       cover_image,
       download_link,
     }
@@ -201,7 +198,6 @@ export let search = async (req: express.Request, res: express.Response) => {
     .populate("artist", "photo fullName englishName")
     .populate("genre", "-__v")
     .populate("createBy", "name username profile")
-    .populate("album", "-__v")
     .select("-__v");
 
   if (!foundMusic.length) {
@@ -217,7 +213,6 @@ export let popular = async (req: express.Request, res: express.Response) => {
     .populate("artist", "photo fullName englishName")
     .populate("genre", "-__v")
     .populate("createBy", "name username profile")
-    .populate("album", "-__v")
     .select("-__v");
 
   popularMusics.sort((a, b) => b.count_views - a.count_views);
@@ -229,7 +224,7 @@ export let like = async (req: express.Request, res: express.Response) => {
 
   if (!isValidObjectId(id)) {
     res
-      .status(httpStatus.NOT_MODIFIED)
+      .status(httpStatus.BAD_REQUEST)
       .json({ message: "This music id is not from mongodb" });
     return;
   }
@@ -251,7 +246,7 @@ export let view = async (req: express.Request, res: express.Response) => {
 
   if (!isValidObjectId(id)) {
     res
-      .status(httpStatus.NOT_MODIFIED)
+      .status(httpStatus.BAD_REQUEST)
       .json({ message: "This music id is not from mongodb" });
     return;
   }
@@ -273,7 +268,7 @@ export let download = async (req: express.Request, res: express.Response) => {
 
   if (!isValidObjectId(id)) {
     res
-      .status(httpStatus.NOT_MODIFIED)
+      .status(httpStatus.BAD_REQUEST)
       .json({ message: "This music id is not from mongodb" });
     return;
   }
@@ -295,7 +290,7 @@ export let getOne = async (req: express.Request, res: express.Response) => {
 
   if (!isValidObjectId(id)) {
     res
-      .status(httpStatus.NOT_MODIFIED)
+      .status(httpStatus.BAD_REQUEST)
       .json({ message: "This music id is not from mongodb" });
     return;
   }
@@ -305,7 +300,6 @@ export let getOne = async (req: express.Request, res: express.Response) => {
     .populate("artist", "photo fullName englishName")
     .populate("genre", "-__v")
     .populate("createBy", "name username profile")
-    .populate("album", "-__v")
     .select("-__v");
 
   if (!music) {

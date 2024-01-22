@@ -202,7 +202,7 @@ export let search = async (req: express.Request, res: express.Response) => {
     .populate("genre", "-__v")
     .populate("createBy", "name username profile")
     .populate("album", "-__v")
-    .select("-__v");;
+    .select("-__v");
 
   if (!foundMusic.length) {
     res.status(httpStatus.NOT_FOUND).json({ message: "Music not found" });
@@ -211,7 +211,7 @@ export let search = async (req: express.Request, res: express.Response) => {
 
   res.json(foundMusic);
 };
-export let popular = async (req: express.Request, res: express.Response) => { 
+export let popular = async (req: express.Request, res: express.Response) => {
   const popularMusics = await musicModel
     .find()
     .populate("artist", "photo fullName englishName")
@@ -220,12 +220,32 @@ export let popular = async (req: express.Request, res: express.Response) => {
     .populate("album", "-__v")
     .select("-__v");
 
-  popularMusics.sort((a , b) => b.count_views - a.count_views)
-  
-  res.json(popularMusics)
-  
-}
-export let like = async (req: express.Request, res: express.Response) => {}
-export let view = async (req: express.Request, res: express.Response) => {}
-export let download = async (req: express.Request, res: express.Response) => {}
-export let getOne = async (req: express.Request, res: express.Response) => {}
+  popularMusics.sort((a, b) => b.count_views - a.count_views);
+
+  res.json(popularMusics);
+};
+export let like = async (req: express.Request, res: express.Response) => {
+  const { id } = req.params;
+
+  if (isValidObjectId(id)) {
+    res
+      .status(httpStatus.NOT_MODIFIED)
+      .json({ message: "This music id is not from mongodb" });
+    return;
+  }
+
+  const music = await musicModel.findOneAndUpdate(
+    { _id: id },
+    { $inc: { count_likes: 1 } }
+  );
+
+  if (!music) {
+    res.status(httpStatus.NOT_FOUND).json({ message: "Music not found" });
+    return;
+  }
+
+  res.json({ message: "music liked successfully" });
+};
+export let view = async (req: express.Request, res: express.Response) => {};
+export let download = async (req: express.Request, res: express.Response) => {};
+export let getOne = async (req: express.Request, res: express.Response) => {};

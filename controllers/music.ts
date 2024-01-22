@@ -266,7 +266,7 @@ export let view = async (req: express.Request, res: express.Response) => {
     return;
   }
 
-  res.json({ message: "music viewed successfully" });  
+  res.json({ message: "music viewed successfully" });
 };
 export let download = async (req: express.Request, res: express.Response) => {
   const { id } = req.params;
@@ -288,6 +288,30 @@ export let download = async (req: express.Request, res: express.Response) => {
     return;
   }
 
-  res.json({ message: "music viewed successfully" });    
+  res.json({ message: "music viewed successfully" });
 };
-export let getOne = async (req: express.Request, res: express.Response) => {};
+export let getOne = async (req: express.Request, res: express.Response) => {
+  const { id } = req.params;
+
+  if (!isValidObjectId(id)) {
+    res
+      .status(httpStatus.NOT_MODIFIED)
+      .json({ message: "This music id is not from mongodb" });
+    return;
+  }
+
+  const music = await musicModel
+    .findById(id)
+    .populate("artist", "photo fullName englishName")
+    .populate("genre", "-__v")
+    .populate("createBy", "name username profile")
+    .populate("album", "-__v")
+    .select("-__v");
+
+  if (!music) {
+    res.status(httpStatus.NOT_FOUND).json({ message: "Music not found" });
+    return;
+  }
+
+  res.json(music);
+};

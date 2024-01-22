@@ -240,39 +240,3 @@ export let like = async (req: express.Request, res: express.Response) => {
 
   res.json({ message: "Like singer successfully" });
 };
-export let addAlbum = async (req: express.Request, res: express.Response) => {
-  const { singer, album } = req.params;
-
-  if (!isValidObjectId(album)) {
-    res
-      .status(httpStatus.BAD_REQUEST)
-      .json({ message: "This album id is not from mongodb" });
-    return;
-  }
-  const foundAlbum = await albumModel.findById(album).lean();
-  if (!foundAlbum) {
-    res.status(httpStatus.NOT_FOUND).json({ message: "Album not found" });
-    return;
-  }
-
-  if (!isValidObjectId(singer)) {
-    res
-      .status(httpStatus.BAD_REQUEST)
-      .json({ message: "This signer id is not from mongodb" });
-    return;
-  }
-  const foundSinger = await singerModel.findById(singer).lean();
-  if (!foundSinger) {
-    res.status(httpStatus.NOT_FOUND).json({ message: "Singer not found" });
-    return;
-  }
-
-  await singerModel.updateOne(
-    { _id: singer },
-    {
-      $push: { albums: album },
-    }
-  );
-
-  res.json("Added new album successfully");
-};

@@ -8,7 +8,6 @@ import {
   update,
   getOne,
   like,
-  addAlbum,
 } from "../controllers/singer";
 import validatorSinger from "../validators/singer";
 import validatorMiddlewares from "../middlewares/validator";
@@ -42,12 +41,5 @@ router
   )
   .delete(authMiddlewares, isAdminMiddlewares, remove)
   .get(getOne);
-
-router.post(
-  "/:singer/:album/album",
-  authMiddlewares,
-  isAdminMiddlewares,
-  addAlbum
-);
 
 export default router;

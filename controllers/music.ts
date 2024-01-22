@@ -227,7 +227,7 @@ export let popular = async (req: express.Request, res: express.Response) => {
 export let like = async (req: express.Request, res: express.Response) => {
   const { id } = req.params;
 
-  if (isValidObjectId(id)) {
+  if (!isValidObjectId(id)) {
     res
       .status(httpStatus.NOT_MODIFIED)
       .json({ message: "This music id is not from mongodb" });
@@ -246,6 +246,27 @@ export let like = async (req: express.Request, res: express.Response) => {
 
   res.json({ message: "music liked successfully" });
 };
-export let view = async (req: express.Request, res: express.Response) => {};
+export let view = async (req: express.Request, res: express.Response) => {
+  const { id } = req.params;
+
+  if (!isValidObjectId(id)) {
+    res
+      .status(httpStatus.NOT_MODIFIED)
+      .json({ message: "This music id is not from mongodb" });
+    return;
+  }
+
+  const music = await musicModel.findOneAndUpdate(
+    { _id: id },
+    { $inc: { count_views: 1 } }
+  );
+
+  if (!music) {
+    res.status(httpStatus.NOT_FOUND).json({ message: "Music not found" });
+    return;
+  }
+
+  res.json({ message: "music viewed successfully" });  
+};
 export let download = async (req: express.Request, res: express.Response) => {};
 export let getOne = async (req: express.Request, res: express.Response) => {};

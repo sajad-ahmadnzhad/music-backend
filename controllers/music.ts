@@ -133,11 +133,9 @@ export let remove = async (req: express.Request, res: express.Response) => {
   }
 
   if (user._id.toString() !== music.createBy.toString() && !user.isSuperAdmin) {
-    res
-      .status(httpStatus.BAD_REQUEST)
-      .json({
-        message: "Only the person who created this music can delete it",
-      });
+    res.status(httpStatus.BAD_REQUEST).json({
+      message: "Only the person who created this music can delete it",
+    });
     return;
   }
 
@@ -180,12 +178,10 @@ export let update = async (req: express.Request, res: express.Response) => {
       for (let key in files) {
         fs.unlinkSync((files as any)[key][0].path);
       }
-    }    
-    res
-      .status(httpStatus.BAD_REQUEST)
-      .json({
-        message: "Only the person who created this music can edit it",
-      });
+    }
+    res.status(httpStatus.BAD_REQUEST).json({
+      message: "Only the person who created this music can edit it",
+    });
     return;
   }
 
@@ -249,4 +245,29 @@ export let update = async (req: express.Request, res: express.Response) => {
   );
 
   res.json({ message: "Updated music successfully" });
+};
+export let search = async (req: express.Request, res: express.Response) => {
+  const { music } = req.query;
+
+  if (!music) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "Please enter a music name" });
+    return;
+  }
+
+  const foundMusic = await musicModel
+    .find({ title: { $regex: music } })
+    .populate("artist", "photo fullName englishName")
+    .populate("genre", "-__v")
+    .populate("createBy", "name username profile")
+    .populate("album", "-__v")
+    .select("-__v");;
+
+  if (!foundMusic.length) {
+    res.status(httpStatus.NOT_FOUND).json({ message: "Music not found" });
+    return;
+  }
+
+  res.json(foundMusic);
 };

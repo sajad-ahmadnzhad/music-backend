@@ -3,7 +3,6 @@ import singerModel from "../models/singer";
 import { SingerBody } from "../interfaces/singer";
 import { isValidObjectId } from "mongoose";
 import categoryModel from "../models/category";
-import albumModel from "../models/album";
 import httpStatus from "http-status";
 import fs from "fs";
 import path from "path";
@@ -11,8 +10,7 @@ export let getAll = async (req: express.Request, res: express.Response) => {
   const singers = await singerModel
     .find()
     .populate("musicStyle", "-__v")
-    .populate("likedBy", "name email profile")
-    .populate("albums", "-__v")
+    .populate("album", "title")
     .populate("createBy", "name username profile")
     .select("-__v")
     .lean();
@@ -82,15 +80,13 @@ export let search = async (req: express.Request, res: express.Response) => {
         { englishName: artist },
       ],
     })
-    .populate("musicStyle", "-__v");
-
+    .populate("musicStyle", "-__v")
+    .populate("album", "title")
+    .populate("createBy", "name username profile")
+    .lean();
   if (!foundArtists) {
     res.status(httpStatus.NOT_FOUND).json({ message: "Artist not found" });
     return;
-  }
-
-  if (foundArtists.albums.length) {
-    await foundArtists.populate("albums", "-__v");
   }
 
   res.json(foundArtists);
@@ -174,6 +170,7 @@ export let popular = async (req: express.Request, res: express.Response) => {
     .find({})
     .select("-__v")
     .populate("musicStyle", "-__v")
+    .populate("album", "title")
     .lean();
 
   const popularSingers = singers.sort((a, b) => b.count_likes - a.count_likes);
@@ -193,7 +190,10 @@ export let getOne = async (req: express.Request, res: express.Response) => {
   const singer = await singerModel
     .findOne({ _id: id })
     .populate("musicStyle", "-__v")
-    .select("-__v");
+    .populate("album", "title")
+    .populate("createBy", "name username profile")
+    .select("-__v")
+    .lean();
 
   if (!singer) {
     res.status(httpStatus.NOT_FOUND).json({ message: "Singer not found" });
@@ -204,7 +204,7 @@ export let getOne = async (req: express.Request, res: express.Response) => {
 };
 export let like = async (req: express.Request, res: express.Response) => {
   const { id } = req.params;
-  const { user } = req as any;
+
   if (!isValidObjectId(id)) {
     res
       .status(httpStatus.BAD_REQUEST)
@@ -212,31 +212,14 @@ export let like = async (req: express.Request, res: express.Response) => {
     return;
   }
 
-  const singer = await singerModel.findById(id).lean();
+  const singer = await singerModel
+    .findByIdAndUpdate(id, { $inc: { count_likes: 1 } })
+    .lean();
+
   if (!singer) {
     res.status(httpStatus.NOT_FOUND).json({ message: "Singer not found" });
     return;
   }
 
-  const isLikedByCurrentUser = singer.likedBy.find(
-    (i) => i.toString() == user._id.toString()
-  );
-
-  if (isLikedByCurrentUser) {
-    await singerModel.updateOne(
-      { _id: id },
-      { $pull: { likedBy: user._id }, $inc: { count_likes: -1 } }
-    );
-    res
-      .status(httpStatus.BAD_REQUEST)
-      .json({ message: "Unlike the singer with success" });
-    return;
-  }
-
-  await singerModel.updateOne(
-    { _id: id },
-    { $push: { likedBy: user._id }, $inc: { count_likes: 1 } }
-  );
-
-  res.json({ message: "Like singer successfully" });
+  res.json({ message: "Singer licked successfully" });
 };

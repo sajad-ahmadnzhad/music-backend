@@ -29,7 +29,7 @@ router
 
 router.get("/search", search);
 router.get("/popular", popular);
-router.put("/:id/like", authMiddlewares, like);
+router.put("/:id/like", like);
 router
   .route("/:id")
   .put(

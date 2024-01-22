@@ -1,5 +1,5 @@
 import express from "express";
-import { create, getAll, remove, search, update } from "../controllers/music";
+import { create, getAll, popular, remove, search, update } from "../controllers/music";
 import authMiddlewares from "../middlewares/auth";
 import isAdminMiddlewares from "../middlewares/isAdmin";
 import validatorMiddlewares from "../middlewares/validator";
@@ -45,5 +45,6 @@ router
   );
 
 router.get('/search' , search)
+router.get('/popular' , popular)
 
 export default router;

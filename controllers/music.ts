@@ -271,3 +271,21 @@ export let search = async (req: express.Request, res: express.Response) => {
 
   res.json(foundMusic);
 };
+export let popular = async (req: express.Request, res: express.Response) => { 
+  const popularMusics = await musicModel
+    .find()
+    .populate("artist", "photo fullName englishName")
+    .populate("genre", "-__v")
+    .populate("createBy", "name username profile")
+    .populate("album", "-__v")
+    .select("-__v");
+
+  popularMusics.sort((a , b) => b.count_views - a.count_views)
+  
+  res.json(popularMusics)
+  
+}
+export let like = async (req: express.Request, res: express.Response) => {}
+export let view = async (req: express.Request, res: express.Response) => {}
+export let download = async (req: express.Request, res: express.Response) => {}
+export let getOne = async (req: express.Request, res: express.Response) => {}

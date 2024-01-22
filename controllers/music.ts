@@ -280,7 +280,7 @@ export let download = async (req: express.Request, res: express.Response) => {
 
   const music = await musicModel.findOneAndUpdate(
     { _id: id },
-    { $inc: { count_views: 1 } }
+    { $inc: { count_downloads: 1 } }
   );
 
   if (!music) {
@@ -288,7 +288,7 @@ export let download = async (req: express.Request, res: express.Response) => {
     return;
   }
 
-  res.json({ message: "music viewed successfully" });
+  res.json({ message: "music downloaded successfully" });
 };
 export let getOne = async (req: express.Request, res: express.Response) => {
   const { id } = req.params;

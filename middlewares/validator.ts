@@ -1,32 +1,34 @@
 import Joi from "joi";
 import httpStatus from "http-status";
 import { RegisterBody } from "./../interfaces/auth";
-import { MusicFile } from "./../interfaces/music";
 import express from "express";
 import fs from "fs";
 import path from "path";
 //validate schema joi middlewares
 export default (schema: Joi.Schema) => {
-  return (
+  return async (
     req: express.Request,
     res: express.Response,
     next: express.NextFunction
   ) => {
     try {
-      const validateSchema = schema.validate(req.body as RegisterBody);
-      if (validateSchema.error) {
-        const error = {
-          [validateSchema.error.details[0].path[0]]:
-            validateSchema.error.message.replace(/"/g, ""),
-        };
-        //Delete files sent by multer after incorrect validation
-        removeFile(req);
-        res.status(httpStatus.BAD_REQUEST).json(error);
-        return;
-      }
+      await schema.validateAsync(req.body as RegisterBody);
       next();
-    } catch (e) {
-      res.status(httpStatus.BAD_REQUEST).json(e);
+    } catch (e: any) {
+      //Delete files sent by multer after incorrect validation
+      removeFile(req);
+
+      let errorMessage = e.message;
+
+      if (e.message?.match(/"/g) && e.message.includes('Error code')) {
+        errorMessage = e.message.split('"')[1];
+      } else if (e.message.includes('"')) {
+        errorMessage = e.message.replace(/"/g , "").trim()
+      }
+
+      res
+        .status(httpStatus.BAD_REQUEST)
+        .json({ [e.details[0].path[0]]: errorMessage });
     }
   };
 };

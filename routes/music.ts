@@ -9,6 +9,8 @@ const router = express.Router();
 router
   .route("/")
   .post(
+    authMiddlewares,
+    isAdminMiddlewares,
     musicUploader.fields([
       {
         name: "music",

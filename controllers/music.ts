@@ -1,9 +1,6 @@
 import express from "express";
 import musicModel from "./../models/music";
 import { MusicBody, MusicFile } from "./../interfaces/music";
-import singerModel from "../models/singer";
-import categoryModel from "../models/category";
-import albumModel from "../models/album";
 import httpStatus from "http-status";
 import fs from "fs";
 import { isValidObjectId } from "mongoose";
@@ -53,38 +50,6 @@ export let create = async (req: express.Request, res: express.Response) => {
       .status(httpStatus.BAD_REQUEST)
       .json({ message: "This music already exists" });
     return;
-  }
-
-  const foundArtist = await singerModel.findById(artist);
-
-  if (!foundArtist) {
-    for (let key in files) {
-      fs.unlinkSync((files as any)[key][0].path);
-    }
-    res.status(httpStatus.NOT_FOUND).json({ message: "Artist not found" });
-    return;
-  }
-
-  const foundGenre = await categoryModel.findById(genre);
-
-  if (!foundGenre) {
-    for (let key in files) {
-      fs.unlinkSync((files as any)[key][0].path);
-    }
-    res.status(httpStatus.NOT_FOUND).json({ message: "Genre not found" });
-    return;
-  }
-
-  if (album) {
-    const foundAlbum = await albumModel.findById(album);
-
-    if (!foundAlbum) {
-      for (let key in files) {
-        fs.unlinkSync((files as any)[key][0].path);
-      }
-      res.status(httpStatus.NOT_FOUND).json({ message: "Album not found" });
-      return;
-    }
   }
 
   await musicModel.create({
@@ -183,31 +148,6 @@ export let update = async (req: express.Request, res: express.Response) => {
       message: "Only the person who created this music can edit it",
     });
     return;
-  }
-
-  const singer = await singerModel.findOne({ _id: artist });
-
-  if (!singer) {
-    if (files) {
-      for (let key in files) {
-        fs.unlinkSync((files as any)[key][0].path);
-      }
-    }
-    res.status(httpStatus.NOT_FOUND).json({ message: "Singer not found" });
-    return;
-  }
-
-  if (album) {
-    const foundAlbum = await albumModel.findOne({ _id: album });
-    if (!foundAlbum) {
-      if (files) {
-        for (let key in files) {
-          fs.unlinkSync((files as any)[key][0].path);
-        }
-      }
-      res.status(httpStatus.NOT_FOUND).json({ message: "Album not found" });
-      return;
-    }
   }
 
   if (files) {

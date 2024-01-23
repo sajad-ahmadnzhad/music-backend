@@ -3,6 +3,14 @@ import singerModel from "../models/singer";
 import { SingerBody } from "../interfaces/singer";
 import { isValidObjectId } from "mongoose";
 import categoryModel from "../models/category";
+import musicModel from "../models/music";
+import albumModel from "../models/album";
+import archiveModel from "../models/archive";
+import commentModel from "../models/comment";
+import criticismModel from "../models/criticism";
+import palyListModel from "../models/playList";
+import userFavoriteModel from "../models/userFavorite";
+import upcomingModel from "../models/upcoming";
 import httpStatus from "http-status";
 import fs from "fs";
 import path from "path";
@@ -157,6 +165,35 @@ export let remove = async (req: express.Request, res: express.Response) => {
       message: "This reader can only be removed by the person who created it",
     });
     return;
+  }
+
+  const singerMusics = await musicModel.find({ artist: id }).lean();
+  const signerAlbums = await albumModel.find({artist: id}).lean()
+  const upcomingMusic = await upcomingModel.find({artist: id}).lean()
+  const musicIds = singerMusics.map((music) => music._id);
+
+  await musicModel.deleteMany({ artist: id }); //accept
+  await albumModel.deleteMany({ artist: id }); //accept
+  await archiveModel.deleteMany({ artist: id }); //accept
+  await upcomingModel.deleteMany({ artist: id }); //accept
+  await criticismModel.deleteMany({ target_id: id }); //accept
+  await commentModel.deleteMany({ music: { $in: musicIds } }); //accept
+  await palyListModel.updateMany({ musics: id }, { $pull: { musics: id } }); //accept
+  await userFavoriteModel.deleteMany({ target_id: { $in: musicIds } }); //accept
+
+  //remove music and cover
+  for (let music of singerMusics) {
+    fs.unlinkSync(path.join(__dirname, "../", "public", music.download_link));
+    fs.unlinkSync(path.join(__dirname, "../", "public", music.cover_image));
+  }
+  //remove photo album 
+  for (let album of signerAlbums) {
+    fs.unlinkSync(path.join(__dirname, "../", "public", album.photo));
+  }
+  //remove cover music upcoming
+  for (let music of upcomingMusic) {
+    if(music.cover_image)
+    fs.unlinkSync(path.join(__dirname, "../", "public", music.cover_image));
   }
 
   fs.unlinkSync(path.join(__dirname, "../", "public", singer.photo));

@@ -3,7 +3,7 @@ import { Schema, model } from "mongoose";
 const schema = new Schema(
   {
     title: { type: String, required: true },
-    singer: { type: Schema.ObjectId, ref: "singer", required: true },
+    artist: { type: Schema.ObjectId, ref: "singer", required: true },
     photo: { type: String, required: true },
     musics: [{type: Schema.ObjectId , ref: 'music' , default: []}],
     description: { type: String },

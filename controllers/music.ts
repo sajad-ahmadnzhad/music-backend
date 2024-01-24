@@ -1,5 +1,6 @@
 import express from "express";
 import musicModel from "./../models/music";
+import categoryModel from "./../models/category";
 import { MusicBody, MusicFile } from "./../interfaces/music";
 import criticismModel from "../models/criticism";
 import httpStatus from "http-status";
@@ -8,15 +9,8 @@ import { isValidObjectId } from "mongoose";
 import path from "path";
 
 export let create = async (req: express.Request, res: express.Response) => {
-  const {
-    title,
-    artist,
-    genre,
-    duration,
-    release_year,
-    description,
-    lyrics,
-  } = req.body as MusicBody;
+  const { title, artist, genre, duration, release_year, description, lyrics } =
+    req.body as MusicBody;
   const files = { ...req.files } as MusicFile;
   const countFiles = Object.entries({ ...files }).length;
   const { user } = req as any;
@@ -112,15 +106,8 @@ export let remove = async (req: express.Request, res: express.Response) => {
 };
 export let update = async (req: express.Request, res: express.Response) => {
   const { id } = req.params;
-  const {
-    title,
-    artist,
-    genre,
-    duration,
-    release_year,
-    description,
-    lyrics,
-  } = req.body as MusicBody;
+  const { title, artist, genre, duration, release_year, description, lyrics } =
+    req.body as MusicBody;
   const { user } = req as any;
   const files = { ...req.files } as MusicFile;
 
@@ -199,11 +186,6 @@ export let search = async (req: express.Request, res: express.Response) => {
     .populate("genre", "-__v")
     .populate("createBy", "name username profile")
     .select("-__v");
-
-  if (!foundMusic.length) {
-    res.status(httpStatus.NOT_FOUND).json({ message: "Music not found" });
-    return;
-  }
 
   res.json(foundMusic);
 };
@@ -306,6 +288,32 @@ export let getOne = async (req: express.Request, res: express.Response) => {
     res.status(httpStatus.NOT_FOUND).json({ message: "Music not found" });
     return;
   }
+
+  res.json(music);
+};
+export let getByGenre = async (req: express.Request, res: express.Response) => {
+  const { categoryId } = req.params;
+
+  if (!isValidObjectId(categoryId)) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "This category id is not from mongodb" });
+    return;
+  }
+
+  const category = await categoryModel.findById(categoryId);
+
+  if (!category) {
+    res.status(httpStatus.NOT_FOUND).json({ message: "Category not found" });
+    return;
+  }
+
+  const music = await musicModel
+    .find({ genre: categoryId })
+    .populate("artist", "photo fullName englishName")
+    .populate("genre", "-__v")
+    .populate("createBy", "name username profile")
+    .select("-__v");
 
   res.json(music);
 };

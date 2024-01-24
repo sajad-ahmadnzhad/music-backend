@@ -38,3 +38,15 @@ export let create = async (req: express.Request, res: express.Response) => {
     .status(httpStatus.CREATED)
     .json({ message: "Create new album successfully" });
 };
+
+export let getAll = async (req: express.Request, res: express.Response) => {
+  const albums = await albumModel
+    .find()
+    .populate("artist", "fullName englishName photo")
+    .populate("musics", "title duration download_link cover genre")
+    .populate("createBy", "name username profile")
+    .select("-__v")
+    .lean();
+
+  res.json(albums);
+};

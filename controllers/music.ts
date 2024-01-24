@@ -69,8 +69,11 @@ export let getAll = async (req: express.Request, res: express.Response) => {
     .populate("artist", "photo fullName englishName")
     .populate("genre", "-__v")
     .populate("createBy", "name username profile")
-    .select("-__v");
-
+    .select("-__v")
+    .lean()
+  
+  allMusics.sort((a: any, b: any) => b.createdAt - a.createdAt);
+  
   res.json(allMusics);
 };
 export let remove = async (req: express.Request, res: express.Response) => {

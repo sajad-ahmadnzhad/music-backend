@@ -1,5 +1,17 @@
 import express from "express";
-import { create, getAll, like, popular, remove, search, update, view, download, getOne, getByGenre } from '../controllers/music';
+import {
+  create,
+  getAll,
+  like,
+  popular,
+  remove,
+  search,
+  update,
+  view,
+  download,
+  getOne,
+  getByGenre,
+} from "../controllers/music";
 import authMiddlewares from "../middlewares/auth";
 import isAdminMiddlewares from "../middlewares/isAdmin";
 import validatorMiddlewares from "../middlewares/validator";
@@ -26,12 +38,12 @@ router
   )
   .get(getAll);
 
-router.get('/search' , search)
-router.get('/:categoryId' , getByGenre)
-router.get('/popular' , popular)
-router.put('/:id/like' , like)
-router.put('/:id/view' , view)
-router.put('/:id/download', download)
+router.get("/search", search);
+router.get("/:categoryId", getByGenre);
+router.get("/popular", popular);
+router.put("/:id/like", like);
+router.put("/:id/view", view);
+router.put("/:id/download", download);
 
 router
   .route("/:id")
@@ -51,7 +63,7 @@ router
     ]),
     validatorMiddlewares(musicValidator),
     update
-  ).get(getOne);
-
+  )
+  .get(getOne);
 
 export default router;

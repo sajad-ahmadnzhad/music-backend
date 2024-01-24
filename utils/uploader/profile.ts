@@ -9,7 +9,7 @@ const storage = multer.diskStorage({
       suffixes.includes(fileExtension?.toLowerCase()) &&
       file.fieldname == "profile"
     ) {
-      cb(null, path.join(__dirname, "../", "../", "public", "usersProfile"));
+      cb(null, path.join(process.cwd(), "public", "usersProfile"));
       return;
     }
     //image singer
@@ -17,7 +17,15 @@ const storage = multer.diskStorage({
       suffixes.includes(fileExtension?.toLowerCase()) &&
       file.fieldname == "photo"
     ) {
-      cb(null, path.join(__dirname, "../", "../", "public", "photoSingers"));
+      cb(null, path.join(process.cwd(), "public", "photoSingers"));
+      return;
+    }
+    // image album
+    else if (
+      suffixes.includes(fileExtension?.toLowerCase()) &&
+      file.fieldname == "albumPhoto"
+    ) {
+      cb(null, path.join(process.cwd(), "public", "albumPhotos"));
       return;
     }
     const message = `The extension of the submitted file is not valid. The extension of the submitted files must include: ${suffixes.join(
@@ -30,7 +38,7 @@ const storage = multer.diskStorage({
       Date.now() +
       Math.random() * 20000 +
       "_" +
-      file.originalname.replace(/\s/g, "_");
+      file.originalname.replace(/\s/g, "-");
     cb(null, `${fileName}`);
   },
 });

@@ -1,0 +1,40 @@
+import express from "express";
+import httpStatus from "http-status";
+import albumModel from "../models/album";
+import { AlbumBody } from "../interfaces/album";
+import fs from "fs";
+import path from "path";
+
+export let create = async (req: express.Request, res: express.Response) => {
+  const { title, description, artist } = req.body as AlbumBody;
+
+  if (!req.file) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "album photo is required" });
+    return;
+  }
+
+  const album = await albumModel.findOne({ artist, title });
+
+  if (album) {
+    fs.unlinkSync(
+      path.join(process.cwd(), "public", "albumPhotos", req.file.filename)
+    );
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "This album already exists" });
+    return;
+  }
+
+  albumModel.create({
+    title,
+    description,
+    artist,
+    photo: `/albumPhotos/${req.file.filename}`,
+  });
+
+  res
+    .status(httpStatus.CREATED)
+    .json({ message: "Create new album successfully" });
+};

@@ -7,8 +7,8 @@ const schema = new Schema(
     photo: { type: String, required: true },
     musics: [{type: Schema.ObjectId , ref: 'music' , default: []}],
     description: { type: String },
-    duration: { type: String, required: true },
-    countMusic: { type: Number, required: true },
+    duration: { type: String, default: '00:00' },
+    countMusics: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

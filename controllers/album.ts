@@ -117,7 +117,7 @@ export let update = async (req: express.Request, res: express.Response) => {
 
   if (user._id !== album.createBy && !user.isSuperAdmin) {
     if (photo) {
-      fs.unlinkSync(path.join(process.cwd(), "public","albumPhotos", photo));
+      fs.unlinkSync(path.join(process.cwd(), "public", "albumPhotos", photo));
     }
     res.status(httpStatus.BAD_REQUEST).json({
       message: "This reader can only be modified by the person who created it",
@@ -141,3 +141,28 @@ export let update = async (req: express.Request, res: express.Response) => {
 
   res.json({ message: "updated album successfully" });
 };
+export let getOne = async (req: express.Request, res: express.Response) => {
+  const { id } = req.params;
+  if (!isValidObjectId(id)) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "This album id is not from mongodb" });
+    return;
+  }
+
+  const album = await albumModel
+    .findById(id)
+    .populate("artist", "fullName englishName photo")
+    .populate("musics", "title duration download_link cover genre")
+    .populate("createBy", "name username profile")
+    .select("-__v")
+    .lean();;
+
+  if (!album) {
+    res.status(httpStatus.NOT_FOUND).json({ message: "album not found" });
+    return;
+  }
+
+  res.json(album);
+};
+

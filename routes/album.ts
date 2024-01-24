@@ -1,5 +1,5 @@
 import express from "express";
-import { create, getAll, remove, update } from "../controllers/album";
+import { create, getAll, getOne, remove, update } from "../controllers/album";
 import isAdminMiddleware from "../middlewares/isAdmin";
 import authMiddleware from "../middlewares/auth";
 import validatorMiddleware from "../middlewares/validator";
@@ -27,6 +27,7 @@ router
     photoUploader.single("albumPhoto"),
     validatorMiddleware(albumValidator),
     update
-  );
+  )
+  .get(getOne);
 
 export default router;

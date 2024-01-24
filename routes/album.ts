@@ -1,5 +1,5 @@
 import express from "express";
-import { create, getAll, remove } from "../controllers/album";
+import { create, getAll, remove, update } from "../controllers/album";
 import isAdminMiddleware from "../middlewares/isAdmin";
 import authMiddleware from "../middlewares/auth";
 import validatorMiddleware from "../middlewares/validator";
@@ -18,6 +18,15 @@ router
   )
   .get(getAll);
 
-router.route("/:id").delete(authMiddleware, isAdminMiddleware, remove);
+router
+  .route("/:id")
+  .delete(authMiddleware, isAdminMiddleware, remove)
+  .put(
+    authMiddleware,
+    isAdminMiddleware,
+    photoUploader.single("albumPhoto"),
+    validatorMiddleware(albumValidator),
+    update
+  );
 
 export default router;

@@ -90,3 +90,54 @@ export let remove = async (req: express.Request, res: express.Response) => {
 
   res.json({ message: "Deleted album successfully" });
 };
+export let update = async (req: express.Request, res: express.Response) => {
+  const { id } = req.params;
+  const { user } = req as any;
+  const { title, artist, description } = req.body as AlbumBody;
+  const photo = req.file?.filename;
+  if (!isValidObjectId(id)) {
+    if (photo) {
+      fs.unlinkSync(path.join(process.cwd(), "public", "albumPhotos", photo));
+    }
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "This album id is not from mongodb" });
+    return;
+  }
+
+  const album = await albumModel.findById(id);
+
+  if (!album) {
+    if (photo) {
+      fs.unlinkSync(path.join(process.cwd(), "public", "albumPhotos", photo));
+    }
+    res.status(httpStatus.NOT_FOUND).json({ message: "album not found" });
+    return;
+  }
+
+  if (user._id !== album.createBy && !user.isSuperAdmin) {
+    if (photo) {
+      fs.unlinkSync(path.join(process.cwd(), "public","albumPhotos", photo));
+    }
+    res.status(httpStatus.BAD_REQUEST).json({
+      message: "This reader can only be modified by the person who created it",
+    });
+    return;
+  }
+
+  if (photo) {
+    fs.unlinkSync(path.join(process.cwd(), "public", album.photo));
+  }
+
+  await albumModel.updateOne(
+    { _id: id },
+    {
+      title,
+      description,
+      artist,
+      photo: photo ? `/albumPhotos/${photo}` : album.photo,
+    }
+  );
+
+  res.json({ message: "updated album successfully" });
+};

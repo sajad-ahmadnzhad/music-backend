@@ -7,7 +7,7 @@ import path from "path";
 
 export let create = async (req: express.Request, res: express.Response) => {
   const { title, description, artist } = req.body as AlbumBody;
-
+  const { user } = req as any;
   if (!req.file) {
     res
       .status(httpStatus.BAD_REQUEST)
@@ -32,6 +32,7 @@ export let create = async (req: express.Request, res: express.Response) => {
     description,
     artist,
     photo: `/albumPhotos/${req.file.filename}`,
+    createBy: user._id,
   });
 
   res

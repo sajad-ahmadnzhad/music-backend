@@ -1,9 +1,13 @@
 import express from "express";
 import httpStatus from "http-status";
 import albumModel from "../models/album";
+import playListModel from "../models/playList";
+import singerModel from "../models/singer";
+import userFavoriteModel from "../models/userFavorite";
 import { AlbumBody } from "../interfaces/album";
 import fs from "fs";
 import path from "path";
+import { isValidObjectId } from "mongoose";
 
 export let create = async (req: express.Request, res: express.Response) => {
   const { title, description, artist } = req.body as AlbumBody;
@@ -39,7 +43,6 @@ export let create = async (req: express.Request, res: express.Response) => {
     .status(httpStatus.CREATED)
     .json({ message: "Create new album successfully" });
 };
-
 export let getAll = async (req: express.Request, res: express.Response) => {
   const albums = await albumModel
     .find()
@@ -50,4 +53,40 @@ export let getAll = async (req: express.Request, res: express.Response) => {
     .lean();
 
   res.json(albums);
+};
+export let remove = async (req: express.Request, res: express.Response) => {
+  const { id } = req.params;
+  const { user } = req as any;
+  if (!isValidObjectId(id)) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "This album id is not from mongodb" });
+    return;
+  }
+
+  const album = await albumModel.findById(id);
+
+  if (!album) {
+    res.status(httpStatus.NOT_FOUND).json({ message: "album not found" });
+    return;
+  }
+
+  if (user._id !== album.createBy && !user.isSuperAdmin) {
+    res.status(httpStatus.BAD_REQUEST).json({
+      message: "This reader can only be removed by the person who created it",
+    });
+    return;
+  }
+
+  fs.unlinkSync(path.join(process.cwd(), "public", album.photo));
+
+  await albumModel.deleteOne({ _id: id });
+
+  await playListModel.updateOne({ albums: id }, { $pull: { albums: id } });
+
+  await singerModel.updateOne({ albums: id }, { $pull: { albums: id } });
+
+  await userFavoriteModel.deleteOne({ target_id: id });
+
+  res.json({ message: "Deleted album successfully" });
 };

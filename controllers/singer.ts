@@ -104,8 +104,12 @@ export let update = async (req: express.Request, res: express.Response) => {
   const { user } = req as any;
   const { englishName, fullName, nationality, nickname } =
     req.body as SingerBody;
+  const photo = req.file?.filename;
 
   if (!isValidObjectId(id)) {
+    if (photo) {
+      fs.unlinkSync(path.join(process.cwd(), "public", "photoSingers", photo));
+    }
     res
       .status(httpStatus.BAD_REQUEST)
       .json({ message: "This singer id is not from mongodb" });
@@ -115,19 +119,25 @@ export let update = async (req: express.Request, res: express.Response) => {
   const singer = await singerModel.findOne({ _id: id });
 
   if (!singer) {
+    if (photo) {
+      fs.unlinkSync(path.join(process.cwd(), "public", "photoSingers", photo));
+    }
     res.status(httpStatus.NOT_FOUND).json({ message: "Singer not found" });
     return;
   }
 
   if (singer.createBy !== user._id && !user.isSuperAdmin) {
+    if (photo) {
+      fs.unlinkSync(path.join(process.cwd(), "public", "photoSingers", photo));
+    }
     res.status(httpStatus.BAD_REQUEST).json({
       message: "This reader can only be modified by the person who created it",
     });
     return;
   }
 
-  if (req.file) {
-    fs.unlinkSync(path.join(__dirname, "../", "public", singer.photo));
+  if (photo) {
+    fs.unlinkSync(path.join(process.cwd(), "public", singer.photo));
   }
 
   await singerModel.updateOne(
@@ -137,7 +147,7 @@ export let update = async (req: express.Request, res: express.Response) => {
       fullName,
       nationality,
       nickname,
-      photo: req.file ? `/photoSingers/${req.file.filename}` : singer.photo,
+      photo: photo ? `/photoSingers/${photo}` : singer.photo,
     }
   );
 
@@ -168,8 +178,8 @@ export let remove = async (req: express.Request, res: express.Response) => {
   }
 
   const singerMusics = await musicModel.find({ artist: id }).lean();
-  const signerAlbums = await albumModel.find({artist: id}).lean()
-  const upcomingMusic = await upcomingModel.find({artist: id}).lean()
+  const signerAlbums = await albumModel.find({ artist: id }).lean();
+  const upcomingMusic = await upcomingModel.find({ artist: id }).lean();
   const musicIds = singerMusics.map((music) => music._id);
 
   await musicModel.deleteMany({ artist: id }); //accept
@@ -186,14 +196,14 @@ export let remove = async (req: express.Request, res: express.Response) => {
     fs.unlinkSync(path.join(__dirname, "../", "public", music.download_link));
     fs.unlinkSync(path.join(__dirname, "../", "public", music.cover_image));
   }
-  //remove photo album 
+  //remove photo album
   for (let album of signerAlbums) {
     fs.unlinkSync(path.join(__dirname, "../", "public", album.photo));
   }
   //remove cover music upcoming
   for (let music of upcomingMusic) {
-    if(music.cover_image)
-    fs.unlinkSync(path.join(__dirname, "../", "public", music.cover_image));
+    if (music.cover_image)
+      fs.unlinkSync(path.join(__dirname, "../", "public", music.cover_image));
   }
 
   fs.unlinkSync(path.join(__dirname, "../", "public", singer.photo));

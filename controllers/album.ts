@@ -156,7 +156,7 @@ export let getOne = async (req: express.Request, res: express.Response) => {
     .populate("musics", "title duration download_link cover genre")
     .populate("createBy", "name username profile")
     .select("-__v")
-    .lean();;
+    .lean();
 
   if (!album) {
     res.status(httpStatus.NOT_FOUND).json({ message: "album not found" });
@@ -165,4 +165,24 @@ export let getOne = async (req: express.Request, res: express.Response) => {
 
   res.json(album);
 };
+export let search = async (req: express.Request, res: express.Response) => {
+    const { album } = req.query;
 
+    if (!album) {
+        res
+            .status(httpStatus.BAD_REQUEST)
+            .json({ message: "album title is required" });
+        return;
+    }
+
+    const foundAlbum = await albumModel
+      .find({ title: { $regex: album } })
+      .populate("artist", "fullName englishName photo")
+      .populate("musics", "title duration download_link cover genre")
+      .populate("createBy", "name username profile")
+      .select("-__v")
+      .lean();
+    
+    res.json(foundAlbum)
+
+};

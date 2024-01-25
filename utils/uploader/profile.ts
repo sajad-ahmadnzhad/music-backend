@@ -5,6 +5,7 @@ const storage = multer.diskStorage({
   destination(req, file, cb) {
     const fileExtension = path.extname(file.originalname);
     let suffixes = [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"];
+    //user profile
     if (
       suffixes.includes(fileExtension?.toLowerCase()) &&
       file.fieldname == "profile"
@@ -26,6 +27,14 @@ const storage = multer.diskStorage({
       file.fieldname == "albumPhoto"
     ) {
       cb(null, path.join(process.cwd(), "public", "albumPhotos"));
+      return;
+    }
+    //upcoming cover
+    else if (
+      suffixes.includes(fileExtension?.toLowerCase()) &&
+      file.fieldname == "upcomingCover"
+    ) {
+      cb(null, path.join(process.cwd(), "public", "upcomingCovers"));
       return;
     }
     const message = `The extension of the submitted file is not valid. The extension of the submitted files must include: ${suffixes.join(

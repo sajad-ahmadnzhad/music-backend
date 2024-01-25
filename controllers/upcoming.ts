@@ -35,3 +35,12 @@ export let create = async (req: express.Request, res: express.Response) => {
     .status(httpStatus.CREATED)
     .json({ message: "Create new upcoming successfully" });
 };
+export let getAll = async (req: express.Request, res: express.Response) => {
+  const allUpcoming = await upcomingModel
+    .find()
+    .populate("artist", 'fullName photo')
+    .populate("genre" , 'title description')
+    .lean();
+  allUpcoming.sort((a: any, b: any) => b.createdAt - a.createdAt);
+  res.json(allUpcoming);
+};

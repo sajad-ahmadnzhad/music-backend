@@ -224,11 +224,15 @@ export let addMusic = async (req: express.Request, res: express.Response) => {
     return;
   }
 
-  if (album.musics.includes(musicId)) {
-    res
-      .status(httpStatus.BAD_REQUEST)
-      .json({ message: "This music is already in the album" });
-    return;
+  const albums = await albumModel.find().lean();
+  let isMusicInAlbum = albums.some((album) =>
+    album.musics.some((music) => music.toString() == musicId)
+  );
+
+  if (isMusicInAlbum) {
+    return res.status(httpStatus.BAD_REQUEST).json({
+      message: `This music has already been included in one of the albums`,
+    });
   }
 
   const [albumMinutes, albumSeconds] = album.duration.split(":").map(Number);
@@ -310,12 +314,11 @@ export let removeMusic = async (
     secondsDiff
   ).padStart(2, "0")}`;
 
-    
   await albumModel.findByIdAndUpdate(albumId, {
     $pull: { musics: musicId },
     $inc: { countMusics: -1 },
     duration: albumDuration,
   });
 
-  res.json({ message: "Deleted music from album successfully" });    
+  res.json({ message: "Deleted music from album successfully" });
 };

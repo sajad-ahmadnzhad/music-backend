@@ -8,6 +8,7 @@ const schema = new Schema(
     genre: { type: Schema.ObjectId, ref: "categories", required: true },
     description: { type: String },
     cover_image: { type: String },
+    createdBy: {type: Schema.ObjectId, ref: "users", required: true}
   },
   { timestamps: true }
 );

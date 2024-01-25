@@ -254,3 +254,68 @@ export let addMusic = async (req: express.Request, res: express.Response) => {
 
   res.json({ message: "Added music to album successfully" });
 };
+export let removeMusic = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  const { albumId } = req.params;
+  const { musicId } = req.body;
+  const { user } = req as any;
+
+  if (!musicId) {
+    res.status(httpStatus.BAD_REQUEST).json({ message: "musicId is required" });
+    return;
+  }
+
+  if (!isValidObjectId(musicId) || !isValidObjectId(albumId)) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "album id or music id is not from mongodb" });
+    return;
+  }
+
+  const music = await musicModel.findById(musicId);
+
+  if (!music) {
+    res.status(httpStatus.NOT_FOUND).json({ message: "Music not found" });
+    return;
+  }
+
+  const album = await albumModel.findById(albumId);
+
+  if (!album) {
+    res.status(httpStatus.NOT_FOUND).json({ message: "Album not found" });
+    return;
+  }
+
+  if (user._id !== album.createBy && !user.isSuperAdmin) {
+    res.status(httpStatus.BAD_REQUEST).json({
+      message: "Only the person who created this album can remove music",
+    });
+    return;
+  }
+
+  const [albumMinutes, albumSeconds] = album.duration.split(":").map(Number);
+  const [musicMinutes, musicSeconds] = music.duration.split(":").map(Number);
+
+  let minutesDiff = albumMinutes - musicMinutes;
+  let secondsDiff = albumSeconds - musicSeconds;
+
+  if (secondsDiff >= 60) {
+    secondsDiff += 60;
+    minutesDiff--;
+  }
+
+  const albumDuration = `${String(minutesDiff).padStart(2, "0")}:${String(
+    secondsDiff
+  ).padStart(2, "0")}`;
+
+    
+  await albumModel.findByIdAndUpdate(albumId, {
+    $pull: { musics: musicId },
+    $inc: { countMusics: -1 },
+    duration: albumDuration,
+  });
+
+  res.json({ message: "Deleted music from album successfully" });    
+};

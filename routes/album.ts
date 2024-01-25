@@ -7,6 +7,7 @@ import {
   search,
   update,
   addMusic,
+  removeMusic
 } from "../controllers/album";
 import isAdminMiddleware from "../middlewares/isAdmin";
 import authMiddleware from "../middlewares/auth";
@@ -28,6 +29,7 @@ router
 
 router.get("/search", search);
 router.post("/add-music/:albumId", authMiddleware, isAdminMiddleware, addMusic);
+router.delete("/remove-music/:albumId", authMiddleware, isAdminMiddleware, removeMusic);
 
 router
   .route("/:id")

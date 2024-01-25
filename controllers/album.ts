@@ -32,7 +32,7 @@ export let create = async (req: express.Request, res: express.Response) => {
     return;
   }
 
-  albumModel.create({
+  await albumModel.create({
     title,
     description,
     artist,
@@ -187,13 +187,14 @@ export let search = async (req: express.Request, res: express.Response) => {
   res.json(foundAlbum);
 };
 export let addMusic = async (req: express.Request, res: express.Response) => {
-  const { musicId, albumId } = req.body;
+  const { albumId } = req.params;
+  const { musicId } = req.body;
   const { user } = req as any;
 
-  if (!musicId || !albumId) {
+  if (!musicId) {
     res
       .status(httpStatus.BAD_REQUEST)
-      .json({ message: "musicId and albumId is required" });
+      .json({ message: "musicId is required" });
     return;
   }
 

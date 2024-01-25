@@ -27,7 +27,7 @@ router
   .get(getAll);
 
 router.get("/search", search);
-router.post("/add-music", authMiddleware, isAdminMiddleware, addMusic);
+router.post("/add-music/:albumId", authMiddleware, isAdminMiddleware, addMusic);
 
 router
   .route("/:id")

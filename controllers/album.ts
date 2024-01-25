@@ -192,9 +192,7 @@ export let addMusic = async (req: express.Request, res: express.Response) => {
   const { user } = req as any;
 
   if (!musicId) {
-    res
-      .status(httpStatus.BAD_REQUEST)
-      .json({ message: "musicId is required" });
+    res.status(httpStatus.BAD_REQUEST).json({ message: "musicId is required" });
     return;
   }
 
@@ -233,8 +231,25 @@ export let addMusic = async (req: express.Request, res: express.Response) => {
     return;
   }
 
+  const [albumMinutes, albumSeconds] = album.duration.split(":").map(Number);
+  const [musicMinutes, musicSeconds] = music.duration.split(":").map(Number);
+
+  let totalMinutes = albumMinutes + musicMinutes;
+  let totalSeconds = albumSeconds + musicSeconds;
+
+  if (totalSeconds >= 60) {
+    totalMinutes++;
+    totalSeconds -= 60;
+  }
+
+  const albumDuration = `${String(totalMinutes).padStart(2, "0")}:${String(
+    totalSeconds
+  ).padStart(2, "0")}`;
+
   await albumModel.findByIdAndUpdate(albumId, {
     $addToSet: { musics: musicId },
+    $inc: { countMusics: 1 },
+    duration: albumDuration,
   });
 
   res.json({ message: "Added music to album successfully" });

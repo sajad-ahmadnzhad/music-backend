@@ -53,6 +53,8 @@ export let getAll = async (req: express.Request, res: express.Response) => {
     .select("-__v")
     .lean();
 
+  albums.sort((a: any, b: any) => b.createdAt - a.createdAt);
+
   res.json(albums);
 };
 export let remove = async (req: express.Request, res: express.Response) => {

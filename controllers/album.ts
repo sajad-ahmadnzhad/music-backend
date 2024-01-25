@@ -3,6 +3,7 @@ import httpStatus from "http-status";
 import albumModel from "../models/album";
 import playListModel from "../models/playList";
 import singerModel from "../models/singer";
+import musicModel from "../models/music";
 import userFavoriteModel from "../models/userFavorite";
 import { AlbumBody } from "../interfaces/album";
 import fs from "fs";
@@ -47,7 +48,7 @@ export let getAll = async (req: express.Request, res: express.Response) => {
   const albums = await albumModel
     .find()
     .populate("artist", "fullName englishName photo")
-    .populate("musics", "title duration download_link cover genre")
+    .populate("musics", "title duration download_link cover")
     .populate("createBy", "name username profile")
     .select("-__v")
     .lean();
@@ -73,7 +74,7 @@ export let remove = async (req: express.Request, res: express.Response) => {
 
   if (user._id !== album.createBy && !user.isSuperAdmin) {
     res.status(httpStatus.BAD_REQUEST).json({
-      message: "This reader can only be removed by the person who created it",
+      message: "This album can only be removed by the person who created it",
     });
     return;
   }
@@ -120,7 +121,7 @@ export let update = async (req: express.Request, res: express.Response) => {
       fs.unlinkSync(path.join(process.cwd(), "public", "albumPhotos", photo));
     }
     res.status(httpStatus.BAD_REQUEST).json({
-      message: "This reader can only be modified by the person who created it",
+      message: "This album can only be modified by the person who created it",
     });
     return;
   }
@@ -153,7 +154,7 @@ export let getOne = async (req: express.Request, res: express.Response) => {
   const album = await albumModel
     .findById(id)
     .populate("artist", "fullName englishName photo")
-    .populate("musics", "title duration download_link cover genre")
+    .populate("musics", "title duration download_link cover")
     .populate("createBy", "name username profile")
     .select("-__v")
     .lean();
@@ -166,23 +167,74 @@ export let getOne = async (req: express.Request, res: express.Response) => {
   res.json(album);
 };
 export let search = async (req: express.Request, res: express.Response) => {
-    const { album } = req.query;
+  const { album } = req.query;
 
-    if (!album) {
-        res
-            .status(httpStatus.BAD_REQUEST)
-            .json({ message: "album title is required" });
-        return;
-    }
+  if (!album) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "album title is required" });
+    return;
+  }
 
-    const foundAlbum = await albumModel
-      .find({ title: { $regex: album } })
-      .populate("artist", "fullName englishName photo")
-      .populate("musics", "title duration download_link cover genre")
-      .populate("createBy", "name username profile")
-      .select("-__v")
-      .lean();
-    
-    res.json(foundAlbum)
+  const foundAlbum = await albumModel
+    .find({ title: { $regex: album } })
+    .populate("artist", "fullName englishName photo")
+    .populate("musics", "title duration download_link cover")
+    .populate("createBy", "name username profile")
+    .select("-__v")
+    .lean();
 
+  res.json(foundAlbum);
+};
+export let addMusic = async (req: express.Request, res: express.Response) => {
+  const { musicId, albumId } = req.body;
+  const { user } = req as any;
+
+  if (!musicId || !albumId) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "musicId and albumId is required" });
+    return;
+  }
+
+  if (!isValidObjectId(musicId) || !isValidObjectId(albumId)) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "album id or music id is not from mongodb" });
+    return;
+  }
+
+  const music = await musicModel.findById(musicId);
+
+  if (!music) {
+    res.status(httpStatus.NOT_FOUND).json({ message: "Music not found" });
+    return;
+  }
+
+  const album = await albumModel.findById(albumId);
+
+  if (!album) {
+    res.status(httpStatus.NOT_FOUND).json({ message: "Album not found" });
+    return;
+  }
+
+  if (user._id !== album.createBy && !user.isSuperAdmin) {
+    res.status(httpStatus.BAD_REQUEST).json({
+      message: "Only the person who created this album can add music to it",
+    });
+    return;
+  }
+
+  if (album.musics.includes(musicId)) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "This music is already in the album" });
+    return;
+  }
+
+  await albumModel.findByIdAndUpdate(albumId, {
+    $addToSet: { musics: musicId },
+  });
+
+  res.json({ message: "Added music to album successfully" });
 };

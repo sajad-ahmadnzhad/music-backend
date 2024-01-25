@@ -1,5 +1,13 @@
 import express from "express";
-import { create, getAll, getOne, remove, search, update } from "../controllers/album";
+import {
+  create,
+  getAll,
+  getOne,
+  remove,
+  search,
+  update,
+  addMusic,
+} from "../controllers/album";
 import isAdminMiddleware from "../middlewares/isAdmin";
 import authMiddleware from "../middlewares/auth";
 import validatorMiddleware from "../middlewares/validator";
@@ -18,7 +26,8 @@ router
   )
   .get(getAll);
 
-router.get('/search' , search)
+router.get("/search", search);
+router.post("/add-music", authMiddleware, isAdminMiddleware, addMusic);
 
 router
   .route("/:id")

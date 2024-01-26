@@ -2,7 +2,7 @@ import express from "express";
 import authMiddlewares from "../middlewares/auth";
 import isAdminMiddlewares from "../middlewares/isAdmin";
 import validatorMiddlewares from "../middlewares/validator";
-import { create, getAll, getOne, remove, update } from "../controllers/upcoming";
+import { create, getAll, getOne, remove, search, update } from "../controllers/upcoming";
 import imageUploader from "../utils/uploader/profile";
 import upcomingValidator from "../validators/upcoming";
 const router = express.Router();
@@ -17,6 +17,8 @@ router
     create
   )
   .get(getAll);
+
+router.get('/search' , search)
 
 router
   .route("/:id")

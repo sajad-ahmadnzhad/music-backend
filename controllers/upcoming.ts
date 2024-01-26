@@ -162,3 +162,19 @@ export let getOne = async (req: express.Request, res: express.Response) => {
 
   res.json(upcoming);
 };
+export let search = async (req: express.Request, res: express.Response) => {
+  const { upcoming } = req.query;
+  if (!upcoming) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "upcoming title is required" });
+    return;
+  }
+
+  const upcomingResult = await upcomingModel.find({
+    title: { $regex: upcoming },
+  });
+
+  res.json(upcomingResult)
+
+};

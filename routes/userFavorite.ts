@@ -1,5 +1,5 @@
 import express from "express";
-import { create } from "../controllers/userFavorite";
+import { create, getAll } from "../controllers/userFavorite";
 import authMiddlewares from "../middlewares/auth";
 import validatorMiddlewares from "../middlewares/validator";
 import userFavoriteValidator from "../validators/userFavorite";
@@ -7,6 +7,6 @@ const router = express.Router();
 
 router
   .route("/")
-  .post(authMiddlewares, validatorMiddlewares(userFavoriteValidator), create);
+  .post(authMiddlewares, validatorMiddlewares(userFavoriteValidator), create).get(authMiddlewares , getAll);
 
 export default router;

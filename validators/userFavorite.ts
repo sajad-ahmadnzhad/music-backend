@@ -1,6 +1,6 @@
 import joi from "joi";
 export default joi.object({
-  type: joi.string().valid("music", "album").required(),
+  type: joi.string().valid("music", "albums").required(),
   target_id: joi
     .string()
     .regex(/^[0-9a-fA-F]{24}$/)

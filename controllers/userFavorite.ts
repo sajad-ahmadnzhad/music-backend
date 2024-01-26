@@ -16,7 +16,7 @@ export let create = async (req: express.Request, res: express.Response) => {
     return;
   }
 
-  if (type === "album" && !album) {
+  if (type === "albums" && !album) {
     res.status(httpStatus.NOT_FOUND).json({ message: "Album not found" });
     return;
   }
@@ -38,4 +38,13 @@ export let create = async (req: express.Request, res: express.Response) => {
   res
     .status(httpStatus.CREATED)
     .json({ message: "Create user favorite successfully" });
+};
+export let getAll = async (req: express.Request, res: express.Response) => {
+  const { user } = req as any;
+  const favoriteList = await userFavoriteModel
+    .find({ user: user._id })
+    .populate("target_id", "title photo cover_image download_link")
+    .select("-user -__v")
+    .lean();
+  res.json(favoriteList);
 };

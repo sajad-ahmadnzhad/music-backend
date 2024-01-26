@@ -4,7 +4,7 @@ import isAdminMiddlewares from "../middlewares/isAdmin";
 import validatorMiddlewares from "../middlewares/validator";
 import playListValidator from "../validators/playList";
 import photoUploader from "../utils/uploader/profile";
-import { create } from "../controllers/playList";
+import { create, getAll } from "../controllers/playList";
 const router = express.Router();
 
 router
@@ -15,6 +15,7 @@ router
     photoUploader.single("playListCover"),
     validatorMiddlewares(playListValidator),
     create
-  );
+  )
+  .get(getAll);
 
 export default router;

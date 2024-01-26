@@ -39,3 +39,17 @@ export let create = async (req: express.Request, res: express.Response) => {
       .json({ message: error.message || "Internal Server Error !!" });
   }
 };
+export let getAll = async (req: express.Request, res: express.Response) => {
+  try {
+    const playLists = await playListModel
+      .find({})
+      .populate("createBy", "name username profile")
+      .select("-__v")
+      .lean();
+    res.json(playLists);
+  } catch (error: any) {
+    const statusCode = error.status || httpStatus.INTERNAL_SERVER_ERROR;
+    const errorMessage = error.message || "Internal Server Error !!";
+    res.status(statusCode).json({ errorMessage });
+  }
+};

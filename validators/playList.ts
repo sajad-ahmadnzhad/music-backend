@@ -7,8 +7,10 @@ export default joi.object({
     .string()
     .regex(/^[0-9a-fA-F]{24}$/)
     .message("Category id is not from mongodb")
-      .external(async(value, helpers) => {
-        const category = await categoryModel.findById(value)
-        if(!category)return helpers.error('Category not found')
+    .external(async (value, helpers) => {
+      if (value) {
+        const category = await categoryModel.findById(value);
+        if (!category) return helpers.error("Category not found");
+      }
     }),
 });

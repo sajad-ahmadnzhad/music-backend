@@ -6,6 +6,7 @@ import singerRouter from "./singer";
 import upcomingRouter from "./upcoming";
 import albumRouter from "./album";
 import userFavoriteRouter from "./userFavorite";
+import playListRouter from "./playList";
 import express from "express";
 const mainRouter = express.Router();
 
@@ -17,5 +18,6 @@ mainRouter.use("/v1/singer", singerRouter);
 mainRouter.use("/v1/album", albumRouter);
 mainRouter.use("/v1/upcoming", upcomingRouter);
 mainRouter.use("/v1/user-favorite", userFavoriteRouter);
+mainRouter.use("/v1/play-list", playListRouter);
 
 export default mainRouter;

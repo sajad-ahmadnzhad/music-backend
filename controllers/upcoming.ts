@@ -42,6 +42,7 @@ export let getAll = async (req: express.Request, res: express.Response) => {
     .find()
     .populate("artist", "fullName photo")
     .populate("genre", "title description")
+    .populate("createBy", "name username profile")
     .lean();
   allUpcoming.sort((a: any, b: any) => b.createdAt - a.createdAt);
   res.json(allUpcoming);
@@ -136,4 +137,28 @@ export let update = async (req: express.Request, res: express.Response) => {
   });
 
   res.json({ message: "Updated upcoming successfully" });
+};
+export let getOne = async (req: express.Request, res: express.Response) => {
+  const { id } = req.params;
+
+  if (!isValidObjectId(id)) {
+    res
+      .status(httpStatus.BAD_REQUEST)
+      .json({ message: "upcoming id is not from mongodb" });
+    return;
+  }
+
+  const upcoming = await upcomingModel
+    .findById(id)
+    .populate("artist", "fullName photo")
+    .populate("genre", "title description")
+    .populate("createBy", "name username profile")
+    .lean();
+
+  if (!upcoming) {
+    res.status(httpStatus.BAD_REQUEST).json({ message: "Upcoming not found" });
+    return;
+  }
+
+  res.json(upcoming);
 };

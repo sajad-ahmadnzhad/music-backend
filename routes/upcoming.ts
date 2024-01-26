@@ -2,7 +2,7 @@ import express from "express";
 import authMiddlewares from "../middlewares/auth";
 import isAdminMiddlewares from "../middlewares/isAdmin";
 import validatorMiddlewares from "../middlewares/validator";
-import { create, getAll, remove } from "../controllers/upcoming";
+import { create, getAll, remove, update } from "../controllers/upcoming";
 import imageUploader from "../utils/uploader/profile";
 import upcomingValidator from "../validators/upcoming";
 const router = express.Router();
@@ -18,6 +18,15 @@ router
   )
   .get(getAll);
 
-router.route("/:id").delete(authMiddlewares, isAdminMiddlewares, remove);
+router
+  .route("/:id")
+  .delete(authMiddlewares, isAdminMiddlewares, remove)
+  .put(
+    authMiddlewares,
+    isAdminMiddlewares,
+    imageUploader.single("upcomingCover"),
+    validatorMiddlewares(upcomingValidator),
+    update
+  );
 
 export default router;

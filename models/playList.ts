@@ -8,6 +8,8 @@ const schema = new Schema(
     musics: [{ type: Schema.ObjectId, ref: "music", default: [] }],
     albums: [{ type: Schema.ObjectId, ref: "album", default: [] }],
     createBy: { type: Schema.ObjectId, ref: "users", required: true },
+    count_likes: { type: Number, default: 0 },
+    count_views: { type: Number, default: 0 },
     category: { type: Schema.ObjectId, ref: "categories" },
   },
   { timestamps: true }

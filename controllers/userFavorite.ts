@@ -71,3 +71,30 @@ export let remove = async (req: express.Request, res: express.Response) => {
   }
   res.json({ message: "Deleted favorite successfully" });
 };
+export let getOne = async (req: express.Request, res: express.Response) => {
+  const { user } = req as any;
+  const { id } = req.params;
+
+  if (!isValidObjectId(id)) {
+    res
+      .status(httpStatus.NOT_FOUND)
+      .json({ message: "Favorite id is not found mongodb" });
+    return;
+  }
+
+  const favorite = await userFavoriteModel
+    .findOne({
+      user: user._id,
+      _id: id,
+    })
+    .populate("target_id", "title photo cover_image download_link")
+    .select("-user -__v")
+    .lean();
+
+  if (!favorite) {
+    res.status(httpStatus.NOT_FOUND).json({ message: "Favorite not found" });
+    return;
+  }
+
+  res.json(favorite);
+};

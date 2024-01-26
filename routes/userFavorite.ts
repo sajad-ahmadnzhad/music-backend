@@ -1,5 +1,5 @@
 import express from "express";
-import { create, getAll, remove } from "../controllers/userFavorite";
+import { create, getAll, getOne, remove } from "../controllers/userFavorite";
 import authMiddlewares from "../middlewares/auth";
 import validatorMiddlewares from "../middlewares/validator";
 import userFavoriteValidator from "../validators/userFavorite";
@@ -13,5 +13,6 @@ router
 router
   .route("/:id")
   .delete(authMiddlewares, remove)
+  .get(authMiddlewares, getOne);
 
 export default router;

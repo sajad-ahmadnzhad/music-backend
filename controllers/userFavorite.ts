@@ -4,6 +4,7 @@ import userFavoriteModel from "../models/userFavorite";
 import albumModel from "../models/album";
 import musicModel from "../models/music";
 import httpStatus from "http-status";
+import { isValidObjectId } from "mongoose";
 export let create = async (req: express.Request, res: express.Response) => {
   const { type, target_id } = req.body as UserFavoriteBody;
   const { user } = req as any;
@@ -47,4 +48,26 @@ export let getAll = async (req: express.Request, res: express.Response) => {
     .select("-user -__v")
     .lean();
   res.json(favoriteList);
+};
+export let remove = async (req: express.Request, res: express.Response) => {
+  const { id } = req.params;
+  const { user } = req as any;
+
+  if (!isValidObjectId(id)) {
+    res
+      .status(httpStatus.NOT_FOUND)
+      .json({ message: "Favorite id is not found mongodb" });
+    return;
+  }
+
+  const favoriteList = await userFavoriteModel.findOneAndDelete({
+    user: user._id,
+    _id: id,
+  });
+
+  if (!favoriteList) {
+    res.status(httpStatus.NOT_FOUND).json({ message: "Favorite not found" });
+    return;
+  }
+  res.json({ message: "Deleted favorite successfully" });
 };

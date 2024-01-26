@@ -97,4 +97,34 @@ export let update = async (req: express.Request, res: express.Response) => {
     res.status(statusCode).json({ message });
   }
 };
+export let remove = async (req: express.Request, res: express.Response) => {
+  try {
+    const { id } = req.params;
+    const { user } = req as any;
+    if (!isValidObjectId(id)) {
+      throw new Error("Play list id is not from mongodb");
+    }
 
+    const playList = await playListModel.findById(id);
+
+    if (!playList) {
+      throw new Error("Play list not found");
+    }
+
+    if (user._id !== playList.createBy && !user.isSuperAdmin) {
+      throw new Error(
+        "This paly list can only be remove by the person who created it"
+      );
+    }
+
+    if (playList.cover_image) {
+      fs.unlinkSync(path.join(process.cwd(), "public", playList.cover_image));
+    }
+    await playListModel.findByIdAndDelete(id);
+    res.json({ message: "Deleted play list successfully" });
+  } catch (error:any) {
+    const statusCode = error.status || httpStatus.INTERNAL_SERVER_ERROR;
+    const message = error.message || "Internal Server Error !!";
+    res.status(statusCode).json({ message });
+  }
+};

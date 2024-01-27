@@ -159,3 +159,23 @@ export let unlike = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+export let view = async (req: Request, res: Response, next: NextFunction) => { 
+  try {
+    const { id } = req.params;
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("Paly list id is not from mongodb");
+    }
+
+    const playList = await playListModel.findByIdAndUpdate(id, {
+      $inc: { count_views: 1 },
+    });
+
+    if (!playList) {
+      throw httpErrors.NotFound("Play list not found");
+    }
+
+    res.json({ message: "Playlist was viewed successfully" });
+  } catch (error: any) {
+    next(error);
+};    
+}

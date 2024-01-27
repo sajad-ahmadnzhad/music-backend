@@ -4,6 +4,7 @@ import httpStatus from "http-status";
 import fs from "fs";
 import path from "path";
 import playListModel from "../models/playList";
+import musicModel from "../models/music";
 import { isValidObjectId } from "mongoose";
 import httpErrors from "http-errors";
 
@@ -159,7 +160,7 @@ export let unlike = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
-export let view = async (req: Request, res: Response, next: NextFunction) => { 
+export let view = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     if (!isValidObjectId(id)) {
@@ -177,5 +178,60 @@ export let view = async (req: Request, res: Response, next: NextFunction) => {
     res.json({ message: "Playlist was viewed successfully" });
   } catch (error: any) {
     next(error);
-};    
-}
+  }
+};
+export let addMusic = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { musicId } = req.body;
+    const { playListId } = req.params;
+    const { user } = req as any;
+
+    if (!musicId) {
+      throw httpErrors.BadRequest("Music id is required");
+    }
+
+    if (!isValidObjectId(musicId)) {
+      throw httpErrors.BadRequest("Music id is not from mongodb");
+    }
+
+    if (!isValidObjectId(playListId)) {
+      throw httpErrors.BadRequest("Play list id is not from mongodb");
+    }
+
+    const music = await musicModel.findById(musicId);
+
+    if (!music) {
+      throw httpErrors.NotFound("Music not found");
+    }
+
+    const playList = await playListModel.findById(playListId);
+
+    if (!playList) {
+      throw httpErrors.NotFound("Play list not found");
+    }
+
+    if (user._id !== playList.createBy && !user.isSuperAdmin) {
+      throw httpErrors(
+        "Only the person who created this paly list can add music to it"
+      );
+    }
+
+    const isMusicToPlayList = playList.musics.some((music) => music.toString() == musicId);
+
+    if (isMusicToPlayList) {
+      throw httpErrors.BadRequest("This music is already in this playlist");
+    }
+
+    await playListModel.findByIdAndUpdate(playListId, {
+      $addToSet: { musics: musicId },
+    });
+
+    res.json({ message: "Added music to play list successfully" });
+  } catch (error: any) {
+    next(error);
+  }
+};

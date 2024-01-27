@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 import { PlayListBody } from "../interfaces/playList";
 import httpStatus from "http-status";
 import fs from "fs";
@@ -61,7 +61,7 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
     const playList = await playListModel.findById(id);
 
     if (!playList) {
-      throw httpErrors.BadRequest("Play list not found");
+      throw httpErrors.NotFound("Play list not found");
     }
 
     if (user._id !== playList.createBy && !user.isSuperAdmin) {
@@ -95,7 +95,7 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
     const playList = await playListModel.findById(id);
 
     if (!playList) {
-      throw httpErrors.BadRequest("Play list not found");
+      throw httpErrors.NotFound("Play list not found");
     }
 
     if (user._id !== playList.createBy && !user.isSuperAdmin) {
@@ -113,3 +113,24 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+export let like = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("paly list id is not from mongodb");
+    }
+
+    const playList = await playListModel.findByIdAndUpdate(id, {
+      $inc: { count_likes: 1 },
+    });
+
+    if (!playList) {
+      throw httpErrors.NotFound("Play list not found");
+    }
+
+    res.json({ message: "Liked play list successfully" });
+  } catch (error: any) {
+    next(error);
+  }
+};
+

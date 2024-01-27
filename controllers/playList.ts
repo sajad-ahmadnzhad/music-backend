@@ -133,4 +133,29 @@ export let like = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+export let unlike = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("paly list id is not from mongodb");
+    }
 
+    const playList = await playListModel.findById(id);
+
+    if (!playList) {
+      throw httpErrors.NotFound("Play list not found");
+    }
+
+    if (!playList.count_likes) {
+      throw httpErrors.BadRequest("This playlist has not been liked yet");
+    }
+
+    await playListModel.findByIdAndUpdate(id, {
+      $inc: { count_likes: -1 },
+    });
+
+    res.json({ message: "Un linked play list successfully" });
+  } catch (error: any) {
+    next(error);
+  }
+};

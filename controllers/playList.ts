@@ -47,25 +47,25 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
-export let update = async (req: express.Request, res: express.Response) => {
+export let update = async (req: Request, res: Response, next: NextFunction) => {
   const cover = req.file?.filename;
   try {
     const { id } = req.params;
-    const body = req.body;
+    const body = req.body as PlayListBody;
     const { user } = req as any;
 
     if (!isValidObjectId(id)) {
-      throw new Error("Play list id is not from mongodb");
+      throw httpErrors.BadRequest("Play list id is not from mongodb");
     }
 
     const playList = await playListModel.findById(id);
 
     if (!playList) {
-      throw new Error("Play list not found");
+      throw httpErrors.BadRequest("Play list not found");
     }
 
     if (user._id !== playList.createBy && !user.isSuperAdmin) {
-      throw new Error(
+      throw httpErrors.BadRequest(
         "This paly list can only be modified by the person who created it"
       );
     }
@@ -81,13 +81,7 @@ export let update = async (req: express.Request, res: express.Response) => {
 
     res.json({ message: "Updated play list successfully" });
   } catch (error: any) {
-    cover &&
-      fs.unlinkSync(
-        path.join(process.cwd(), "public", "playListCovers", cover)
-      );
-    const statusCode = error.status || httpStatus.INTERNAL_SERVER_ERROR;
-    const message = error.message || "Internal Server Error !!";
-    res.status(statusCode).json({ message });
+    next(error);
   }
 };
 export let remove = async (req: express.Request, res: express.Response) => {

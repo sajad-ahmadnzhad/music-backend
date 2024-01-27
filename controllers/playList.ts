@@ -84,22 +84,22 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
-export let remove = async (req: express.Request, res: express.Response) => {
+export let remove = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const { user } = req as any;
     if (!isValidObjectId(id)) {
-      throw new Error("Play list id is not from mongodb");
+      throw httpErrors.BadRequest("Play list id is not from mongodb");
     }
 
     const playList = await playListModel.findById(id);
 
     if (!playList) {
-      throw new Error("Play list not found");
+      throw httpErrors.BadRequest("Play list not found");
     }
 
     if (user._id !== playList.createBy && !user.isSuperAdmin) {
-      throw new Error(
+      throw httpErrors.BadRequest(
         "This paly list can only be remove by the person who created it"
       );
     }
@@ -110,8 +110,6 @@ export let remove = async (req: express.Request, res: express.Response) => {
     await playListModel.findByIdAndDelete(id);
     res.json({ message: "Deleted play list successfully" });
   } catch (error: any) {
-    const statusCode = error.status || httpStatus.INTERNAL_SERVER_ERROR;
-    const message = error.message || "Internal Server Error !!";
-    res.status(statusCode).json({ message });
+    next(error);
   }
 };

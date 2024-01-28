@@ -350,3 +350,46 @@ export let removeMusic = async (
     next(error);
   }
 };
+export let searchMusic = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { music } = req.query;
+    const { playListId } = req.body;
+    if (!music) {
+      throw httpErrors.BadRequest("Music title is required");
+    }
+
+    if (!playListId) {
+      throw httpErrors.BadRequest("Playlist id is required");
+    }
+
+    if (!isValidObjectId(playListId)) {
+      throw httpErrors.BadRequest("Playlist id is not from mongodb");
+    }
+
+    const playList = await playListModel.findById(playListId);
+
+    if (!playList) {
+      throw httpErrors.BadRequest("Playlist not found");
+    }
+
+    const foundMusic = await musicModel.findOne({ title: {$regex: music } }).lean();
+
+    if (!foundMusic) {
+      throw httpErrors.BadRequest("Music not found");
+    }
+
+    const musicResult = playList.musics.includes(foundMusic._id);
+
+    if (!musicResult) {
+      throw httpErrors.BadRequest("The music was not found in the playlist");
+    }
+
+    res.json(foundMusic);
+  } catch (error) {
+    next(error);
+  }
+};

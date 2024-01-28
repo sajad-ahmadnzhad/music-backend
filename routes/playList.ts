@@ -17,6 +17,7 @@ import {
   search,
   popular,
   getOne,
+  searchMusic
 } from "../controllers/playList";
 const router = express.Router();
 
@@ -47,6 +48,8 @@ router.delete(
   isAdminMiddlewares,
   removeMusic
 );
+
+router.get("/search-music", searchMusic);
 
 router.get("/search", search);
 router.get("/popular", popular);

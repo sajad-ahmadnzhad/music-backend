@@ -1,18 +1,19 @@
 import Joi from "joi";
 import httpStatus from "http-status";
-import { RegisterBody } from "./../interfaces/auth";
-import express from "express";
+import { Request, Response, NextFunction } from "express";
 import fs from "fs";
-import path from "path";
 //validate schema joi middlewares
 export default (schema: Joi.Schema) => {
   return async (
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction
+    req: Request,
+    res: Response,
+    next: NextFunction
   ) => {
     try {
-      await schema.validateAsync(req.body as RegisterBody);
+      if(req.params)
+        await schema.validateAsync({ ...req.body, ...req.params });
+      else
+      await schema.validateAsync(req.body);
       next();
     } catch (e: any) {
       //Delete files sent by multer after incorrect validation
@@ -33,7 +34,7 @@ export default (schema: Joi.Schema) => {
   };
 };
 
-function removeFile(req: express.Request) {
+function removeFile(req: Request) {
   //Delete user profile when validating incorrectly
   if (req.file) {
     fs.unlinkSync(req.file.path);

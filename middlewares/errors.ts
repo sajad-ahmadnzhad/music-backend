@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import fs from "fs";
-import path from "path";
 export default (
   error: any,
   req: Request,
@@ -8,23 +7,23 @@ export default (
   next: NextFunction
 ) => {
   if (error) {
-    req.file && removeFile(req);
+     removeFile(req)
     const statusCode = error.status || error.statusCode || 500;
     const message = error.message || "Internal Server Error !!";
     res.status(statusCode).json({ message });
   }
 };
 
+
 function removeFile(req: Request) {
-  const folders = fs.readdirSync(path.join(process.cwd(), "public"));
+   req.file && fs.unlinkSync(req.file.path);
 
-  folders.forEach((folder) => {
-    const files = fs.readdirSync(path.join(process.cwd(), "public", folder));
-
-    if (files.includes(req.file!.filename)) {
-      fs.unlinkSync(
-        path.join(process.cwd(), "public", folder, req.file!.filename)
-      );
+  if (req.files) {
+    const files = { ...req.files } as any;
+    for (let key in files) {
+      if (files[key] && files[key][0]) {
+        fs.unlinkSync(files[key][0].path);
+      }
     }
-  });
+  }
 }

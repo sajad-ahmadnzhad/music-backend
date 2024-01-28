@@ -41,6 +41,8 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
     const playLists = await playListModel
       .find({})
       .populate("createBy", "name username profile")
+      .populate("musics", "title cover_image download_link")
+      .populate("category", "-__v")
       .select("-__v")
       .lean();
     res.json(playLists);
@@ -180,6 +182,70 @@ export let view = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+export let search = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { playList } = req.query;
+    if (!playList) {
+      throw httpErrors.BadRequest("paly list title is required");
+    }
+
+    const foundPlayLists = await playListModel
+      .find({
+        title: { $regex: playList },
+      })
+      .populate("createBy", "name username profile")
+      .populate("musics", "title cover_image download_link")
+      .populate("category", "-__v")
+      .select("-__v")
+      .lean();
+
+    res.json(foundPlayLists);
+  } catch (error: any) {
+    next(error);
+  }
+};
+export let getOne = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("Play list id is not from mongodb");
+    }
+
+    const playList = await playListModel
+      .findById(id)
+      .populate("createBy", "name username profile")
+      .populate("musics", "title cover_image download_link")
+      .populate("category", "-__v")
+      .select("-__v")
+      .lean();
+
+    if (!playList) {
+      throw httpErrors.NotFound("Play list not found");
+    }
+    res.json(playList);
+  } catch (error: any) {
+    next(error);
+  }
+};
+export let popular = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const playLists = await playListModel
+      .find()
+      .populate("createBy", "name username profile")
+      .populate("musics", "title cover_image download_link")
+      .populate("category", "-__v")
+      .select("-__v")
+      .lean();
+    playLists.sort((a: any, b: any) => b.count_views - a.count_views);
+    res.json(playLists);
+  } catch (error: any) {
+    next(error);
+  }
+};
 export let addMusic = async (
   req: Request,
   res: Response,
@@ -215,12 +281,14 @@ export let addMusic = async (
     }
 
     if (user._id !== playList.createBy && !user.isSuperAdmin) {
-      throw httpErrors(
+      throw httpErrors.BadRequest(
         "Only the person who created this paly list can add music to it"
       );
     }
 
-    const isMusicToPlayList = playList.musics.some((music) => music.toString() == musicId);
+    const isMusicToPlayList = playList.musics.some(
+      (music) => music.toString() == musicId
+    );
 
     if (isMusicToPlayList) {
       throw httpErrors.BadRequest("This music is already in this playlist");
@@ -231,6 +299,53 @@ export let addMusic = async (
     });
 
     res.json({ message: "Added music to play list successfully" });
+  } catch (error: any) {
+    next(error);
+  }
+};
+export let removeMusic = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { musicId } = req.body;
+    const { playListId } = req.params;
+    const { user } = req as any;
+
+    if (!musicId) {
+      throw httpErrors.BadRequest("Music id is required");
+    }
+
+    if (!isValidObjectId(musicId)) {
+      throw httpErrors.BadRequest("Music id is not from mongodb");
+    }
+
+    if (!isValidObjectId(playListId)) {
+      throw httpErrors.BadRequest("Play list id is not from mongodb");
+    }
+
+    const playList = await playListModel.findById(playListId);
+
+    if (!playList) {
+      throw httpErrors.NotFound("Play list not found");
+    }
+
+    if (user._id !== playList.createBy && !user.isSuperAdmin) {
+      throw httpErrors.BadRequest(
+        "Only the person who created this paly list can remove music to it"
+      );
+    }
+
+    if (!playList.musics.includes(musicId)) {
+      throw httpErrors.BadRequest("Music not found in play list");
+    }
+
+    await playListModel.findByIdAndUpdate(playListId, {
+      $pull: { musics: musicId },
+    });
+
+    res.json({ message: "Deleted music from play list successfully" });
   } catch (error: any) {
     next(error);
   }

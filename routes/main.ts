@@ -18,6 +18,6 @@ mainRouter.use("/v1/singer", singerRouter);
 mainRouter.use("/v1/album", albumRouter);
 mainRouter.use("/v1/upcoming", upcomingRouter);
 mainRouter.use("/v1/user-favorite", userFavoriteRouter);
-mainRouter.use("/v1/play-list", playListRouter);
+mainRouter.use("/v1/playlist", playListRouter);
 
 export default mainRouter;

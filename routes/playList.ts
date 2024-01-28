@@ -13,6 +13,10 @@ import {
   unlike,
   view,
   addMusic,
+  removeMusic,
+  search,
+  popular,
+  getOne,
 } from "../controllers/playList";
 const router = express.Router();
 
@@ -37,6 +41,16 @@ router.post(
   addMusic
 );
 
+router.delete(
+  "/remove-music/:playListId",
+  authMiddlewares,
+  isAdminMiddlewares,
+  removeMusic
+);
+
+router.get("/search", search);
+router.get("/popular", popular);
+
 router
   .route("/:id")
   .put(
@@ -46,6 +60,7 @@ router
     validatorMiddlewares(playListValidator),
     update
   )
-  .delete(authMiddlewares, isAdminMiddlewares, remove);
+  .delete(authMiddlewares, isAdminMiddlewares, remove)
+  .get(getOne);
 
 export default router;

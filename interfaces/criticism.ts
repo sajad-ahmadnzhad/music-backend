@@ -1,5 +1,5 @@
 import {ObjectId} from 'mongoose'
-export default interface CriticismBody {
+export interface CriticismBody {
     type: string
     body: string
     score: number

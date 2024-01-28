@@ -1,4 +1,5 @@
 import joi from "joi";
+
 export default joi.object({
   type: joi.string().valid("music", "singer").required(),
   body: joi.string().max(500).min(5).required(),
@@ -6,5 +7,6 @@ export default joi.object({
   target_id: joi
     .string()
     .regex(/^[0-9a-fA-F]{24}$/)
-    .required(),
+    .message("target id is not from mongodb")
+    .required()
 });

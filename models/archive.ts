@@ -7,6 +7,7 @@ const schema = new Schema(
     musics: [{ type: Schema.ObjectId, ref: "music", default: [] }],
     artist: { type: Schema.ObjectId, ref: "singer" },
     album: { type: Schema.ObjectId, ref: "albums" },
+    cover_image: { type: String },
     createBy: { type: Schema.ObjectId, ref: "users", required: true },
     genre: { type: Schema.ObjectId, ref: "category" },
   },

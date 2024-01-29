@@ -15,9 +15,9 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
     const singer = await singerModel.findById(body.target_id);
     if (body.type === "music" && !music) {
       throw httpErrors.BadRequest("Music not found");
-    } else if(body.type === 'singer' && !singer) {
+    } else if (body.type === "singer" && !singer) {
       throw httpErrors.BadRequest("Singer not found");
-      }
+    }
 
     await criticismModel.create({ ...body, user: user._id });
 

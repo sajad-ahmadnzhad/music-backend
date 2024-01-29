@@ -338,7 +338,7 @@ export let removeMusic = async (
     }
 
     if (!playList.musics.includes(musicId)) {
-      throw httpErrors.BadRequest("Music not found in play list");
+      throw httpErrors.BadRequest("The music was not found in the playlist");
     }
 
     await playListModel.findByIdAndUpdate(playListId, {
@@ -376,19 +376,21 @@ export let searchMusic = async (
       throw httpErrors.BadRequest("Playlist not found");
     }
 
-    const foundMusic = await musicModel.findOne({ title: {$regex: music } }).lean();
+    const foundMusics = await musicModel
+      .find({ title: { $regex: music } })
+      .populate("genre", "title")
+      .populate("artist", "fullName photo")
+      .populate("createBy", "name username profile")
+      .select('-__v')
+      .lean();
 
-    if (!foundMusic) {
-      throw httpErrors.BadRequest("Music not found");
-    }
+    const musics = playList.musics.map((item) => {
+      return foundMusics.find(
+        (music) => music._id.toString() === item.toString()
+      ) || [];
+    }).flat(Infinity);
 
-    const musicResult = playList.musics.includes(foundMusic._id);
-
-    if (!musicResult) {
-      throw httpErrors.BadRequest("The music was not found in the playlist");
-    }
-
-    res.json(foundMusic);
+    res.json(musics);
   } catch (error) {
     next(error);
   }

@@ -37,11 +37,20 @@ const storage = multer.diskStorage({
       cb(null, path.join(process.cwd(), "public", "upcomingCovers"));
       return;
     }
+    //playlist cover
     else if (
       suffixes.includes(fileExtension?.toLowerCase()) &&
       file.fieldname == "playListCover"
     ) {
       cb(null, path.join(process.cwd(), "public", "playListCovers"));
+      return;
+    }
+    //archive cover
+    else if (
+      suffixes.includes(fileExtension?.toLowerCase()) &&
+      file.fieldname == "archiveCover"
+    ) {
+      cb(null, path.join(process.cwd(), "public", "archiveCovers"));
       return;
     }
     const message = `The extension of the submitted file is not valid. The extension of the submitted files must include: ${suffixes.join(

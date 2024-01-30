@@ -10,10 +10,7 @@ export default (schema: Joi.Schema) => {
     next: NextFunction
   ) => {
     try {
-      if(req.params)
-        await schema.validateAsync({ ...req.body, ...req.params });
-      else
-      await schema.validateAsync(req.body);
+        await schema.validateAsync({ ...req.body });
       next();
     } catch (e: any) {
       //Delete files sent by multer after incorrect validation

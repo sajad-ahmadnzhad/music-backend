@@ -1,5 +1,6 @@
 import multer from "multer";
 import path from "path";
+import httpErrors from "http-errors";
 
 const storage = multer.diskStorage({
   destination(req, file, cb) {
@@ -56,7 +57,7 @@ const storage = multer.diskStorage({
     const message = `The extension of the submitted file is not valid. The extension of the submitted files must include: ${suffixes.join(
       " "
     )}`;
-    (cb as any)(new Error(message));
+    (cb as any)(httpErrors.BadRequest(message));
   },
   filename(req, file, cb) {
     const fileName =

@@ -6,5 +6,5 @@ export default Joi.object({
   email: Joi.string().trim()
     .email({ tlds: { allow: ["com", "yahoo"] } }).required(),
   password: Joi.string().trim().min(8).max(20).required(),
-  confirmPassword: Joi.ref("password"),
+  confirmPassword: Joi.string().trim().valid(Joi.ref("password")).required(),
 });

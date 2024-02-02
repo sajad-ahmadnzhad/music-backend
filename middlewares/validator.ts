@@ -39,11 +39,13 @@ function removeFile(req: Request) {
 
   //Removing music and cover when validating incorrectly
   if (req.files) {
-    const files = { ...req.files } as any;
-    for (let key in files) {
-      if (files[key] && files[key][0]) {
-        fs.unlinkSync(files[key][0].path);
-      }
-    }
+    const files = Object.entries({ ...req.files })
+      .flat(Infinity)
+      .filter((file) => typeof file === "object");
+
+    files.forEach(file => {
+    const path = file.path || ''
+     if (fs.existsSync(path)) return fs.unlinkSync(path);  
+    })
   }
 }

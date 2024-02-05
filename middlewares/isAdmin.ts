@@ -1,17 +1,18 @@
 import express from "express";
-import usersModel from "../models/users";
-import httpStatus from "http-status";
+import httpErrors from "http-errors";
+
 export default async (
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const { isAdmin } = (req as any).user;
-  if (!isAdmin) {
-    res
-      .status(httpStatus.BAD_REQUEST)
-      .json({ message: "This path is only for admins" });
-    return;
+  try {
+    const { isAdmin } = (req as any).user;
+    if (!isAdmin) {
+      throw httpErrors.Forbidden("This path is only for admins");
+    }
+    next();
+  } catch (error) {
+    next(error);
   }
-  next();
 };

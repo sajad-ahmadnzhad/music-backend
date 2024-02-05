@@ -1,12 +1,17 @@
 import { Request, Response, NextFunction } from "express";
 import usersModel from "./../models/users";
 import { RegisterBody, LoginBody } from "./../interfaces/auth";
-import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
-import httpStatus from "http-status";
 import httpErrors from "http-errors";
+import httpStatus from "http-status";
 import banUserModel from "../models/banUser";
+import {
+  generateVerificationToken,
+  sendConfirmationEmail,
+  verifyEmail,
+} from "../helpers/userVerification";
+import accessToken from "../helpers/authToken";
 dotenv.config();
 export let login = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -31,12 +36,10 @@ export let login = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.BadRequest("password is not valid");
     }
 
-    const accessToken = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET as string
-    );
+    const twoMonths = 60 * 60 * 24 * 60 * 1000;
+    const authToken = accessToken(user._id, twoMonths);
 
-    res.cookie("token", accessToken);
+    res.cookie("token", authToken);
     res.json({ message: "You have successfully logged in" });
   } catch (error) {
     next(error);
@@ -48,50 +51,91 @@ export let register = async (
   next: NextFunction
 ) => {
   try {
-    let { name, username, email, password } = req.body as RegisterBody;
+    let { username, email, password } = req.body as RegisterBody;
+    delete req.body.confirmPassword;
+    const foundUser = await usersModel.findOne({
+      $or: [{ email }, { username }],
+    });
 
-    const user = await usersModel.findOne({ $or: [{ email }, { username }] });
-    if (user) {
+    if (foundUser) {
       throw httpErrors.Conflict("Username or email already exists");
     }
-
-    const hashedPassword = bcrypt.hashSync(password, 10);
-    const users = await usersModel.find();
-
-    const newUser = await usersModel.create({
-      name,
-      username,
-      email,
-      password: hashedPassword,
-      isSuperAdmin: users.length == 0,
-      isAdmin: users.length == 0,
-      profile: req.file
-        ? `/usersProfile/${req.file.filename}`
-        : "/usersProfile/customProfile.png",
+    password = bcrypt.hashSync(password, 10);
+    const profile = req.file && req.file.filename;
+    const emailToken = generateVerificationToken(<RegisterBody>{
+      ...req.body,
+      profile,
+      password,
     });
-    const twoMonths = 60 * 60 * 24 * 60 * 1000;
-    const accessToken = jwt.sign(
-      { id: newUser._id },
-      process.env.JWT_SECRET as string,
-      {
-        expiresIn: twoMonths,
-      }
-    );
-    res.cookie("token", accessToken, {
-      maxAge: twoMonths,
-      httpOnly: true,
-    });
-    res
-      .status(httpStatus.CREATED)
-      .json({ message: "Registration was successful" });
+    if (emailToken.error) {
+      throw httpErrors("The token was created with an error");
+    }
+    const result = <any>sendConfirmationEmail(email, <string>emailToken.token);
+    
+    if (result?.error) {
+      throw httpErrors(
+        result.error || "The email was sent with an error"
+      );
+    }
+
+    res.json({ message: "Email sent Confirm email to login" });
   } catch (error) {
     next(error);
   }
 };
 export let logout = async (req: Request, res: Response, next: NextFunction) => {
   try {
-      res.clearCookie("token");
-      res.json({ message: "You have successfully logged out" });
+    res.clearCookie("token");
+    res.json({ message: "You have successfully logged out" });
+  } catch (error) {
+    next(error);
+  }
+};
+export let confirmEmail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const token = <any>req.query.token;
+    console.log(req.headers)
+    const userInfo = verifyEmail(token);
+
+    if (userInfo.error) {
+      throw httpErrors(
+        userInfo.error.status || 400,
+        userInfo.error.message || "Token error confirmation"
+      );
+    }
+
+    const foundUser = await usersModel.findOne({ email: userInfo.email });
+
+    if (foundUser) {
+      throw httpErrors.Conflict("email already exists");
+    }
+
+    const users = await usersModel.find();
+
+    const user = await usersModel.create({
+      ...userInfo,
+      isSuperAdmin: users.length == 0,
+      isAdmin: users.length == 0,
+      profile: userInfo.profile
+        ? `/usersProfile/${userInfo.profile}`
+        : "/usersProfile/customProfile.png",
+    });
+    const twoMonths = 60 * 60 * 24 * 60 * 1000;
+
+    const authToken = accessToken(user._id, twoMonths);
+
+    res.cookie("token", authToken, {
+      maxAge: twoMonths,
+      httpOnly: true,
+      secure: true,
+    });
+    res
+      .status(httpStatus.CREATED)
+      .json({ message: "Registration was successful" });
   } catch (error) {
     next(error);
   }

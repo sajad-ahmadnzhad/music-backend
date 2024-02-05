@@ -1,5 +1,10 @@
 import express from "express";
-import { login, logout, register } from "../controllers/auth";
+import {
+  login,
+  logout,
+  register,
+  confirmEmail
+} from "../controllers/auth";
 import validatorMiddlewares from "../middlewares/validator";
 import registerValidatorSchema from "../validators/register";
 import loginValidatorSchema from "../validators/login";
@@ -14,6 +19,6 @@ router.post(
   validatorMiddlewares(registerValidatorSchema),
   register
 );
+router.get('/confirm-email' , confirmEmail)
 router.post("/logout", authMiddlewares, logout);
-
 export default router;

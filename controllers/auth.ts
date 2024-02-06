@@ -98,7 +98,6 @@ export let confirmEmail = async (
 ) => {
   try {
     const token = <any>req.query.token;
-    console.log(req.headers)
     const userInfo = verifyEmail(token);
 
     if (userInfo.error) {

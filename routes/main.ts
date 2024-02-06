@@ -9,6 +9,7 @@ import userFavoriteRouter from "./userFavorite";
 import playListRouter from "./playList";
 import criticismRouter from "./criticism";
 import archiveRouter from "./archive";
+import commentRouter from "./comment";
 import express from "express";
 const mainRouter = express.Router();
 
@@ -23,5 +24,6 @@ mainRouter.use("/v1/user-favorite", userFavoriteRouter);
 mainRouter.use("/v1/playlist", playListRouter);
 mainRouter.use("/v1/criticism", criticismRouter);
 mainRouter.use("/v1/archive", archiveRouter);
+mainRouter.use("/v1/comment", commentRouter);
 
 export default mainRouter;

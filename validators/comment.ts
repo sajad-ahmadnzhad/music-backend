@@ -11,7 +11,7 @@ export default joi.object({
     .external(async (value, helpers) => {
       if (value) {
         const comment = await commentModel.findOne({ _id: value });
-        if (!comment) helpers.error("Comment not found");
+        if (!comment) return helpers.error("Comment not found");
       }
     }),
 
@@ -23,7 +23,7 @@ export default joi.object({
     .external(async (value, helpers) => {
       if (value) {
         const music = await musicModel.findOne({ _id: value });
-        if (!music) helpers.error("Music not found");
+        if (!music) return helpers.error("Music not found");
       }
     }),
   score: joi.number().valid(1, 2, 3, 4, 5),

@@ -29,8 +29,27 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
-export let getAll = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {};
+export let getAll = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { musicId } = req.params;
+    if (!isValidObjectId(musicId)) {
+      throw httpErrors.BadRequest("music id is not from mongodb");
+    }
+
+    const music = await musicModel.findById(musicId).lean();
+
+    if (!music) {
+      throw httpErrors.NotFound("Music not found");
+    }
+
+    const comments = await commentModel
+      .find({ musicId, isAccept: true })
+      .lean()
+      .select("-__v")
+      .sort({ createdAt: "desc" });
+
+    res.json(comments);
+  } catch (error) {
+    next(error);
+  }
+};

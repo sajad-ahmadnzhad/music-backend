@@ -2,19 +2,25 @@ import { Request, Response, NextFunction } from "express";
 import { CommentsBody } from "../interfaces/comment";
 import commentModel from "../models/comment";
 import httpStatus from "http-status";
+import musicModel from "../models/music";
 import { isValidObjectId } from "mongoose";
 import httpErrors from "http-errors";
 export let create = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const { musicId } = req.params;
     const body = req.body as CommentsBody;
     const { user } = req as any;
-    const { musicId } = req.params;
-
     if (!isValidObjectId(musicId)) {
-      throw httpErrors.BadRequest("This music id is not from mongodb");
+      throw httpErrors.BadRequest("music id is not from mongodb");
     }
 
-    await commentModel.create({ ...body, creator: user._id, music: musicId });
+    const music = await musicModel.findById(musicId).lean();
+
+    if (!music) {
+      throw httpErrors.NotFound("Music not found");
+    }
+
+    await commentModel.create({ ...body, username: user.username, musicId });
 
     res
       .status(httpStatus.CREATED)

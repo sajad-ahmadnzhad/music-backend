@@ -2,14 +2,19 @@ import { Schema, model } from "mongoose";
 
 const schema = new Schema(
   {
-    body: { type: String, required: true },
-    mainCommentID: { type: Schema.ObjectId, ref: "comment" },
+    musicId: { type: Schema.ObjectId, ref: "music", required: true },
+    comment: { type: String, required: true },
+    username: { type: String, required: true },
     isAccept: { type: Boolean, default: false },
-    music: { type: Schema.ObjectId, ref: "music", required: true },
-    likes: { type: Number, default: 0 },
-    dislikes: { type: Number, default: 0 },
     score: { type: Number, enum: [1, 2, 3, 4, 5], default: 5 },
-    creator: { type: Schema.ObjectId, ref: "users", required: true },
+    replies: [
+      {
+        username: { type: String, required: true },
+        commentId: { type: Schema.ObjectId, required: true },
+        reply: { type: String, maxLength: 2000, required: true },
+        createdAt: { type: Date, default: new Date().getTime() },
+      },
+    ],
   },
   { timestamps: true }
 );

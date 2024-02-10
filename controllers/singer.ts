@@ -5,6 +5,7 @@ import { isValidObjectId } from "mongoose";
 import musicModel from "../models/music";
 import albumModel from "../models/album";
 import archiveModel from "../models/archive";
+import singerArchiveModel from "../models/singerArchive";
 import commentModel from "../models/comment";
 import criticismModel from "../models/criticism";
 import palyListModel from "../models/playList";
@@ -44,10 +45,14 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.BadRequest("This artist already exists");
     }
 
-    await singerModel.create({
+   const newSinger = await singerModel.create({
       ...body,
       photo: `/photoSingers/${req.file.filename}`,
       createBy: (req as any).user._id,
+    });
+
+    await singerArchiveModel.create({
+      artist: newSinger._id,
     });
 
     res

@@ -3,6 +3,8 @@ import musicModel from "./../models/music";
 import categoryModel from "./../models/category";
 import { MusicBody, MusicFile } from "./../interfaces/music";
 import httpStatus from "http-status";
+import singerArchiveModel from "../models/singerArchive";
+import singerModel from "../models/singer";
 import fs from "fs";
 import { isValidObjectId } from "mongoose";
 import path from "path";
@@ -28,18 +30,30 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
     if (music) {
       throw httpErrors.BadRequest("This music already exists");
     }
+
     const result = await nodeMediainfo(files.music[0].path);
     const duration = result.media.track[0].Duration as any;
     const minutes = Math.floor(duration / 60).toString();
     const seconds = Math.floor(duration % 60).toString();
 
-    await musicModel.create({
+    const newMusic = await musicModel.create({
       ...body,
       duration: `${minutes.padStart(2, "0")}:${seconds.padStart(2, "0")}`,
       cover_image: `/coverMusics/${files.cover[0].filename}`,
       download_link: `/musics/${files.music[0].filename}`,
       createBy: user._id,
     });
+
+    const singer = await singerModel.findById(body.artist);
+    if (singer) {
+      await singerArchiveModel.findOneAndUpdate(
+        { artist: singer._id },
+        {
+          $push: { musics: newMusic._id },
+          $inc: { count_musics: 1 },
+        }
+      );
+    }
 
     res
       .status(httpStatus.CREATED)
@@ -150,7 +164,7 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
     if (!music) {
       throw httpErrors.BadRequest("Music title is required");
     }
-    music = (music as string).trim()
+    music = (music as string).trim();
     const foundMusic = await musicModel
       .find({ title: { $regex: music } })
       .populate("artist", "photo fullName englishName")

@@ -1,4 +1,3 @@
 export interface CommentsBody {
-  comment: string;
-  score: number;
+  body: string;
 }

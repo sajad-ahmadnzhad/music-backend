@@ -1,22 +1,60 @@
 import { Schema, model } from "mongoose";
-
 const schema = new Schema(
   {
-    musicId: { type: Schema.ObjectId, ref: "music", required: true },
-    comment: { type: String, required: true },
-    username: { type: String, required: true },
-    isAccept: { type: Boolean, default: false },
-    score: { type: Number, enum: [1, 2, 3, 4, 5], default: 5 },
+    creator: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: "users",
+    },
+    reports: [
+      {
+        type: Schema.ObjectId,
+        ref: "users",
+        default: [],
+      },
+    ],
+    like: [
+      {
+        type: Schema.ObjectId,
+        ref: "users",
+        default: [],
+      },
+    ],
+    dislike: [
+      {
+        type: Schema.ObjectId,
+        ref: "users",
+        default: [],
+      },
+    ],
+    edited: {
+      type: Boolean,
+      default: false,
+    },
+    musicId: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: "music",
+    },
+    body: {
+      type: String,
+      required: true,
+    },
+    parentComment: {
+      type: Schema.Types.ObjectId,
+      ref: "comment",
+      default: null,
+    },
     replies: [
       {
-        username: { type: String, required: true },
-        commentId: { type: Schema.ObjectId, required: true },
-        reply: { type: String, maxLength: 2000, required: true },
-        createdAt: { type: Date, default: new Date().getTime() },
+        type: Schema.Types.ObjectId,
+        ref: "comment",
       },
     ],
   },
   { timestamps: true }
 );
+
+schema.index({ createdAt: 1 });
 
 export default model("comment", schema);

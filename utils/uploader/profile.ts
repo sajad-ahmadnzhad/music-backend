@@ -54,6 +54,14 @@ const storage = multer.diskStorage({
       cb(null, path.join(process.cwd(), "public", "archiveCovers"));
       return;
     }
+    //user playlist cover
+    else if (
+      suffixes.includes(fileExtension?.toLowerCase()) &&
+      file.fieldname == "userPlaylistCover"
+    ) {
+      cb(null, path.join(process.cwd(), "public", "usersPlaylistCover"));
+      return;
+    }
     const message = `The extension of the submitted file is not valid. The extension of the submitted files must include: ${suffixes.join(
       " "
     )}`;

@@ -19,12 +19,26 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
 
     await userPlaylistModel.create({
       ...body,
-      cover: req.file && `userPlaylistCover/${req.file.filename}`,
+      cover: req.file && `/usersPlaylistCover/${req.file.filename}`,
       createBy: user._id,
     });
     res
       .status(httpStatus.CREATED)
       .json({ message: "Create user playlist successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+export let getAll = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { user } = req as any;
+    const userPlaylists = await userPlaylistModel
+      .find({ createBy: user._id })
+      .populate("musics", "-__v")
+      .select("-__v -createBy")
+      .lean();
+
+    res.json(userPlaylists);
   } catch (error) {
     next(error);
   }

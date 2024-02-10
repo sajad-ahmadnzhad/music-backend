@@ -5,7 +5,7 @@ const schema = new Schema(
     title: { type: String, required: true },
     artist: { type: Schema.ObjectId, ref: "singer", required: true },
     duration: { type: String, required: true },
-    release_year: { type: Number, required: true },
+    release_year: { type: Number, default: new Date().getFullYear() },
     cover_image: { type: String, required: true },
     download_link: { type: String, required: true },
     description: { type: String },

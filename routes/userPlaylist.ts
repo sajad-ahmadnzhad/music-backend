@@ -1,6 +1,6 @@
 import express from "express";
 import authMiddlewares from "../middlewares/auth";
-import { create, getAll } from "../controllers/userPlaylist";
+import { create, getAll, update } from "../controllers/userPlaylist";
 import userPlaylistValidator from "../validators/userPlaylist";
 import validatorMiddlewares from "../middlewares/validator";
 import userPlaylistUploader from "../utils/uploader/profile";
@@ -15,5 +15,14 @@ router
     create
   )
   .get(authMiddlewares, getAll);
+
+router
+  .route("/:id")
+  .put(
+    authMiddlewares,
+    userPlaylistUploader.single("userPlaylistCover"),
+    validatorMiddlewares(userPlaylistValidator),
+    update
+  );
 
 export default router;

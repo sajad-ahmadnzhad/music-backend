@@ -6,6 +6,7 @@ import {
   update,
   remove,
   getOne,
+  search,
 } from "../controllers/userPlaylist";
 import userPlaylistValidator from "../validators/userPlaylist";
 import validatorMiddlewares from "../middlewares/validator";
@@ -21,6 +22,8 @@ router
     create
   )
   .get(authMiddlewares, getAll);
+
+router.get("/search/", authMiddlewares, search);
 
 router
   .route("/:id")

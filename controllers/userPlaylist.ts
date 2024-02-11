@@ -128,3 +128,25 @@ export let getOne = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+export let search = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userPlaylist } = req.query;
+    const { user } = req as any;
+    if (!userPlaylist) {
+      throw httpErrors.BadRequest("user playlist is required");
+    }
+
+    const foundUserPlaylists = await userPlaylistModel
+      .find({
+        title: { $regex: userPlaylist },
+        createBy: user._id,
+      })
+      .populate("musics", "-__v")
+      .select("-__v -createBy")
+      .lean();
+
+    res.json(foundUserPlaylists);
+  } catch (error) {
+    next(error);
+  }
+};

@@ -105,3 +105,26 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+export let getOne = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { user } = req as any;
+
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("User playlist id is not from mongodb");
+    }
+    const userPlaylist = await userPlaylistModel
+      .findOne({ _id: id, createBy: user._id })
+      .populate("musics", "-__v")
+      .select("-__v -createBy")
+      .lean();
+
+    if (!userPlaylist) {
+      throw httpErrors.NotFound("User playlist not found");
+    }
+
+    res.json(userPlaylist);
+  } catch (error) {
+    next(error);
+  }
+};

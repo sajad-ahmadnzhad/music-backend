@@ -1,6 +1,12 @@
 import express from "express";
 import authMiddlewares from "../middlewares/auth";
-import { create, getAll, update, remove } from "../controllers/userPlaylist";
+import {
+  create,
+  getAll,
+  update,
+  remove,
+  getOne,
+} from "../controllers/userPlaylist";
 import userPlaylistValidator from "../validators/userPlaylist";
 import validatorMiddlewares from "../middlewares/validator";
 import userPlaylistUploader from "../utils/uploader/profile";
@@ -24,6 +30,7 @@ router
     validatorMiddlewares(userPlaylistValidator),
     update
   )
-  .delete(authMiddlewares, remove);
+  .delete(authMiddlewares, remove)
+  .get(authMiddlewares, getOne);
 
 export default router;

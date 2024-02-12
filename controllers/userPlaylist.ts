@@ -48,6 +48,7 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
         ],
       })
       .select("-__v -createBy")
+      .sort({ createdAt: "desc" })
       .lean();
 
     res.json(userPlaylists);

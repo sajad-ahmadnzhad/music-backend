@@ -40,6 +40,7 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
       .find({ createBy: user._id })
       .populate({
         path: "musics",
+        select: "-__v",
         populate: [
           { path: "artist", select: "fullName englishName photo" },
           { path: "genre", select: "title description" },
@@ -125,6 +126,7 @@ export let getOne = async (req: Request, res: Response, next: NextFunction) => {
       .findOne({ _id: id, createBy: user._id })
       .populate({
         path: "musics",
+        select: "-__v",
         populate: [
           { path: "artist", select: "fullName englishName photo" },
           { path: "genre", select: "title description" },
@@ -158,6 +160,7 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
       })
       .populate({
         path: "musics",
+        select: "-__v",
         populate: [
           { path: "artist", select: "fullName englishName photo" },
           { path: "genre", select: "title description" },

@@ -9,6 +9,7 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
       .populate("musics", "-__v -artist")
       .populate("artist", "fullName englishName photo")
       .select("-__v")
+      .sort({ createdAt: "desc" })
       .lean();
     res.json(singersArchive);
   } catch (error) {

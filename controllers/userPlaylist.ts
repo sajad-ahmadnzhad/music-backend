@@ -38,7 +38,14 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
     const { user } = req as any;
     const userPlaylists = await userPlaylistModel
       .find({ createBy: user._id })
-      .populate("musics", "-__v")
+      .populate({
+        path: "musics",
+        populate: [
+          { path: "artist", select: "fullName englishName photo" },
+          { path: "genre", select: "title description" },
+          { path: "createBy", select: "name username profile" },
+        ],
+      })
       .select("-__v -createBy")
       .lean();
 
@@ -116,7 +123,14 @@ export let getOne = async (req: Request, res: Response, next: NextFunction) => {
     }
     const userPlaylist = await userPlaylistModel
       .findOne({ _id: id, createBy: user._id })
-      .populate("musics", "-__v")
+      .populate({
+        path: "musics",
+        populate: [
+          { path: "artist", select: "fullName englishName photo" },
+          { path: "genre", select: "title description" },
+          { path: "createBy", select: "name username profile" },
+        ],
+      })
       .select("-__v -createBy")
       .lean();
 
@@ -142,7 +156,14 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
         title: { $regex: userPlaylist },
         createBy: user._id,
       })
-      .populate("musics", "-__v")
+      .populate({
+        path: "musics",
+        populate: [
+          { path: "artist", select: "fullName englishName photo" },
+          { path: "genre", select: "title description" },
+          { path: "createBy", select: "name username profile" },
+        ],
+      })
       .select("-__v -createBy")
       .lean();
 

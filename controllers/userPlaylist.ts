@@ -3,6 +3,7 @@ import { userPlaylistBody } from "../interfaces/userPlaylist";
 import userPlaylistModel from "../models/userPlaylist";
 import httpStatus from "http-status";
 import httpErrors from "http-errors";
+import musicModel from "../models/music";
 import path from "path";
 import fs from "fs";
 import { isValidObjectId } from "mongoose";
@@ -146,6 +147,51 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
       .lean();
 
     res.json(foundUserPlaylists);
+  } catch (error) {
+    next(error);
+  }
+};
+export let addMusic = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { playlistId, musicId } = req.params;
+    const { user } = req as any;
+
+    if (!isValidObjectId(playlistId)) {
+      throw httpErrors.BadRequest("User playlist id is not from mongodb");
+    }
+    const userPlaylist = await userPlaylistModel
+      .findOne({ _id: playlistId, createBy: user._id })
+      .lean();
+    if (!userPlaylist) {
+      throw httpErrors.NotFound("User playlist not found");
+    }
+
+    if (!isValidObjectId(musicId)) {
+      throw httpErrors.BadRequest("Music id is not from mongodb");
+    }
+    const music = await musicModel.findById(musicId).lean();
+    if (!music) {
+      throw httpErrors.NotFound("Music not found");
+    }
+
+    const musicInToPlaylist = await userPlaylistModel
+      .findOne({ musics: { $in: musicId } })
+      .lean();
+
+    if (musicInToPlaylist) {
+      throw httpErrors.Conflict("This music is already in the user's playlist");
+    }
+
+    await userPlaylistModel.findByIdAndUpdate(playlistId, {
+      $addToSet: { musics: musicId },
+      $inc: { count_musics: 1 },
+    });
+
+    res.json({ message: "Music added to user playlist successfully" });
   } catch (error) {
     next(error);
   }

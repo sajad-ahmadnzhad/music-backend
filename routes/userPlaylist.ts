@@ -8,6 +8,7 @@ import {
   getOne,
   search,
   addMusic,
+  removeMusic,
 } from "../controllers/userPlaylist";
 import userPlaylistValidator from "../validators/userPlaylist";
 import validatorMiddlewares from "../middlewares/validator";
@@ -24,7 +25,7 @@ router
   .get(getAll);
 
 router.get("/search/", search);
-router.post("/:playlistId/music/:musicId", addMusic);
+router.route("/:playlistId/music/:musicId").post(addMusic).delete(removeMusic);
 router
   .route("/:id")
   .put(

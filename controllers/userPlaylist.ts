@@ -217,3 +217,52 @@ export let addMusic = async (
     next(error);
   }
 };
+export let removeMusic = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { playlistId, musicId } = req.params;
+    const { user } = req as any;
+
+    if (!isValidObjectId(playlistId)) {
+      throw httpErrors.BadRequest("User playlist id is not from mongodb");
+    }
+    const userPlaylist = await userPlaylistModel
+      .findOne({ _id: playlistId, createBy: user._id })
+      .lean();
+
+    if (!userPlaylist) {
+      throw httpErrors.NotFound("User playlist not found");
+    }
+
+    if (!isValidObjectId(musicId)) {
+      throw httpErrors.BadRequest("Music id is not from mongodb");
+    }
+    const music = await musicModel.findById(musicId).lean();
+    if (!music) {
+      throw httpErrors.NotFound("Music not found");
+    }
+
+    const musicInToPlaylist = await userPlaylistModel
+      .findOne({ musics: { $in: musicId } })
+      .lean();
+
+    if (!musicInToPlaylist) {
+      throw httpErrors.NotFound("This music is not in the playlist");
+    }
+
+    await userPlaylistModel.findByIdAndUpdate(playlistId, {
+      $pull: { musics: musicId },
+      $inc: { count_musics: -1 },
+    });
+
+    res.json({
+      message:
+        "The music has been successfully removed from the user's playlist",
+    });
+  } catch (error) {
+    next(error);
+  }
+};

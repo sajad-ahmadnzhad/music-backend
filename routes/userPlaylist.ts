@@ -7,34 +7,32 @@ import {
   remove,
   getOne,
   search,
-  addMusic
+  addMusic,
 } from "../controllers/userPlaylist";
 import userPlaylistValidator from "../validators/userPlaylist";
 import validatorMiddlewares from "../middlewares/validator";
 import userPlaylistUploader from "../utils/uploader/profile";
 const router = express.Router();
-
+router.use(authMiddlewares);
 router
   .route("/")
   .post(
-    authMiddlewares,
     userPlaylistUploader.single("userPlaylistCover"),
     validatorMiddlewares(userPlaylistValidator),
     create
   )
-  .get(authMiddlewares, getAll);
+  .get(getAll);
 
-router.get("/search/", authMiddlewares, search);
-router.post('/:playlistId/music/:musicId' ,authMiddlewares, addMusic)
+router.get("/search/", search);
+router.post("/:playlistId/music/:musicId", addMusic);
 router
   .route("/:id")
   .put(
-    authMiddlewares,
     userPlaylistUploader.single("userPlaylistCover"),
     validatorMiddlewares(userPlaylistValidator),
     update
   )
-  .delete(authMiddlewares, remove)
-  .get(authMiddlewares, getOne);
+  .delete(remove)
+  .get(getOne);
 
 export default router;

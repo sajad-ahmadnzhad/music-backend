@@ -39,7 +39,11 @@ export let login = async (req: Request, res: Response, next: NextFunction) => {
     const twoMonths = 60 * 60 * 24 * 60 * 1000;
     const authToken = accessToken(user._id, twoMonths);
 
-    res.cookie("token", authToken);
+    res.cookie("token", authToken, {
+      secure: true,
+      httpOnly: true,
+      maxAge: twoMonths,
+    });
     res.json({ message: "You have successfully logged in" });
   } catch (error) {
     next(error);
@@ -71,11 +75,9 @@ export let register = async (
       throw httpErrors("The token was created with an error");
     }
     const result = <any>sendConfirmationEmail(email, <string>emailToken.token);
-    
+
     if (result?.error) {
-      throw httpErrors(
-        result.error || "The email was sent with an error"
-      );
+      throw httpErrors(result.error || "The email was sent with an error");
     }
 
     res.json({ message: "Email sent Confirm email to login" });

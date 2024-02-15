@@ -12,9 +12,10 @@ import {
 } from "../controllers/userPlaylist";
 import userPlaylistValidator from "../validators/userPlaylist";
 import validatorMiddlewares from "../middlewares/validator";
+import isBanMiddlewares from "../middlewares/isBan";
 import userPlaylistUploader from "../utils/uploader/profile";
 const router = express.Router();
-router.use(authMiddlewares);
+router.use(authMiddlewares, isBanMiddlewares);
 router
   .route("/")
   .post(

@@ -13,6 +13,7 @@ import {
   getByGenre,
 } from "../controllers/music";
 import authMiddlewares from "../middlewares/auth";
+import isBanMiddlewares from "../middlewares/isBan";
 import isAdminMiddlewares from "../middlewares/isAdmin";
 import validatorMiddlewares from "../middlewares/validator";
 import musicValidator from "./../validators/music";
@@ -32,6 +33,7 @@ router
   .route("/")
   .post(
     authMiddlewares,
+    isBanMiddlewares,
     isAdminMiddlewares,
     uploader,
     validatorMiddlewares(musicValidator),
@@ -48,9 +50,10 @@ router.put("/:id/download", download);
 
 router
   .route("/:id")
-  .delete(authMiddlewares, isAdminMiddlewares, remove)
+  .delete(authMiddlewares, isBanMiddlewares, isAdminMiddlewares, remove)
   .put(
     authMiddlewares,
+    isBanMiddlewares,
     isAdminMiddlewares,
     uploader,
     validatorMiddlewares(musicValidator),

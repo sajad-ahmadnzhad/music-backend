@@ -10,6 +10,7 @@ import {
 import authMiddlewares from "../middlewares/auth";
 import isAdminMiddlewares from "../middlewares/isAdmin";
 import categoryValidator from "../validators/category";
+import isBanMiddlewares from "../middlewares/isBan";
 import validatorMiddlewares from "../middlewares/validator";
 const router = express.Router();
 
@@ -17,6 +18,7 @@ router
   .route("/")
   .post(
     authMiddlewares,
+    isBanMiddlewares,
     isAdminMiddlewares,
     validatorMiddlewares(categoryValidator),
     create
@@ -27,9 +29,10 @@ router.get("/parent", getAllParents);
 
 router
   .route("/:id")
-  .delete(authMiddlewares, isAdminMiddlewares, remove)
+  .delete(authMiddlewares, isBanMiddlewares, isAdminMiddlewares, remove)
   .put(
     authMiddlewares,
+    isBanMiddlewares,
     isAdminMiddlewares,
     validatorMiddlewares(categoryValidator),
     update

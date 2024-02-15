@@ -13,6 +13,7 @@ import validatorSinger from "../validators/singer";
 import validatorMiddlewares from "../middlewares/validator";
 import isAdminMiddlewares from "../middlewares/isAdmin";
 import authMiddlewares from "../middlewares/auth";
+import isBanMiddlewares from "../middlewares/isBan";
 import uploaderImage from "../utils/uploader/profile";
 const router = express.Router();
 
@@ -21,6 +22,7 @@ router
   .get(getAll)
   .post(
     authMiddlewares,
+    isBanMiddlewares,
     isAdminMiddlewares,
     uploaderImage.single("photo"),
     validatorMiddlewares(validatorSinger),
@@ -35,11 +37,12 @@ router
   .put(
     uploaderImage.single("photo"),
     authMiddlewares,
+    isBanMiddlewares,
     isAdminMiddlewares,
     validatorMiddlewares(validatorSinger),
     update
   )
-  .delete(authMiddlewares, isAdminMiddlewares, remove)
+  .delete(authMiddlewares, isBanMiddlewares, isAdminMiddlewares, remove)
   .get(getOne);
 
 export default router;

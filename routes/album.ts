@@ -7,10 +7,11 @@ import {
   search,
   update,
   addMusic,
-  removeMusic
+  removeMusic,
 } from "../controllers/album";
 import isAdminMiddleware from "../middlewares/isAdmin";
 import authMiddleware from "../middlewares/auth";
+import isBanMiddlewares from "../middlewares/isBan";
 import validatorMiddleware from "../middlewares/validator";
 import albumValidator from "../validators/album";
 import photoUploader from "../utils/uploader/profile";
@@ -20,6 +21,7 @@ router
   .route("/")
   .post(
     authMiddleware,
+    isBanMiddlewares,
     isAdminMiddleware,
     photoUploader.single("albumPhoto"),
     validatorMiddleware(albumValidator),
@@ -28,14 +30,26 @@ router
   .get(getAll);
 
 router.get("/search", search);
-router.post("/add-music/:albumId", authMiddleware, isAdminMiddleware, addMusic);
-router.delete("/remove-music/:albumId", authMiddleware, isAdminMiddleware, removeMusic);
+router.post(
+  "/add-music/:albumId",
+  authMiddleware,
+  isBanMiddlewares,
+  isAdminMiddleware,
+  addMusic
+);
+router.delete(
+  "/remove-music/:albumId",
+  authMiddleware,
+  isAdminMiddleware,
+  removeMusic
+);
 
 router
   .route("/:id")
-  .delete(authMiddleware, isAdminMiddleware, remove)
+  .delete(authMiddleware, isBanMiddlewares, isAdminMiddleware, remove)
   .put(
     authMiddleware,
+    isBanMiddlewares,
     isAdminMiddleware,
     photoUploader.single("albumPhoto"),
     validatorMiddleware(albumValidator),

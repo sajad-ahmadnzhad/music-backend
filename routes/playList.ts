@@ -1,6 +1,7 @@
 import express from "express";
 import authMiddlewares from "../middlewares/auth";
 import isAdminMiddlewares from "../middlewares/isAdmin";
+import isBanMiddlewares from "../middlewares/isBan";
 import validatorMiddlewares from "../middlewares/validator";
 import playListValidator from "../validators/playList";
 import photoUploader from "../utils/uploader/profile";
@@ -17,7 +18,7 @@ import {
   search,
   popular,
   getOne,
-  searchMusic
+  searchMusic,
 } from "../controllers/playList";
 const router = express.Router();
 
@@ -25,6 +26,7 @@ router
   .route("/")
   .post(
     authMiddlewares,
+    isBanMiddlewares,
     isAdminMiddlewares,
     photoUploader.single("playListCover"),
     validatorMiddlewares(playListValidator),
@@ -38,6 +40,7 @@ router.post("/view/:id", view);
 router.post(
   "/add-music/:playListId",
   authMiddlewares,
+  isBanMiddlewares,
   isAdminMiddlewares,
   addMusic
 );
@@ -45,6 +48,7 @@ router.post(
 router.delete(
   "/remove-music/:playListId",
   authMiddlewares,
+  isBanMiddlewares,
   isAdminMiddlewares,
   removeMusic
 );
@@ -58,12 +62,13 @@ router
   .route("/:id")
   .put(
     authMiddlewares,
+    isBanMiddlewares,
     isAdminMiddlewares,
     photoUploader.single("playListCover"),
     validatorMiddlewares(playListValidator),
     update
   )
-  .delete(authMiddlewares, isAdminMiddlewares, remove)
+  .delete(authMiddlewares, isBanMiddlewares, isAdminMiddlewares, remove)
   .get(getOne);
 
 export default router;

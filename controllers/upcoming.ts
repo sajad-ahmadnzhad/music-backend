@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { upcomingBody } from "../interfaces/upcoming";
 import upcomingModel from "../models/upcoming";
+import musicModel from "../models/music";
 import httpStatus from "http-status";
 import httpErrors from "http-errors";
 import fs from "fs";
@@ -18,6 +19,15 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
 
     if (upcomingMusic) {
       throw httpErrors.Conflict("This upcoming music already exists");
+    }
+
+    const music = await musicModel.findOne({
+      title: body.title,
+      artist: body.artist,
+    });
+
+    if (music) {
+      throw httpErrors.Conflict("This music is already in the music list");
     }
 
     await upcomingModel.create({

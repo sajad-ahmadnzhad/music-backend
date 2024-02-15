@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import musicModel from "./../models/music";
 import categoryModel from "./../models/category";
 import { MusicBody, MusicFile } from "./../interfaces/music";
+import upcomingModel from "../models/upcoming";
 import httpStatus from "http-status";
 import singerArchiveModel from "../models/singerArchive";
 import singerModel from "../models/singer";
@@ -35,6 +36,17 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
     const duration = result.media.track[0].Duration as any;
     const minutes = Math.floor(duration / 60).toString();
     const seconds = Math.floor(duration % 60).toString();
+
+    const deletedUpcoming = await upcomingModel.findOneAndDelete({
+      title: body.title,
+      artist: body.artist,
+    });
+
+    if (deletedUpcoming?.cover_image) {
+      fs.unlinkSync(
+        path.join(process.cwd(), "public", deletedUpcoming.cover_image)
+      );
+    }
 
     const newMusic = await musicModel.create({
       ...body,

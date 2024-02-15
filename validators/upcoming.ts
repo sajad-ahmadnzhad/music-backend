@@ -12,7 +12,11 @@ export default joi.object({
       const singer = await singerModel.findOne({ _id: value });
       if (!singer) return helpers.error("Artist not found");
     }),
-  release_date: joi.number().integer().max(new Date().getFullYear()).min(2020),
+  release_date: joi
+    .number()
+    .integer()
+    .min(new Date().getFullYear())
+    .max(new Date().getFullYear() + 1),
   genre: joi
     .string()
     .regex(/^[0-9a-fA-F]{24}$/)

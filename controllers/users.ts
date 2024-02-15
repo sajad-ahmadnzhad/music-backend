@@ -1,6 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import usersModel from "../models/users";
 import banUserModel from "../models/banUser";
+import userFavoriteModel from "../models/userFavorite";
+import userPlaylistModel from "../models/userPlaylist";
 import { isValidObjectId } from "mongoose";
 import { RegisterBody } from "./../interfaces/auth";
 import bcrypt from "bcrypt";
@@ -154,11 +156,10 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
     }
 
     if (!user.profile.includes("customProfile")) {
-      fs.unlinkSync(
-        path.join(process.cwd(), "public", "usersProfile", user.profile)
-      );
+      fs.unlinkSync(path.join(process.cwd(), "public", user.profile));
     }
-
+    await userFavoriteModel.deleteMany({ user: id });
+    await userPlaylistModel.deleteMany({ createBy: id });
     await usersModel.deleteOne({ _id: id });
 
     res.json({

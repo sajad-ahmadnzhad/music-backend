@@ -12,7 +12,6 @@ import {
   update,
   like,
   unlike,
-  view,
   addMusic,
   removeMusic,
   search,
@@ -34,9 +33,8 @@ router
   )
   .get(getAll);
 
-router.post("/like/:id", like);
-router.post("/unlike/:id", unlike);
-router.post("/view/:id", view);
+router.post("/like/:id", authMiddlewares, like);
+router.post("/unlike/:id", authMiddlewares, unlike);
 router.post(
   "/add-music/:playListId",
   authMiddlewares,

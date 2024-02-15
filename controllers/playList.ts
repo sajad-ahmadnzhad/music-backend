@@ -42,7 +42,9 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
       .find({})
       .populate("createBy", "name username profile")
       .populate("musics", "title cover_image download_link")
+      .populate("likes", "name username profile")
       .populate("category", "-__v")
+      .sort({createdAt: 'desc'})
       .select("-__v")
       .lean();
     res.json(playLists);
@@ -119,26 +121,7 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
 export let like = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    if (!isValidObjectId(id)) {
-      throw httpErrors.BadRequest("paly list id is not from mongodb");
-    }
-
-    const playList = await playListModel.findByIdAndUpdate(id, {
-      $inc: { count_likes: 1 },
-    });
-
-    if (!playList) {
-      throw httpErrors.NotFound("Play list not found");
-    }
-
-    res.json({ message: "Liked play list successfully" });
-  } catch (error: any) {
-    next(error);
-  }
-};
-export let unlike = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { id } = req.params;
+    const { user } = req as any;
     if (!isValidObjectId(id)) {
       throw httpErrors.BadRequest("paly list id is not from mongodb");
     }
@@ -149,35 +132,44 @@ export let unlike = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("Play list not found");
     }
 
-    if (!playList.count_likes) {
-      throw httpErrors.BadRequest("This playlist has not been liked yet");
+    if (playList.likes.includes(user._id)) {
+      throw httpErrors.Conflict("You have already liked");
     }
 
     await playListModel.findByIdAndUpdate(id, {
-      $inc: { count_likes: -1 },
+      $addToSet: { likes: user._id },
+      $inc: { count_likes: 1 },
     });
 
-    res.json({ message: "Un linked play list successfully" });
+    res.json({ message: "Liked play list successfully" });
   } catch (error: any) {
     next(error);
   }
 };
-export let view = async (req: Request, res: Response, next: NextFunction) => {
+export let unlike = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
+    const { user } = req as any;
     if (!isValidObjectId(id)) {
-      throw httpErrors.BadRequest("Paly list id is not from mongodb");
+      throw httpErrors.BadRequest("paly list id is not from mongodb");
     }
 
-    const playList = await playListModel.findByIdAndUpdate(id, {
-      $inc: { count_views: 1 },
-    });
+    const playList = await playListModel.findById(id);
 
     if (!playList) {
       throw httpErrors.NotFound("Play list not found");
     }
 
-    res.json({ message: "Playlist was viewed successfully" });
+    if (!playList.likes.includes(user._id)) {
+      throw httpErrors.Conflict("You did not like");
+    }
+
+    await playListModel.findByIdAndUpdate(id, {
+      $pull: { likes: user._id },
+      $inc: { count_likes: -1 },
+    });
+
+    res.json({ message: "Un linked play list successfully" });
   } catch (error: any) {
     next(error);
   }
@@ -238,9 +230,10 @@ export let popular = async (
       .populate("createBy", "name username profile")
       .populate("musics", "title cover_image download_link")
       .populate("category", "-__v")
+      .sort({ count_likes: "desc" })
       .select("-__v")
       .lean();
-    playLists.sort((a: any, b: any) => b.count_views - a.count_views);
+
     res.json(playLists);
   } catch (error: any) {
     next(error);
@@ -381,14 +374,18 @@ export let searchMusic = async (
       .populate("genre", "title")
       .populate("artist", "fullName photo")
       .populate("createBy", "name username profile")
-      .select('-__v')
+      .select("-__v")
       .lean();
 
-    const musics = playList.musics.map((item) => {
-      return foundMusics.find(
-        (music) => music._id.toString() === item.toString()
-      ) || [];
-    }).flat(Infinity);
+    const musics = playList.musics
+      .map((item) => {
+        return (
+          foundMusics.find(
+            (music) => music._id.toString() === item.toString()
+          ) || []
+        );
+      })
+      .flat(Infinity);
 
     res.json(musics);
   } catch (error) {

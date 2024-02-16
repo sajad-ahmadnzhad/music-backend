@@ -189,20 +189,32 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+
 export let popular = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
+    const { type } = req.query;
+
+    if (!type) {
+      throw httpErrors.BadRequest("Type is required");
+    }
+    const types = ["likes", "views", "download"];
+
+    if (!types.includes(type as string)) {
+      throw httpErrors.BadRequest(`Only ${types.join(" ")} fields are allowed`);
+    }
+
     const popularMusics = await musicModel
       .find()
       .populate("artist", "photo fullName englishName")
       .populate("genre", "-__v")
       .populate("createBy", "name username profile")
-      .select("-__v");
-
-    popularMusics.sort((a, b) => b.count_views - a.count_views);
+      .select("-__v")
+      .sort({ [type as string]: -1 })
+      .lean();
 
     res.json(popularMusics);
   } catch (error) {

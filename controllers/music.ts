@@ -8,6 +8,7 @@ import singerArchiveModel from "../models/singerArchive";
 import singerModel from "../models/singer";
 import fs from "fs";
 import { isValidObjectId } from "mongoose";
+import removeFile from "../helpers/removeFile";
 import path from "path";
 import httpErrors from "http-errors";
 import nodeMediainfo from "node-mediainfo";
@@ -144,11 +145,7 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
       );
     }
 
-    if (files?.cover)
-      fs.unlinkSync(path.join(process.cwd(), "public", music.cover_image));
-
-    if (files?.music)
-      fs.unlinkSync(path.join(process.cwd(), "public", music.download_link));
+    removeFile(req);
 
     const cover_image =
       files?.cover && `/coverMusics/${files.cover[0].filename}`;

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import fs from "fs";
+import removeFile from "../helpers/removeFile";
 export default (
   error: any,
   req: Request,
@@ -13,18 +13,3 @@ export default (
     res.status(statusCode).json({ message });
   }
 };
-
-function removeFile(req: Request) {
-  req.file?.path && fs.unlinkSync(req.file.path);
-
-  if (req.files) {
-    const files = Object.entries({ ...req.files })
-      .flat(Infinity)
-      .filter((file) => typeof file === "object");
-
-    files.forEach(file => {
-    const path = file.path || ''
-     if (fs.existsSync(path)) return fs.unlinkSync(path);  
-    })
-  }
-}

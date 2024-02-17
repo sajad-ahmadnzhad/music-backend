@@ -11,6 +11,7 @@ import {
   download,
   getOne,
   getByGenre,
+  unlike,
 } from "../controllers/music";
 import authMiddlewares from "../middlewares/auth";
 import isBanMiddlewares from "../middlewares/isBan";
@@ -44,7 +45,8 @@ router
 router.get("/search", search);
 router.get("/:categoryId/by-genre", getByGenre);
 router.get("/popular", popular);
-router.put("/:id/like", like);
+router.put("/:id/like", authMiddlewares, isBanMiddlewares, like);
+router.put("/:id/unlike", authMiddlewares, isBanMiddlewares, unlike);
 router.put("/:id/view", view);
 router.put("/:id/download", download);
 

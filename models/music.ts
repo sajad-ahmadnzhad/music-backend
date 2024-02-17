@@ -14,6 +14,7 @@ const schema = new Schema(
     count_views: { type: Number, default: 0 },
     count_likes: { type: Number, default: 0 },
     count_downloads: { type: Number, default: 0 },
+    likes: [{ type: Schema.ObjectId, ref: "users", default: [] }],
     genre: { type: Schema.ObjectId, ref: "categories", required: true },
     createBy: { type: Schema.ObjectId, ref: "users", required: true },
   },

@@ -81,10 +81,10 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
       .populate("artist", "photo fullName")
       .populate("genre", "-__v")
       .populate("createBy", "name username profile")
+      .populate("likes", "name username profile")
+      .sort({ createdAt: -1 })
       .select("-__v")
       .lean();
-
-    allMusics.sort((a: any, b: any) => b.createdAt - a.createdAt);
 
     res.json(allMusics);
   } catch (error) {
@@ -176,20 +176,20 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
     if (!music) {
       throw httpErrors.BadRequest("Music title is required");
     }
-    music = (music as string).trim();
     const foundMusic = await musicModel
-      .find({ title: { $regex: music } })
+      .find({ title: { $regex: (music as string)?.trim() } })
       .populate("artist", "photo fullName englishName")
       .populate("genre", "-__v")
       .populate("createBy", "name username profile")
-      .select("-__v");
+      .populate("likes", "name username profile")
+      .select("-__v")
+      .lean();
 
     res.json(foundMusic);
   } catch (error) {
     next(error);
   }
 };
-
 export let popular = async (
   req: Request,
   res: Response,
@@ -224,22 +224,56 @@ export let popular = async (
 export let like = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-
+    const { user } = req as any;
     if (!isValidObjectId(id)) {
-      throw httpErrors.BadRequest("This music id is not from mongodb");
+      throw httpErrors.BadRequest("Music id is not from mongodb");
     }
 
-    const music = await musicModel.findOneAndUpdate(
-      { _id: id },
-      { $inc: { count_likes: 1 } }
-    );
+    const music = await musicModel.findById(id);
 
     if (!music) {
       throw httpErrors.NotFound("Music not found");
     }
 
-    res.json({ message: "music liked successfully" });
-  } catch (error) {
+    if (music.likes.includes(user._id)) {
+      throw httpErrors.Conflict("You have already liked");
+    }
+
+    await musicModel.findByIdAndUpdate(id, {
+      $addToSet: { likes: user._id },
+      $inc: { count_likes: 1 },
+    });
+
+    res.json({ message: "Liked music successfully" });
+  } catch (error: any) {
+    next(error);
+  }
+};
+export let unlike = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { user } = req as any;
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("Music id is not from mongodb");
+    }
+
+    const music = await musicModel.findById(id);
+
+    if (!music) {
+      throw httpErrors.NotFound("Music not found");
+    }
+
+    if (!music.likes.includes(user._id)) {
+      throw httpErrors.Conflict("You have not liked the music");
+    }
+
+    await musicModel.findByIdAndUpdate(id, {
+      $pull: { likes: user._id },
+      $inc: { count_likes: -1 },
+    });
+
+    res.json({ message: "The music was successfully unliked" });
+  } catch (error: any) {
     next(error);
   }
 };
@@ -304,7 +338,9 @@ export let getOne = async (req: Request, res: Response, next: NextFunction) => {
       .populate("artist", "photo fullName englishName")
       .populate("genre", "-__v")
       .populate("createBy", "name username profile")
-      .select("-__v");
+      .populate("likes", "name username profile")
+      .select("-__v")
+      .lean();
 
     if (!music) {
       throw httpErrors.NotFound("Music not found");
@@ -338,7 +374,9 @@ export let getByGenre = async (
       .populate("artist", "photo fullName englishName")
       .populate("genre", "-__v")
       .populate("createBy", "name username profile")
-      .select("-__v");
+      .populate("likes", "name username profile")
+      .select("-__v")
+      .lean();
 
     res.json(music);
   } catch (error) {

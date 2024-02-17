@@ -1,7 +1,7 @@
 import Joi from "joi";
 import httpStatus from "http-status";
 import { Request, Response, NextFunction } from "express";
-import fs from "fs";
+import removeFile from '../helpers/removeFile'
 //validate schema joi middlewares
 export default (schema: Joi.Schema) => {
   return async (
@@ -30,22 +30,3 @@ export default (schema: Joi.Schema) => {
     }
   };
 };
-
-function removeFile(req: Request) {
-  //Delete user profile when validating incorrectly
-  if (req.file) {
-    fs.unlinkSync(req.file.path);
-  }
-
-  //Removing music and cover when validating incorrectly
-  if (req.files) {
-    const files = Object.entries({ ...req.files })
-      .flat(Infinity)
-      .filter((file) => typeof file === "object");
-
-    files.forEach(file => {
-    const path = file.path || ''
-     if (fs.existsSync(path)) return fs.unlinkSync(path);  
-    })
-  }
-}

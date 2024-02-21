@@ -3,6 +3,7 @@ import { CommentsBody } from "../interfaces/comment";
 import commentModel from "../models/comment";
 import httpStatus from "http-status";
 import musicModel from "../models/music";
+import pagination from "../helpers/pagination";
 import { isValidObjectId } from "mongoose";
 import httpErrors from "http-errors";
 export let create = async (req: Request, res: Response, next: NextFunction) => {
@@ -32,11 +33,7 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
 export let getAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { musicId } = req.params;
-    const limit = req.query.limit as string;
 
-    if (limit && !parseInt(limit)) {
-      throw httpErrors.BadRequest("limit must be a number only");
-    }
     if (!isValidObjectId(musicId)) {
       throw httpErrors.BadRequest("music id is not from mongodb");
     }
@@ -47,15 +44,25 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("Music not found");
     }
 
-    const comments = await commentModel
+    const query = commentModel
       .find({ musicId })
-      .lean()
       .select("-__v")
       .sort({ createdAt: "desc" })
-      .limit(parseInt(limit))
-      .populate("creator", "name username profile");
+      .populate("creator", "name username profile")
+      .populate({
+        path: "musicId",
+        select: "title artist cover_image download_link",
+        populate: [{ path: "artist", select: "fullName photo" }],
+      })
+      .lean();
 
-    res.json(comments);
+    const data = await pagination(req, query, commentModel);
+
+    if (data.error) {
+      throw httpErrors(data.error?.message || "");
+    }
+
+    res.json(data);
   } catch (error) {
     next(error);
   }

@@ -8,6 +8,7 @@ import userFavoriteModel from "../models/userFavorite";
 import { AlbumBody } from "../interfaces/album";
 import fs from "fs";
 import path from "path";
+import pagination from "../helpers/pagination";
 import httpErrors from "http-errors";
 import { isValidObjectId } from "mongoose";
 
@@ -42,7 +43,7 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
 };
 export let getAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const albums = await albumModel
+    const query = albumModel
       .find()
       .populate("artist", "fullName englishName photo")
       .populate("musics", "title duration download_link cover")
@@ -51,7 +52,13 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
       .sort({ createdAt: "desc" })
       .lean();
 
-    res.json(albums);
+    const data = await pagination(req, query, albumModel);
+
+    if (data.error) {
+      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
+    }
+
+    res.json(data);
   } catch (error) {
     next(error);
   }

@@ -6,6 +6,7 @@ import musicModel from "../models/music";
 import httpStatus from "http-status";
 import httpErrors from "http-errors";
 import { isValidObjectId } from "mongoose";
+import pagination from "../helpers/pagination";
 export let create = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { type, target_id } = req.body as UserFavoriteBody;
@@ -45,13 +46,19 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
 export let getAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { user } = req as any;
-    const favoriteList = await userFavoriteModel
+    const query = userFavoriteModel
       .find({ user: user._id })
       .populate("target_id", "title photo cover_image download_link")
       .select("-user -__v")
       .lean();
 
-    res.json(favoriteList);
+    const data = await pagination(req, query, userFavoriteModel);
+
+    if (data.error) {
+      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
+    }
+
+    res.json(data);
   } catch (error) {
     next(error);
   }

@@ -12,22 +12,28 @@ import palyListModel from "../models/playList";
 import userFavoriteModel from "../models/userFavorite";
 import upcomingModel from "../models/upcoming";
 import httpStatus from "http-status";
+import pagination from "../helpers/pagination";
 import fs from "fs";
 import path from "path";
 import httpErrors from "http-errors";
 export let getAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const singers = await singerModel
+    const query = singerModel
       .find()
       .populate("musicStyle", "-__v")
       .populate("album", "title")
       .populate("createBy", "name username profile")
       .select("-__v")
+      .sort({ createdAt: "desc" })
       .lean();
 
-    singers.sort((a: any, b: any) => b.createdAt - a.createdAt);
+    const data = await pagination(req, query, singerModel);
 
-    res.json(singers);
+    if (data.error) {
+      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
+    }
+
+    res.json(data);
   } catch (error) {
     next(error);
   }
@@ -45,7 +51,7 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.BadRequest("This artist already exists");
     }
 
-   const newSinger = await singerModel.create({
+    const newSinger = await singerModel.create({
       ...body,
       photo: `/photoSingers/${req.file.filename}`,
       createBy: (req as any).user._id,

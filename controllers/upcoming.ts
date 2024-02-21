@@ -4,6 +4,7 @@ import upcomingModel from "../models/upcoming";
 import musicModel from "../models/music";
 import httpStatus from "http-status";
 import httpErrors from "http-errors";
+import pagination from "../helpers/pagination";
 import fs from "fs";
 import path from "path";
 import { isValidObjectId } from "mongoose";
@@ -45,14 +46,21 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
 };
 export let getAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const allUpcoming = await upcomingModel
+    const query = upcomingModel
       .find()
       .populate("artist", "fullName photo")
       .populate("genre", "title description")
       .populate("createBy", "name username profile")
+      .sort({ createdAt: "desc" })
       .lean();
-    allUpcoming.sort((a: any, b: any) => b.createdAt - a.createdAt);
-    res.json(allUpcoming);
+
+    const data = await pagination(req, query, upcomingModel);
+
+    if (data.error) {
+      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
+    }
+
+    res.json(data);
   } catch (error) {
     next(error);
   }

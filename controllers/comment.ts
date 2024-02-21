@@ -59,7 +59,7 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
     const data = await pagination(req, query, commentModel);
 
     if (data.error) {
-      throw httpErrors(data.error?.message || "");
+      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
     }
 
     res.json(data);

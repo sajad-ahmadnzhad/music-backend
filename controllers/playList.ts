@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import playListModel from "../models/playList";
 import musicModel from "../models/music";
+import pagination from '../helpers/pagination'
 import { isValidObjectId } from "mongoose";
 import httpErrors from "http-errors";
 
@@ -38,16 +39,23 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
 };
 export let getAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const playLists = await playListModel
+    const query = playListModel
       .find({})
       .populate("createBy", "name username profile")
       .populate("musics", "title cover_image download_link")
       .populate("likes", "name username profile")
       .populate("category", "-__v")
-      .sort({createdAt: 'desc'})
+      .sort({ createdAt: "desc" })
       .select("-__v")
       .lean();
-    res.json(playLists);
+
+    const data = await pagination(req, query, playListModel);
+
+    if (data.error) {
+      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
+    }
+
+    res.json(data);
   } catch (error: any) {
     next(error);
   }

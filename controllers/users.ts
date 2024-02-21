@@ -6,6 +6,7 @@ import userPlaylistModel from "../models/userPlaylist";
 import { isValidObjectId } from "mongoose";
 import { RegisterBody } from "./../interfaces/auth";
 import bcrypt from "bcrypt";
+import pagination from "../helpers/pagination";
 import path from "path";
 import fs from "fs";
 import httpErrors from "http-errors";
@@ -24,8 +25,18 @@ export let myAccount = async (
 };
 export let getAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const users = await usersModel.find().select("-password -__v").lean();
-    res.json(users);
+    let query = usersModel
+      .find()
+      .sort({ createdAt: "desc" })
+      .select("-password -__v");
+
+    const data = await pagination(req, query, usersModel);
+
+    if (data.error) {
+      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
+    }
+
+    res.json(data);
   } catch (error) {
     next(error);
   }

@@ -1,17 +1,25 @@
 import { Request, Response, NextFunction } from "express";
 import singerArchiveModel from "../models/singerArchive";
 import { isValidObjectId } from "mongoose";
+import pagination from "../helpers/pagination";
 import httpErrors from "http-errors";
 export let getAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const singersArchive = await singerArchiveModel
+    const query = singerArchiveModel
       .find()
       .populate("musics", "-__v -artist")
       .populate("artist", "fullName englishName photo")
       .select("-__v")
       .sort({ createdAt: "desc" })
       .lean();
-    res.json(singersArchive);
+    
+    const data = await pagination(req, query, singerArchiveModel);
+
+    if (data.error) {
+      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
+    }
+
+    res.json(data);
   } catch (error) {
     next(error);
   }

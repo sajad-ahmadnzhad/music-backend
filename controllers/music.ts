@@ -11,7 +11,7 @@ import { isValidObjectId } from "mongoose";
 import path from "path";
 import httpErrors from "http-errors";
 import nodeMediainfo from "node-mediainfo";
-
+import pagination from "../helpers/pagination";
 export let create = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body = req.body as MusicBody;
@@ -76,7 +76,7 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
 };
 export let getAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const allMusics = await musicModel
+    const query = musicModel
       .find()
       .populate("artist", "photo fullName")
       .populate("genre", "-__v")
@@ -86,7 +86,13 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
       .select("-__v")
       .lean();
 
-    res.json(allMusics);
+    const data = await pagination(req, query, musicModel);
+
+    if (data.error) {
+      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
+    }
+
+    res.json(data);
   } catch (error) {
     next(error);
   }

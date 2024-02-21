@@ -4,6 +4,7 @@ import userPlaylistModel from "../models/userPlaylist";
 import httpStatus from "http-status";
 import httpErrors from "http-errors";
 import musicModel from "../models/music";
+import pagination from "../helpers/pagination";
 import path from "path";
 import fs from "fs";
 import { isValidObjectId } from "mongoose";
@@ -36,7 +37,7 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
 export let getAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { user } = req as any;
-    const userPlaylists = await userPlaylistModel
+    const query = userPlaylistModel
       .find({ createBy: user._id })
       .populate({
         path: "musics",
@@ -50,8 +51,13 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
       .select("-__v -createBy")
       .sort({ createdAt: "desc" })
       .lean();
+    const data = await pagination(req, query, userPlaylistModel);
 
-    res.json(userPlaylists);
+    if (data.error) {
+      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
+    }
+
+    res.json(data);
   } catch (error) {
     next(error);
   }

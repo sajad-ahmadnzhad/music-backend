@@ -11,3 +11,10 @@ export interface LoginBody {
   identifier: string;
   password: string;
 }
+
+export interface SendMailOptions {
+  from: string
+  to: string
+  subject: string
+  html: string
+}

@@ -4,14 +4,13 @@ import { RegisterBody, LoginBody } from "./../interfaces/auth";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import httpErrors from "http-errors";
-import httpStatus from "http-status";
 import banUserModel from "../models/banUser";
-import {
-  generateVerificationToken,
-  sendConfirmationEmail,
-  verifyEmail,
-} from "../helpers/userVerification";
-import accessToken from "../helpers/authToken";
+import { sendMail } from "../helpers/sendMail";
+import generateToken from "../helpers/generateToken";
+import jwt from "jsonwebtoken";
+import tokenModel from "../models/token";
+import { randomBytes } from "crypto";
+import { isValidObjectId } from "mongoose";
 dotenv.config();
 export let login = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -33,11 +32,41 @@ export let login = async (req: Request, res: Response, next: NextFunction) => {
     const checkPassword = bcrypt.compareSync(password, user.password);
 
     if (!checkPassword) {
-      throw httpErrors.BadRequest("password is not valid");
+      throw httpErrors.BadRequest("Email or password is not valid");
+    }
+
+    if (!user.isVerified) {
+      const token = await tokenModel.findOne({ _id: user._id });
+      if (!token) {
+        const token = await tokenModel.create({
+          userId: user._id,
+          token: randomBytes(32).toString("hex"),
+        });
+
+        const url = `${process.env.BASE_URL}/v1/auth/${user._id}/verify/${token.token}`;
+
+        const mailOptions = {
+          from: process.env.GMAIL_USER as string,
+          to: user.email,
+          subject: "Email confirmation",
+          html: `<p>Click on the link below to confirm the email:</p>
+       <h1>${url}</h1>
+       `,
+        };
+
+        const { error }: any = sendMail(mailOptions);
+
+        if (error) {
+          throw httpErrors(error?.message || "");
+        }
+      }
+      throw httpErrors.BadRequest(
+        "An email sent to your account please verify"
+      );
     }
 
     const twoMonths = 60 * 60 * 24 * 60 * 1000;
-    const authToken = accessToken(user._id, twoMonths);
+    const authToken = generateToken(user._id, twoMonths);
 
     res.cookie("token", authToken, {
       secure: true,
@@ -55,7 +84,7 @@ export let register = async (
   next: NextFunction
 ) => {
   try {
-    let { username, email, password } = req.body as RegisterBody;
+    const { username, email, password } = req.body as RegisterBody;
     delete req.body.confirmPassword;
     const foundUser = await usersModel.findOne({
       $or: [{ email }, { username }],
@@ -64,23 +93,44 @@ export let register = async (
     if (foundUser) {
       throw httpErrors.Conflict("Username or email already exists");
     }
-    password = bcrypt.hashSync(password, 10);
-    const profile = req.file && req.file.filename;
-    const emailToken = generateVerificationToken(<RegisterBody>{
+
+    const hashPassword = bcrypt.hashSync(password, 10);
+    const profile = req.file?.filename;
+    const users = await usersModel.find().lean();
+
+    const newUser = await usersModel.create({
       ...req.body,
-      profile,
-      password,
+      profile: profile
+        ? `/usersProfile/${profile}`
+        : "/usersProfile/customProfile.png",
+      password: hashPassword,
+      isAdmin: users.length == 0,
+      isSuperAdmin: users.length == 0,
     });
-    if (emailToken.error) {
-      throw httpErrors("The token was created with an error");
-    }
-    const result = <any>sendConfirmationEmail(email, <string>emailToken.token);
 
-    if (result?.error) {
-      throw httpErrors(result.error || "The email was sent with an error");
+    const token = await tokenModel.create({
+      userId: newUser._id,
+      token: randomBytes(32).toString("hex"),
+    });
+
+    const url = `${process.env.BASE_URL}/v1/auth/${newUser._id}/verify/${token.token}`;
+
+    const mailOptions = {
+      from: process.env.GMAIL_USER as string,
+      to: email,
+      subject: "Email confirmation",
+      html: `<p>Click on the link below to confirm the email:</p>
+       <h1>${url}</h1>
+       `,
+    };
+
+    const { error }: any = sendMail(mailOptions);
+
+    if (error) {
+      throw httpErrors(error?.message || "");
     }
 
-    res.json({ message: "Email sent Confirm email to login" });
+    res.json({ message: "An email sent to your account please verify" });
   } catch (error) {
     next(error);
   }
@@ -93,50 +143,109 @@ export let logout = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
-export let confirmEmail = async (
+export let forgotPassword = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const token = <any>req.query.token;
-    const userInfo = verifyEmail(token);
+    const { email } = req.body;
 
-    if (userInfo.error) {
-      throw httpErrors(
-        userInfo.error.status || 400,
-        userInfo.error.message || "Token error confirmation"
+    const user = await usersModel.findOne({ email });
+
+    if (!user) {
+      throw httpErrors.NotFound("User not found");
+    }
+
+    const token = generateToken(user._id, "1d");
+
+    const mailOptions = {
+      from: process.env.GMAIL_USER as string,
+      to: email,
+      subject: "reset your password",
+      html: `<p>Link to reset your password:</p>
+      <h1>Click on the link below to reset your password</h1>
+      <h2>http://${req.headers.host}/v1/auth/reset-password/${token}</h2>
+       `,
+    };
+
+    const { error }: any = sendMail(mailOptions);
+
+    if (error) {
+      throw httpErrors(error?.message || "");
+    }
+
+    res.json({
+      message: "The password reset link has been sent to your email",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+export let resetPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    if (!password || password < 8) {
+      throw httpErrors.BadRequest(
+        "Password is required and must not be less than 8 characters"
       );
     }
 
-    const foundUser = await usersModel.findOne({ email: userInfo.email });
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET as string);
 
-    if (foundUser) {
-      throw httpErrors.Conflict("email already exists");
+    const user = usersModel.findById((decodedToken as any).id);
+
+    if (!user) {
+      throw httpErrors.NotFound("User not found");
     }
 
-    const users = await usersModel.find();
+    const hashPassword = bcrypt.hashSync(password, 10);
 
-    const user = await usersModel.create({
-      ...userInfo,
-      isSuperAdmin: users.length == 0,
-      isAdmin: users.length == 0,
-      profile: userInfo.profile
-        ? `/usersProfile/${userInfo.profile}`
-        : "/usersProfile/customProfile.png",
+    await user.updateOne({
+      password: hashPassword,
     });
-    const twoMonths = 60 * 60 * 24 * 60 * 1000;
 
-    const authToken = accessToken(user._id, twoMonths);
+    res.json({ message: "Password reset successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+export let verifyEmail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id, token } = req.params;
 
-    res.cookie("token", authToken, {
-      maxAge: twoMonths,
-      httpOnly: true,
-      secure: true,
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("User id is not from mongodb");
+    }
+
+    const user = await usersModel.findById(id);
+    if (!user) {
+      throw httpErrors.NotFound("User not found");
+    }
+
+    const userToken = await tokenModel.findOne({
+      userId: id,
+      token,
     });
-    res
-      .status(httpStatus.CREATED)
-      .json({ message: "Registration was successful" });
+
+    if (!userToken) {
+      throw httpErrors.BadRequest("Invalid token");
+    }
+
+    await user.updateOne({ isVerified: true });
+    await userToken.deleteOne();
+
+    res.json({ message: "Email verified successfully" });
   } catch (error) {
     next(error);
   }

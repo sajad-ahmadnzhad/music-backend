@@ -3,7 +3,9 @@ import {
   login,
   logout,
   register,
-  confirmEmail
+  forgotPassword,
+  resetPassword,
+  verifyEmail,
 } from "../controllers/auth";
 import validatorMiddlewares from "../middlewares/validator";
 import registerValidatorSchema from "../validators/register";
@@ -19,6 +21,8 @@ router.post(
   validatorMiddlewares(registerValidatorSchema),
   register
 );
-router.get('/confirm-email' , confirmEmail)
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password/:token", resetPassword);
+router.get("/:id/verify/:token", verifyEmail);
 router.post("/logout", authMiddlewares, logout);
 export default router;

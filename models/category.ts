@@ -3,7 +3,7 @@ const schema = new Schema(
   {
     title: { type: String, required: true },
     image: { type: String },
-    sub_category: [{ type: Schema.ObjectId, ref: "subCategory", required: true }],
+    sub_category: [{ type: Schema.ObjectId, ref: "subcategory", required: true }],
     description: { type: String },
   },
   { timestamps: true }

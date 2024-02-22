@@ -7,4 +7,4 @@ const schema = new Schema(
   { timestamps: true }
 );
 
-export default model("subCategory", schema);
+export default model("subcategory", schema);

@@ -12,12 +12,12 @@ export let getAll = async (req: express.Request, res: express.Response) => {
     .select("-__v");
   const filterCategories: any = [];
 
-  categories.forEach((category) => {
-    if (category.parent) {
-      const { parent, ...newCategory } = category;
-      filterCategories.push(newCategory);
-    }
-  });
+  // categories.forEach((category) => {
+  //   if (category.parent) {
+  //     const { parent, ...newCategory } = category;
+  //     filterCategories.push(newCategory);
+  //   }
+  // });
   res.json(filterCategories);
 };
 

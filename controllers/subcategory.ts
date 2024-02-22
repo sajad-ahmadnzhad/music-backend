@@ -26,7 +26,11 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
 };
 export let getAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const subcategories = await subcategoryModel.find().select("-__v").lean();
+    const subcategories = await subcategoryModel
+      .find()
+      .populate("createBy", "name username profile")
+      .select("-__v")
+      .lean();
     res.json(subcategories);
   } catch (error) {
     next(error);
@@ -105,6 +109,7 @@ export let getOne = async (req: Request, res: Response, next: NextFunction) => {
     }
     const subcategory = await subcategoryModel
       .findById(id)
+      .populate("createBy", "name username profile")
       .select("-__v")
       .lean();
 

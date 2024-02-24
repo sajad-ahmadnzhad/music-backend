@@ -9,7 +9,7 @@ const schema = new Schema(
     album: [{ type: Schema.ObjectId, ref: "albums", default: [] }],
     cover_image: { type: String },
     createBy: { type: Schema.ObjectId, ref: "users", required: true },
-    genre: { type: Schema.ObjectId, ref: "category" },
+    genre: { type: Schema.ObjectId, ref: "genre" },
   },
   { timestamps: true }
 );

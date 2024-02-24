@@ -1,16 +1,16 @@
 import joi from "joi";
-import categoryModel from "../models/category";
+import countryModel from "../models/country";
 export default joi.object({
   title: joi.string().trim().max(100).min(10).required(),
   description: joi.string().trim().max(400).min(10),
-  category: joi
+  country: joi
     .string()
     .regex(/^[0-9a-fA-F]{24}$/)
-    .message("Category id is not from mongodb")
+    .message("country id is not from mongodb")
     .external(async (value, helpers) => {
       if (value) {
-        const category = await categoryModel.findById(value);
-        if (!category) return helpers.error("Category not found");
+        const country = await countryModel.findById(value);
+        if (!country) return helpers.error("country not found");
       }
     }),
 });

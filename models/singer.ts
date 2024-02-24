@@ -8,7 +8,7 @@ const schema = new Schema(
     photo: { type: String, required: true },
     nationality: { type: String, required: true },
     count_likes: { type: Number, default: 0 },
-    musicStyle: { type: Schema.ObjectId, ref: "categories", required: true },
+    musicStyle: { type: Schema.ObjectId, ref: "genre", required: true },
     album:[{ type: Schema.ObjectId, ref: "albums", default: [] }],
     createBy: { type: Schema.ObjectId, ref: "users", required: true },
   },

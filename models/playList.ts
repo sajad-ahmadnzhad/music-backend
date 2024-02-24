@@ -9,7 +9,7 @@ const schema = new Schema(
     createBy: { type: Schema.ObjectId, ref: "users", required: true },
     likes: [{ type: Schema.ObjectId, ref: "users", default: [] }],
     count_likes: { type: Number, default: 0 },
-    category: { type: Schema.ObjectId, ref: "categories" },
+    genre: { type: Schema.ObjectId, ref: "genre" },
   },
   { timestamps: true }
 );

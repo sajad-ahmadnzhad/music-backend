@@ -1,4 +1,4 @@
-export interface SubCategoryBody {
+export interface BodyGenre {
     title: string
     description: string
 }

@@ -7,7 +7,7 @@ const schema = new Schema(
     cover: { type: String },
     createBy: { type: Schema.ObjectId, ref: "users", required: true },
     count_musics: { type: Number, default: 0 },
-    genre: { type: Schema.ObjectId, ref: "category" },
+    genre: { type: Schema.ObjectId, ref: "genre" },
   },
   { timestamps: true }
 );

@@ -43,7 +43,7 @@ router
   .get(getAll);
 
 router.get("/search", search);
-router.get("/:categoryId/by-genre", getByGenre);
+router.get("/:countryId/:genreId/by-genre", getByGenre);
 router.get("/popular", popular);
 router.put("/:id/like", authMiddlewares, isBanMiddlewares, like);
 router.put("/:id/unlike", authMiddlewares, isBanMiddlewares, unlike);

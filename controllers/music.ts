@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import musicModel from "./../models/music";
-import categoryModel from "./../models/category";
+import countryModel from "../models/country";
 import { MusicBody, MusicFile } from "./../interfaces/music";
 import upcomingModel from "../models/upcoming";
 import httpStatus from "http-status";
@@ -11,6 +11,7 @@ import { isValidObjectId } from "mongoose";
 import path from "path";
 import httpErrors from "http-errors";
 import nodeMediainfo from "node-mediainfo";
+import genreModel from "../models/genre";
 import pagination from "../helpers/pagination";
 export let create = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -79,7 +80,8 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
     const query = musicModel
       .find()
       .populate("artist", "photo fullName")
-      .populate("genre", "-__v")
+      .populate("country", "title description image")
+      .populate("genre", "title description")
       .populate("createBy", "name username profile")
       .populate("likes", "name username profile")
       .sort({ createdAt: -1 })
@@ -184,8 +186,9 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
     }
     const foundMusic = await musicModel
       .find({ title: { $regex: (music as string)?.trim() } })
-      .populate("artist", "photo fullName englishName")
-      .populate("genre", "-__v")
+      .populate("artist", "photo fullName")
+      .populate("country", "title description image")
+      .populate("genre", "title description")
       .populate("createBy", "name username profile")
       .populate("likes", "name username profile")
       .select("-__v")
@@ -215,9 +218,12 @@ export let popular = async (
 
     const popularMusics = await musicModel
       .find()
-      .populate("artist", "photo fullName englishName")
-      .populate("genre", "-__v")
+      .populate("artist", "photo fullName")
+      .populate("country", "title description image")
+      .populate("genre", "title description")
       .populate("createBy", "name username profile")
+      .populate("likes", "name username profile")
+      .sort({ createdAt: -1 })
       .select("-__v")
       .sort({ [type as string]: -1 })
       .lean();
@@ -363,22 +369,29 @@ export let getByGenre = async (
   next: NextFunction
 ) => {
   try {
-    const { categoryId } = req.params;
+    const { countryId, genreId } = req.params;
 
-    if (!isValidObjectId(categoryId)) {
-      throw httpErrors.BadRequest("This category id is not from mongodb");
+    if (!isValidObjectId(countryId)) {
+      throw httpErrors.BadRequest("This country id is not from mongodb");
     }
 
-    const category = await categoryModel.findById(categoryId);
+    const country = await countryModel.findById(countryId);
 
-    if (!category) {
-      throw httpErrors.NotFound("Category not found");
+    if (!country) {
+      throw httpErrors.NotFound("country not found");
+    }
+
+    const genre = await genreModel.findById(genreId);
+
+    if (!genre) {
+      throw httpErrors.NotFound("genre not found");
     }
 
     const music = await musicModel
-      .find({ genre: categoryId })
-      .populate("artist", "photo fullName englishName")
-      .populate("genre", "-__v")
+      .find({ country: countryId, genre: genreId })
+      .populate("artist", "photo fullName")
+      .populate("country", "title description image")
+      .populate("genre", "title description")
       .populate("createBy", "name username profile")
       .populate("likes", "name username profile")
       .select("-__v")

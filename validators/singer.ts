@@ -1,5 +1,5 @@
 import Joi from "joi";
-import categoryModel from "../models/category";
+import genreModel from "../models/genre";
 import singerModel from "../models/singer";
 export default Joi.object({
   fullName: Joi.string().trim().min(5).max(30).required(),
@@ -10,8 +10,8 @@ export default Joi.object({
     .message("This music style is not from mongodb")
     .required()
     .external(async (value, helpers) => {
-      const category = await categoryModel.findById(value);
-      if (!category) return helpers.error("Category not found");
+      const genre = await genreModel.findById(value);
+      if (!genre) return helpers.error("genre not found");
     }),
   nationality: Joi.string().min(3).max(15).required(),
 });

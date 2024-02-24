@@ -1,6 +1,7 @@
 import joi from "joi";
 import singerModel from "../models/singer";
-import categoryModel from "../models/category";
+import countryModel from "../models/country";
+import genreModel from "../models/genre";
 
 export default joi.object({
   title: joi.string().trim().max(100).min(2).required(),
@@ -14,6 +15,16 @@ export default joi.object({
       const artist = await singerModel.findOne({ _id: value });
       if (!artist) return helpers.error("artist not found");
     }),
+  country: joi
+    .string()
+    .trim()
+    .regex(/^[0-9a-fA-F]{24}$/)
+    .message("This country id is not from mongodb")
+    .required()
+    .external(async (value, helpers) => {
+      const country = await countryModel.findOne({ _id: value });
+      if (!country) return helpers.error("country not found");
+    }),
   genre: joi
     .string()
     .trim()
@@ -21,7 +32,7 @@ export default joi.object({
     .message("This genre id is not from mongodb")
     .required()
     .external(async (value, helpers) => {
-      const genre = await categoryModel.findOne({ _id: value });
+      const genre = await genreModel.findOne({ _id: value });
       if (!genre) return helpers.error("genre not found");
     }),
   release_year: joi.number().integer().min(2000).max(new Date().getFullYear()),

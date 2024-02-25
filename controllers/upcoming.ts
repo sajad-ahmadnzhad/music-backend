@@ -5,6 +5,8 @@ import musicModel from "../models/music";
 import httpStatus from "http-status";
 import httpErrors from "http-errors";
 import pagination from "../helpers/pagination";
+import countryModel from "../models/country";
+import genreModel from "../models/genre";
 import fs from "fs";
 import path from "path";
 import { isValidObjectId } from "mongoose";
@@ -50,8 +52,10 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
       .find()
       .populate("artist", "fullName photo")
       .populate("genre", "title description")
+      .populate("country", "title description image")
       .populate("createBy", "name username profile")
       .sort({ createdAt: "desc" })
+      .select("-__v")
       .lean();
 
     const data = await pagination(req, query, upcomingModel);
@@ -144,7 +148,10 @@ export let getOne = async (req: Request, res: Response, next: NextFunction) => {
       .findById(id)
       .populate("artist", "fullName photo")
       .populate("genre", "title description")
+      .populate("country", "title description image")
       .populate("createBy", "name username profile")
+      .sort({ createdAt: "desc" })
+      .select("-__v")
       .lean();
 
     if (!upcoming) {
@@ -163,11 +170,63 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.BadRequest("upcoming title is required");
     }
 
-    const upcomingResult = await upcomingModel.find({
-      title: { $regex: upcoming },
-    });
+    const upcomingResult = await upcomingModel
+      .find({
+        title: { $regex: upcoming },
+      })
+      .populate("artist", "fullName photo")
+      .populate("genre", "title description")
+      .populate("country", "title description image")
+      .populate("createBy", "name username profile")
+      .sort({ createdAt: "desc" })
+      .select("-__v")
+      .lean();
 
     res.json(upcomingResult);
+  } catch (error) {
+    next(error);
+  }
+};
+export let getByGenreAndCounty = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { genreId, countryId } = req.params;
+
+    if (!isValidObjectId(genreId)) {
+      throw httpErrors.BadRequest("Genre id is not from mongodb");
+    }
+
+    if (!isValidObjectId(countryId)) {
+      throw httpErrors.BadRequest("Country id is not from mongodb");
+    }
+    const country = await countryModel.findById(countryId);
+    const genre = await genreModel.findById(genreId);
+
+    if (!genre) {
+      throw httpErrors.NotFound("Genre not found");
+    }
+
+    if (!country) {
+      throw httpErrors.NotFound("Country not found");
+    }
+
+    const upcoming = await upcomingModel
+      .find({
+        country: countryId,
+        genre: genreId,
+      })
+      .populate("artist", "fullName photo")
+      .populate("genre", "title description")
+      .populate("country", "title description image")
+      .populate("createBy", "name username profile")
+      .sort({ createdAt: "desc" })
+      .select("-__v")
+      .lean();
+
+    res.json(upcoming);
   } catch (error) {
     next(error);
   }

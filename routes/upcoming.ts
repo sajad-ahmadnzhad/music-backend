@@ -6,6 +6,7 @@ import validatorMiddlewares from "../middlewares/validator";
 import {
   create,
   getAll,
+  getByGenreAndCounty,
   getOne,
   remove,
   search,
@@ -41,5 +42,7 @@ router
     update
   )
   .get(getOne);
+
+router.get("/by-country-genre/:genreId/:countryId", getByGenreAndCounty);
 
 export default router;

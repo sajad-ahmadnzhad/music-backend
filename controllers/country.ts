@@ -117,11 +117,34 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
       `${paths}${music.download_link}`,
       `${paths}${music.cover_image}`,
     ]);
-    
+
     rimrafSync(musicPaths);
     await countryModel.findByIdAndDelete(id);
     await musicModel.deleteMany({ country: id });
     res.json({ message: "Deleted country successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+export let getOne = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("This country id is not from mongodb");
+    }
+
+    const country = await countryModel
+      .findById(id)
+      .populate("createBy", "name username profile")
+      .select("-__v")
+      .lean();
+
+    if (!country) {
+      throw httpErrors.NotFound("Country not found");
+    }
+    
+    res.json(country);
   } catch (error) {
     next(error);
   }

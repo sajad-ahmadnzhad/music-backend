@@ -1,5 +1,5 @@
 import express from "express";
-import { create, getAll, remove, update } from "../controllers/country";
+import { create, getAll, getOne, remove, update } from "../controllers/country";
 import authMiddlewares from "../middlewares/auth";
 import isAdminMiddlewares from "../middlewares/isAdmin";
 import countryValidator from "../validators/country";
@@ -29,6 +29,6 @@ router
     uploader.single("countryImage"),
     validatorMiddlewares(countryValidator),
     update
-  ).delete(authMiddlewares , isBanMiddlewares , isAdminMiddlewares , remove);
+  ).delete(authMiddlewares , isBanMiddlewares , isAdminMiddlewares , remove).get(getOne);
 
 export default router;

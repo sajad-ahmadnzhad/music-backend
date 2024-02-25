@@ -1,5 +1,5 @@
 import express from "express";
-import { create, getAll, getOne, remove, update } from "../controllers/country";
+import { create, getAll, getOne, remove, search, update } from "../controllers/country";
 import authMiddlewares from "../middlewares/auth";
 import isAdminMiddlewares from "../middlewares/isAdmin";
 import countryValidator from "../validators/country";
@@ -19,6 +19,8 @@ router
     create
   )
   .get(getAll);
+
+router.get('/search' , search)
 
 router
   .route("/:id")

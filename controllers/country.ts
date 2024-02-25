@@ -143,8 +143,25 @@ export let getOne = async (req: Request, res: Response, next: NextFunction) => {
     if (!country) {
       throw httpErrors.NotFound("Country not found");
     }
-    
+
     res.json(country);
+  } catch (error) {
+    next(error);
+  }
+};
+export let search = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { country } = req.query;
+
+    if (!country) {
+      throw httpErrors.BadRequest("Country is required");
+    }
+
+    const foundCountry = await countryModel.find({
+      title: { $regex: country },
+    });
+
+    res.json(foundCountry);
   } catch (error) {
     next(error);
   }

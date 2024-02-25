@@ -1,5 +1,5 @@
 import express from "express";
-import { create, getAll } from "../controllers/country";
+import { create, getAll, update } from "../controllers/country";
 import authMiddlewares from "../middlewares/auth";
 import isAdminMiddlewares from "../middlewares/isAdmin";
 import countryValidator from "../validators/country";
@@ -19,5 +19,16 @@ router
     create
   )
   .get(getAll);
+
+router
+  .route("/:id")
+  .put(
+    authMiddlewares,
+    isBanMiddlewares,
+    isAdminMiddlewares,
+    uploader.single("countryImage"),
+    validatorMiddlewares(countryValidator),
+    update
+  );
 
 export default router;

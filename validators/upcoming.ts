@@ -2,9 +2,10 @@ import joi from "joi";
 import singerModel from "../models/singer";
 import genreModel from "../models/genre";
 export default joi.object({
-  title: joi.string().max(50).min(5).required(),
+  title: joi.string().trim().max(50).min(5).required(),
   artist: joi
     .string()
+    .trim()
     .regex(/^[0-9a-fA-F]{24}$/)
     .message("Artist id is not from mongodb")
     .required()
@@ -19,6 +20,7 @@ export default joi.object({
     .max(new Date().getFullYear() + 1),
   genre: joi
     .string()
+    .trim()
     .regex(/^[0-9a-fA-F]{24}$/)
     .message("Genre id is not from mongodb")
     .required()
@@ -26,5 +28,5 @@ export default joi.object({
       const genre = await genreModel.findOne({ _id: value });
       if (!genre) return helpers.error("Genre not found");
     }),
-  description: joi.string().max(400).min(10),
+  description: joi.string().trim().max(400).min(10),
 });

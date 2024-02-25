@@ -46,7 +46,7 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
     const query = albumModel
       .find()
       .populate("artist", "fullName englishName photo")
-      .populate("musics", "title duration download_link cover")
+      .populate("musics", "title duration download_link cover_image")
       .populate("createBy", "name username profile")
       .select("-__v")
       .sort({ createdAt: "desc" })
@@ -117,6 +117,17 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
     if (user._id !== album.createBy && !user.isSuperAdmin) {
       throw httpErrors.NotFound(
         "This album can only be modified by the person who created it"
+      );
+    }
+
+    const existingAlbum = await albumModel.findOne({
+      title,
+      artist,
+    });
+
+    if (existingAlbum && existingAlbum._id.toString() !== id) {
+      throw httpErrors.Conflict(
+        "Album with this name and artist already exists"
       );
     }
 

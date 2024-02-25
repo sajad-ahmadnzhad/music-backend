@@ -61,12 +61,10 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("genre not found");
     }
 
-    const foundByTitleGenre = await genreModel.findOne({
-      title: body.title,
-    });
+    const existingGenre = await genreModel.findOne({ title: body.title });
 
-    if (foundByTitleGenre) {
-      throw httpErrors.Conflict("This genre already exists");
+    if (existingGenre && existingGenre._id.toString() !== id) {
+      throw httpErrors.Conflict("Genre with this name already exists");
     }
 
     if (genre.createBy !== user._id && !user.isSuperAdmin) {
@@ -74,6 +72,7 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
         "This genre can only be edited by the person who created it"
       );
     }
+
     await genreModel.findByIdAndUpdate(id, body);
 
     res.json({ message: "updated genre successfully" });
@@ -89,10 +88,7 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.BadRequest("genre id is not from mongodb");
     }
 
-    const genre = await genreModel
-      .findById(id)
-      .select("-__v")
-      .lean();
+    const genre = await genreModel.findById(id).select("-__v").lean();
 
     if (!genre) {
       throw httpErrors.NotFound("genre not found");

@@ -5,7 +5,7 @@ import fs from "fs";
 import path from "path";
 import playListModel from "../models/playList";
 import musicModel from "../models/music";
-import pagination from '../helpers/pagination'
+import pagination from "../helpers/pagination";
 import { isValidObjectId } from "mongoose";
 import httpErrors from "http-errors";
 
@@ -44,7 +44,8 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
       .populate("createBy", "name username profile")
       .populate("musics", "title cover_image download_link")
       .populate("likes", "name username profile")
-      .populate("category", "-__v")
+      .populate("genre", "title description")
+      .populate("country", "title description image")
       .sort({ createdAt: "desc" })
       .select("-__v")
       .lean();
@@ -81,6 +82,13 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.BadRequest(
         "This paly list can only be modified by the person who created it"
       );
+    }
+    const existingPlaylist = await playListModel.findOne({
+      title: body.title,
+    });
+
+    if (existingPlaylist && existingPlaylist._id.toString() !== id) {
+      throw httpErrors.Conflict("Playlist with this name already exists");
     }
 
     if (cover) {
@@ -285,6 +293,10 @@ export let addMusic = async (
       throw httpErrors.BadRequest(
         "Only the person who created this paly list can add music to it"
       );
+    }
+
+    if (String(music.country) !== String(playList.country)) {
+      throw httpErrors.Forbidden("music country is not equal with playlist country"); //check message
     }
 
     const isMusicToPlayList = playList.musics.some(

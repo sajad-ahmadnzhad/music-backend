@@ -152,6 +152,14 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
       );
     }
 
+    const existingMusic = await musicModel.findOne({
+      title: body.title,
+      artist: body.artist
+    });
+    if (existingMusic && existingMusic._id.toString() !== id) {
+      throw httpErrors.Conflict("Music with this name and artist already exists");
+    }
+
     if (files?.cover)
       fs.unlinkSync(path.join(process.cwd(), "public", music.cover_image));
 

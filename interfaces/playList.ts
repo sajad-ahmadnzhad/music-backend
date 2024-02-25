@@ -3,5 +3,6 @@ import { ObjectId } from "mongoose"
 export interface PlayListBody {
     title: string
     description: string
-    category: ObjectId
+    genre: ObjectId
+    country: ObjectId
 }

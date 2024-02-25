@@ -3,8 +3,10 @@ import { BodyCountry } from "../interfaces/country";
 import countryModel from "../models/country";
 import httpStatus from "http-status";
 import fs from "fs";
+import musicModel from "../models/music";
 import path from "path";
-import { isValidObjectId, Types } from "mongoose";
+import { isValidObjectId } from "mongoose";
+import { rimrafSync } from "rimraf";
 import httpErrors from "http-errors";
 
 export let create = async (req: Request, res: Response, next: NextFunction) => {
@@ -47,6 +49,7 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
 export let update = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body = req.body as BodyCountry;
+    const { user } = req as any;
     const { id } = req.params;
     if (!isValidObjectId(id)) {
       throw httpErrors.BadRequest("This country id is not from mongodb");
@@ -58,6 +61,11 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("Country not found");
     }
 
+    if (country.createBy !== user._id && !user.isSuperAdmin) {
+      throw httpErrors.Forbidden(
+        "This country can only be edited by the person who created it"
+      );
+    }
     const existingCountry = await countryModel.findOne({ title: body.title });
     if (existingCountry && existingCountry._id.toString() !== id) {
       throw httpErrors.Conflict("Country with this name already exists");
@@ -75,6 +83,45 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
     });
 
     res.json({ message: "Country updated successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+export let remove = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { user } = req as any;
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("This country id is not from mongodb");
+    }
+
+    const country = await countryModel.findById(id);
+
+    if (!country) {
+      throw httpErrors.NotFound("Country not found");
+    }
+
+    if (country.createBy !== user._id && !user.isSuperAdmin) {
+      throw httpErrors.Forbidden(
+        "This country can only be deleted by the person who created it"
+      );
+    }
+
+    if (country.image) {
+      fs.unlinkSync(path.join(process.cwd(), "public", country.image));
+    }
+
+    const musics = await musicModel.find({ country: id });
+    const paths = path.join(process.cwd(), "public");
+    const musicPaths = musics.flatMap((music) => [
+      `${paths}${music.download_link}`,
+      `${paths}${music.cover_image}`,
+    ]);
+    
+    rimrafSync(musicPaths);
+    await countryModel.findByIdAndDelete(id);
+    await musicModel.deleteMany({ country: id });
+    res.json({ message: "Deleted country successfully" });
   } catch (error) {
     next(error);
   }

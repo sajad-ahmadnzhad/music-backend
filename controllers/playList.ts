@@ -6,6 +6,7 @@ import path from "path";
 import playListModel from "../models/playList";
 import musicModel from "../models/music";
 import pagination from "../helpers/pagination";
+import countryModel from "../models/country";
 import { isValidObjectId } from "mongoose";
 import httpErrors from "http-errors";
 
@@ -296,7 +297,9 @@ export let addMusic = async (
     }
 
     if (String(music.country) !== String(playList.country)) {
-      throw httpErrors.Forbidden("music country is not equal with playlist country"); //check message
+      throw httpErrors.Forbidden(
+        "Music from other countries cannot be added to the playlist"
+      );
     }
 
     const isMusicToPlayList = playList.musics.some(
@@ -408,6 +411,40 @@ export let searchMusic = async (
       .flat(Infinity);
 
     res.json(musics);
+  } catch (error) {
+    next(error);
+  }
+};
+export let getByCountry = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { countryId } = req.params;
+
+    if (!isValidObjectId(countryId)) {
+      throw httpErrors.BadRequest("This country id is not from mongodb");
+    }
+
+    const country = await countryModel.findById(countryId);
+
+    if (!country) {
+      throw httpErrors.NotFound("country not found");
+    }
+
+    const music = await playListModel
+      .find({ country: countryId })
+      .populate("createBy", "name username profile")
+      .populate("musics", "title cover_image download_link")
+      .populate("likes", "name username profile")
+      .populate("genre", "title description")
+      .populate("country", "title description image")
+      .sort({ createdAt: "desc" })
+      .select("-__v")
+      .lean();
+
+    res.json(music);
   } catch (error) {
     next(error);
   }

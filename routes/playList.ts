@@ -18,6 +18,7 @@ import {
   popular,
   getOne,
   searchMusic,
+  getByCountry
 } from "../controllers/playList";
 const router = express.Router();
 
@@ -35,6 +36,7 @@ router
 
 router.post("/like/:id", authMiddlewares, like);
 router.post("/unlike/:id", authMiddlewares, unlike);
+router.get('/by-country/:countryId' , getByCountry)
 router.post(
   "/add-music/:playListId",
   authMiddlewares,

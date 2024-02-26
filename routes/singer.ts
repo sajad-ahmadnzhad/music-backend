@@ -8,6 +8,7 @@ import {
   update,
   getOne,
   like,
+  unlike,
 } from "../controllers/singer";
 import validatorSinger from "../validators/singer";
 import validatorMiddlewares from "../middlewares/validator";
@@ -31,7 +32,8 @@ router
 
 router.get("/search", search);
 router.get("/popular", popular);
-router.put("/:id/like", like);
+router.put("/:id/like", authMiddlewares, isBanMiddlewares, like);
+router.put("/:id/unlike", authMiddlewares, isBanMiddlewares, unlike);
 router
   .route("/:id")
   .put(

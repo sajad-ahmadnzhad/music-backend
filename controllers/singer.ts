@@ -22,6 +22,7 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
       .find()
       .populate("musicStyle", "title description")
       .populate("album", "title photo")
+      .populate("likes", "name username profile")
       .populate("createBy", "name username profile")
       .select("-__v")
       .sort({ createdAt: "desc" })
@@ -88,6 +89,7 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
       })
       .populate("musicStyle", "title description")
       .populate("album", "title photo")
+      .populate("likes", "name username profile")
       .populate("createBy", "name username profile")
       .select("-__v")
       .lean();
@@ -220,6 +222,7 @@ export let popular = async (
       .find({})
       .populate("musicStyle", "title description")
       .populate("album", "title photo")
+      .populate("likes", "name username profile")
       .populate("createBy", "name username profile")
       .select("-__v")
       .sort({ count_like: -1 })
@@ -249,6 +252,7 @@ export let getOne = async (req: Request, res: Response, next: NextFunction) => {
       .populate("musicStyle", "-__v")
       .populate("album", "title photo")
       .populate("createBy", "name username profile")
+      .populate("likes", "name username profile")
       .select("-__v")
       .lean();
 
@@ -264,19 +268,55 @@ export let getOne = async (req: Request, res: Response, next: NextFunction) => {
 export let like = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
+    const { user } = req as any;
     if (!isValidObjectId(id)) {
-      throw httpErrors.BadRequest("This singer id is not from mongodb");
+      throw httpErrors.BadRequest("Singer id is not from mongodb");
     }
 
-    const singer = await singerModel
-      .findByIdAndUpdate(id, { $inc: { count_likes: 1 } })
-      .lean();
+    const singer = await singerModel.findById(id);
 
     if (!singer) {
-      throw httpErrors.NotFound("Artist not found");
+      throw httpErrors.NotFound("Singer not found");
     }
 
+    if (singer.likes.includes(user._id)) {
+      throw httpErrors.Conflict("You have already liked");
+    }
+
+    await singerModel.findByIdAndUpdate(id, {
+      $addToSet: { likes: user._id },
+      $inc: { count_likes: 1 },
+    });
+
     res.json({ message: "Singer licked successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+export let unlike = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { user } = req as any;
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("Singer id is not from mongodb");
+    }
+
+    const singer = await singerModel.findById(id);
+
+    if (!singer) {
+      throw httpErrors.NotFound("Singer not found");
+    }
+
+    if (!singer.likes.includes(user._id)) {
+      throw httpErrors.Conflict("You did not like");
+    }
+
+    await singerModel.findByIdAndUpdate(id, {
+      $pull: { likes: user._id },
+      $inc: { count_likes: -1 },
+    });
+
+    res.json({ message: "Singer was successfully unliked" });
   } catch (error) {
     next(error);
   }

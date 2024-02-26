@@ -384,7 +384,7 @@ export let getOne = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
-export let getByGenre = async (
+export let getByGenreAndCountry = async (
   req: Request,
   res: Response,
   next: NextFunction

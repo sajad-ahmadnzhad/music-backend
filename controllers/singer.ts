@@ -124,6 +124,14 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
       );
     }
 
+    const existingSinger = await singerModel.findOne({
+      fullName: body.fullName,
+    });
+    
+    if (existingSinger && existingSinger._id.toString() !== id) {
+      throw httpErrors.Conflict("Singer with this name already exists");
+    }
+
     if (photo) {
       fs.unlinkSync(path.join(process.cwd(), "public", singer.photo));
     }

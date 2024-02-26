@@ -79,6 +79,14 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("User playlist not found");
     }
 
+    const existingUserPlaylist = await userPlaylistModel.findOne({
+      title: body.title,
+    });
+
+    if (existingUserPlaylist && existingUserPlaylist._id.toString() !== id) {
+      throw httpErrors.Conflict("User playlist with this name already exists");
+    }
+
     if (req.file && userPlaylist.cover) {
       fs.unlinkSync(path.join(process.cwd(), "public", userPlaylist.cover));
     }

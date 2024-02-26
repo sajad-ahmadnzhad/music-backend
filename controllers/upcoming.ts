@@ -123,6 +123,15 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
       );
     }
 
+    const existingUpcoming = await upcomingModel.findOne({
+      title: body.title,
+      artist: body.artist,
+    });
+
+    if (existingUpcoming && existingUpcoming._id.toString() !== id) {
+      throw httpErrors.Conflict("Upcoming with this name and artist already exists");
+    }
+
     if (cover && upcoming.cover_image) {
       fs.unlinkSync(path.join(process.cwd(), "public", upcoming.cover_image));
     }

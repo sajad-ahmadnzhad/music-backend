@@ -157,9 +157,13 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.BadRequest("Country is required");
     }
 
-    const foundCountry = await countryModel.find({
-      title: { $regex: country },
-    });
+    const foundCountry = await countryModel
+      .find({
+        title: { $regex: country },
+      })
+      .populate("createBy", "name username profile")
+      .select("-__v")
+      .lean();
 
     res.json(foundCountry);
   } catch (error) {

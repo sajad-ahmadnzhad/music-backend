@@ -20,20 +20,24 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.BadRequest("album photo is required");
     }
 
-    const album = await albumModel.findOne({ artist, title });
+    const existingAlbum = await albumModel.findOne({ artist, title });
 
-    if (album) {
+    if (existingAlbum) {
       throw httpErrors.Conflict("This album already exists");
     }
 
-    await albumModel.create({
+    const album = await albumModel.create({
       title,
       description,
       artist,
       photo: `/albumPhotos/${req.file.filename}`,
       createBy: user._id,
     });
-
+    await singerModel.findByIdAndUpdate(artist, {
+      $push: {
+        album: album._id,
+      },
+    });
     res
       .status(httpStatus.CREATED)
       .json({ message: "Create new album successfully" });
@@ -182,7 +186,7 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.BadRequest("album title is required");
     }
 
-    const foundAlbum = await albumModel
+    const query = albumModel
       .find({ title: { $regex: album } })
       .populate("artist", "fullName englishName photo")
       .populate("musics", "title duration download_link cover")
@@ -190,7 +194,13 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
       .select("-__v")
       .lean();
 
-    res.json(foundAlbum);
+    const data = await pagination(req, query, albumModel);
+
+    if (data.error) {
+      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
+    }
+
+    res.json(data);
   } catch (error) {
     next(error);
   }

@@ -154,10 +154,12 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
 
     const existingMusic = await musicModel.findOne({
       title: body.title,
-      artist: body.artist
+      artist: body.artist,
     });
     if (existingMusic && existingMusic._id.toString() !== id) {
-      throw httpErrors.Conflict("Music with this name and artist already exists");
+      throw httpErrors.Conflict(
+        "Music with this name and artist already exists"
+      );
     }
 
     if (files?.cover)
@@ -192,7 +194,7 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
     if (!music) {
       throw httpErrors.BadRequest("Music title is required");
     }
-    const foundMusic = await musicModel
+    const query = musicModel
       .find({ title: { $regex: (music as string)?.trim() } })
       .populate("artist", "photo fullName")
       .populate("country", "title description image")
@@ -202,7 +204,12 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
       .select("-__v")
       .lean();
 
-    res.json(foundMusic);
+    const data = await pagination(req, query, musicModel);
+
+    if (data.error) {
+      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
+    }
+    res.json(data);
   } catch (error) {
     next(error);
   }
@@ -224,7 +231,7 @@ export let popular = async (
       throw httpErrors.BadRequest(`Only ${types.join(" ")} fields are allowed`);
     }
 
-    const popularMusics = await musicModel
+    const query = musicModel
       .find()
       .populate("artist", "photo fullName")
       .populate("country", "title description image")
@@ -236,7 +243,13 @@ export let popular = async (
       .sort({ [type as string]: -1 })
       .lean();
 
-    res.json(popularMusics);
+    const data = await pagination(req, query, musicModel);
+
+    if (data.error) {
+      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
+    }
+
+    res.json(data);
   } catch (error) {
     next(error);
   }
@@ -395,7 +408,7 @@ export let getByGenre = async (
       throw httpErrors.NotFound("genre not found");
     }
 
-    const music = await musicModel
+    const query = musicModel
       .find({ country: countryId, genre: genreId })
       .populate("artist", "photo fullName")
       .populate("country", "title description image")
@@ -405,7 +418,13 @@ export let getByGenre = async (
       .select("-__v")
       .lean();
 
-    res.json(music);
+    const data = await pagination(req, query, musicModel);
+
+    if (data.error) {
+      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
+    }
+
+    res.json(data);
   } catch (error) {
     next(error);
   }

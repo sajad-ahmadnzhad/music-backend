@@ -45,6 +45,7 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
         populate: [
           { path: "artist", select: "fullName englishName photo" },
           { path: "genre", select: "title description" },
+          { path: "country", select: "title description image" },
           { path: "createBy", select: "name username profile" },
         ],
       })
@@ -145,6 +146,7 @@ export let getOne = async (req: Request, res: Response, next: NextFunction) => {
         populate: [
           { path: "artist", select: "fullName englishName photo" },
           { path: "genre", select: "title description" },
+          { path: "country", select: "title description image" },
           { path: "createBy", select: "name username profile" },
         ],
       })
@@ -168,7 +170,7 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.BadRequest("user playlist is required");
     }
 
-    const foundUserPlaylists = await userPlaylistModel
+    const query = userPlaylistModel
       .find({
         title: { $regex: userPlaylist },
         createBy: user._id,
@@ -180,12 +182,18 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
           { path: "artist", select: "fullName englishName photo" },
           { path: "genre", select: "title description" },
           { path: "createBy", select: "name username profile" },
+          { path: "country", select: "title description image" },
         ],
       })
       .select("-__v -createBy")
       .lean();
 
-    res.json(foundUserPlaylists);
+    const data = await pagination(req, query, userPlaylistModel);
+
+    if (data.error) {
+      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
+    }
+    res.json(data);
   } catch (error) {
     next(error);
   }

@@ -129,7 +129,9 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
     });
 
     if (existingUpcoming && existingUpcoming._id.toString() !== id) {
-      throw httpErrors.Conflict("Upcoming with this name and artist already exists");
+      throw httpErrors.Conflict(
+        "Upcoming with this name and artist already exists"
+      );
     }
 
     if (cover && upcoming.cover_image) {
@@ -179,7 +181,7 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.BadRequest("upcoming title is required");
     }
 
-    const upcomingResult = await upcomingModel
+    const query = upcomingModel
       .find({
         title: { $regex: upcoming },
       })
@@ -191,7 +193,13 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
       .select("-__v")
       .lean();
 
-    res.json(upcomingResult);
+    const data = await pagination(req, query, upcomingModel);
+
+    if (data.error) {
+      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
+    }
+
+    res.json(data);
   } catch (error) {
     next(error);
   }

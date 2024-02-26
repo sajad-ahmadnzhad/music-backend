@@ -20,8 +20,8 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const query = singerModel
       .find()
-      .populate("musicStyle", "-__v")
-      .populate("album", "title")
+      .populate("musicStyle", "title description")
+      .populate("album", "title photo")
       .populate("createBy", "name username profile")
       .select("-__v")
       .sort({ createdAt: "desc" })
@@ -78,25 +78,27 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
       );
     }
 
-    const foundArtists = await singerModel
-      .findOne({
+    const query = singerModel
+      .find({
         $or: [
-          { fullName: artist },
-          { nickname: artist },
-          { englishName: artist },
+          { fullName: { $regex: artist } },
+          { nickname: { $regex: artist } },
+          { englishName: { $regex: artist } },
         ],
       })
-      .populate("musicStyle", "-__v")
-      .populate("album", "title")
+      .populate("musicStyle", "title description")
+      .populate("album", "title photo")
       .populate("createBy", "name username profile")
       .select("-__v")
       .lean();
 
-    if (!foundArtists) {
-      throw httpErrors.NotFound("Artist not found");
+    const data = await pagination(req, query, singerModel);
+
+    if (data.error) {
+      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
     }
 
-    res.json(foundArtists);
+    res.json(data);
   } catch (error) {
     next(error);
   }
@@ -127,7 +129,7 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
     const existingSinger = await singerModel.findOne({
       fullName: body.fullName,
     });
-    
+
     if (existingSinger && existingSinger._id.toString() !== id) {
       throw httpErrors.Conflict("Singer with this name already exists");
     }
@@ -214,17 +216,22 @@ export let popular = async (
   next: NextFunction
 ) => {
   try {
-    const singers = await singerModel
+    const query = singerModel
       .find({})
-      .populate("musicStyle", "-__v")
-      .populate("album", "title")
+      .populate("musicStyle", "title description")
+      .populate("album", "title photo")
       .populate("createBy", "name username profile")
       .select("-__v")
+      .sort({ count_like: -1 })
       .lean();
 
-    singers.sort((a, b) => b.count_likes - a.count_likes);
+    const data = await pagination(req, query, singerModel);
 
-    res.json(singers);
+    if (data.error) {
+      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
+    }
+
+    res.json(data);
   } catch (error) {
     next(error);
   }
@@ -240,7 +247,7 @@ export let getOne = async (req: Request, res: Response, next: NextFunction) => {
     const singer = await singerModel
       .findOne({ _id: id })
       .populate("musicStyle", "-__v")
-      .populate("album", "title")
+      .populate("album", "title photo")
       .populate("createBy", "name username profile")
       .select("-__v")
       .lean();

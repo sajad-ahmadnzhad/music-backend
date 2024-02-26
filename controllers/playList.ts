@@ -198,7 +198,7 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.BadRequest("paly list title is required");
     }
 
-    const foundPlayLists = await playListModel
+    const query = playListModel
       .find({
         title: { $regex: playList },
       })
@@ -208,7 +208,13 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
       .select("-__v")
       .lean();
 
-    res.json(foundPlayLists);
+    const data = await pagination(req, query, playListModel);
+
+    if (data.error) {
+      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
+    }
+
+    res.json(data);
   } catch (error: any) {
     next(error);
   }
@@ -242,7 +248,7 @@ export let popular = async (
   next: NextFunction
 ) => {
   try {
-    const playLists = await playListModel
+    const query = playListModel
       .find()
       .populate("createBy", "name username profile")
       .populate("musics", "title cover_image download_link")
@@ -251,7 +257,13 @@ export let popular = async (
       .select("-__v")
       .lean();
 
-    res.json(playLists);
+    const data = await pagination(req, query, musicModel);
+
+    if (data.error) {
+      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
+    }
+
+    res.json(data);
   } catch (error: any) {
     next(error);
   }
@@ -433,7 +445,7 @@ export let getByCountry = async (
       throw httpErrors.NotFound("country not found");
     }
 
-    const music = await playListModel
+    const query = playListModel
       .find({ country: countryId })
       .populate("createBy", "name username profile")
       .populate("musics", "title cover_image download_link")
@@ -444,7 +456,13 @@ export let getByCountry = async (
       .select("-__v")
       .lean();
 
-    res.json(music);
+    const data = await pagination(req, query, playListModel);
+
+    if (data.error) {
+      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
+    }
+
+    res.json(data);
   } catch (error) {
     next(error);
   }

@@ -6,7 +6,6 @@ import path from "path";
 import playListModel from "../models/playList";
 import musicModel from "../models/music";
 import pagination from "../helpers/pagination";
-import commentModel from "../models/comment";
 import countryModel from "../models/country";
 import { isValidObjectId } from "mongoose";
 import httpErrors from "http-errors";
@@ -127,11 +126,7 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
       );
     }
 
-    if (playList.cover_image) {
-      fs.unlinkSync(path.join(process.cwd(), "public", playList.cover_image));
-    }
-    await playListModel.findByIdAndDelete(id);
-    await commentModel.deleteMany({ target_id: id });
+    await playListModel.deleteOne({ _id: id });
     res.json({ message: "Deleted play list successfully" });
   } catch (error: any) {
     next(error);

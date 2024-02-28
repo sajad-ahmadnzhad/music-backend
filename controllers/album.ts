@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import httpStatus from "http-status";
 import albumModel from "../models/album";
-import playListModel from "../models/playList";
 import singerModel from "../models/singer";
 import musicModel from "../models/music";
 import userFavoriteModel from "../models/userFavorite";
@@ -92,9 +91,10 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
 
     await albumModel.deleteOne({ _id: id });
 
-    await playListModel.updateOne({ albums: id }, { $pull: { albums: id } });
-
-    await singerModel.updateOne({ albums: id }, { $pull: { albums: id } });
+    await singerModel.updateOne(
+      { _id: album.artist },
+      { $pull: { album: id } }
+    );
 
     await userFavoriteModel.deleteOne({ target_id: id });
     await commentModel.deleteMany({ target_id: id });

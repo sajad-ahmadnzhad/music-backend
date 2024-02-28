@@ -1,16 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import singerModel from "../models/singer";
+import singerArchiveModel from "../models/singerArchive";
 import { SingerBody } from "../interfaces/singer";
 import { isValidObjectId } from "mongoose";
-import musicModel from "../models/music";
-import albumModel from "../models/album";
-import archiveModel from "../models/archive";
-import singerArchiveModel from "../models/singerArchive";
-import commentModel from "../models/comment";
-import criticismModel from "../models/criticism";
-import palyListModel from "../models/playList";
-import userFavoriteModel from "../models/userFavorite";
-import upcomingModel from "../models/upcoming";
 import httpStatus from "http-status";
 import pagination from "../helpers/pagination";
 import fs from "fs";
@@ -24,6 +16,7 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
       .populate("album", "title photo")
       .populate("likes", "name username profile")
       .populate("createBy", "name username profile")
+      .populate("country", "title description image")
       .select("-__v")
       .sort({ createdAt: "desc" })
       .lean();
@@ -91,6 +84,7 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
       .populate("album", "title photo")
       .populate("likes", "name username profile")
       .populate("createBy", "name username profile")
+      .populate("country", "title description image")
       .select("-__v")
       .lean();
 
@@ -168,42 +162,10 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
     }
 
     if (singer.createBy !== user._id && !user.isSuperAdmin) {
-      res.status(httpStatus.BAD_REQUEST).json({
-        message: "This reader can only be removed by the person who created it",
-      });
-      return;
+      throw httpErrors.BadRequest(
+        "This reader can only be removed by the person who created it"
+      );
     }
-
-    const singerMusics = await musicModel.find({ artist: id }).lean();
-    const signerAlbums = await albumModel.find({ artist: id }).lean();
-    const upcomingMusic = await upcomingModel.find({ artist: id }).lean();
-    const musicIds = singerMusics.map((music) => music._id);
-
-    await musicModel.deleteMany({ artist: id }); //accept
-    await albumModel.deleteMany({ artist: id }); //accept
-    await archiveModel.deleteMany({ artist: id }); //accept
-    await upcomingModel.deleteMany({ artist: id }); //accept
-    await criticismModel.deleteMany({ target_id: id }); //accept
-    await commentModel.deleteMany({ music: { $in: musicIds } }); //accept
-    await palyListModel.updateMany({ musics: id }, { $pull: { musics: id } }); //accept
-    await userFavoriteModel.deleteMany({ target_id: { $in: musicIds } }); //accept
-
-    //remove music and cover
-    for (let music of singerMusics) {
-      fs.unlinkSync(path.join(process.cwd(), "public", music.download_link));
-      fs.unlinkSync(path.join(process.cwd(), "public", music.cover_image));
-    }
-    //remove photo album
-    for (let album of signerAlbums) {
-      fs.unlinkSync(path.join(process.cwd(), "public", album.photo));
-    }
-    //remove cover music upcoming
-    for (let music of upcomingMusic) {
-      if (music.cover_image)
-        fs.unlinkSync(path.join(process.cwd(), "public", music.cover_image));
-    }
-
-    fs.unlinkSync(path.join(process.cwd(), "public", singer.photo));
 
     await singerModel.deleteOne({ _id: singer._id });
 
@@ -222,6 +184,7 @@ export let popular = async (
       .find({})
       .populate("musicStyle", "title description")
       .populate("album", "title photo")
+      .populate("country", "title description image")
       .populate("likes", "name username profile")
       .populate("createBy", "name username profile")
       .select("-__v")
@@ -253,6 +216,7 @@ export let getOne = async (req: Request, res: Response, next: NextFunction) => {
       .populate("album", "title photo")
       .populate("createBy", "name username profile")
       .populate("likes", "name username profile")
+      .populate("country", "title description image")
       .select("-__v")
       .lean();
 

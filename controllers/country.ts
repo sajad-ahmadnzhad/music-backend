@@ -3,10 +3,8 @@ import { BodyCountry } from "../interfaces/country";
 import countryModel from "../models/country";
 import httpStatus from "http-status";
 import fs from "fs";
-import musicModel from "../models/music";
 import path from "path";
 import { isValidObjectId } from "mongoose";
-import { rimrafSync } from "rimraf";
 import httpErrors from "http-errors";
 
 export let create = async (req: Request, res: Response, next: NextFunction) => {
@@ -107,20 +105,7 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
       );
     }
 
-    if (country.image) {
-      fs.unlinkSync(path.join(process.cwd(), "public", country.image));
-    }
-
-    const musics = await musicModel.find({ country: id });
-    const paths = path.join(process.cwd(), "public");
-    const musicPaths = musics.flatMap((music) => [
-      `${paths}${music.download_link}`,
-      `${paths}${music.cover_image}`,
-    ]);
-
-    rimrafSync(musicPaths);
-    await countryModel.findByIdAndDelete(id);
-    await musicModel.deleteMany({ country: id });
+    await countryModel.deleteOne({ _id: id });
     res.json({ message: "Deleted country successfully" });
   } catch (error) {
     next(error);

@@ -4,13 +4,6 @@ import httpStatus from "http-status";
 import httpErrors from "http-errors";
 import { isValidObjectId } from "mongoose";
 import genreModel from "../models/genre";
-import { rimrafSync } from "rimraf";
-import path from "path";
-import userPlaylistModel from "../models/userPlaylist";
-import playListModel from "../models/playList";
-import musicModel from "../models/music";
-import singerModel from "../models/singer";
-import upcomingModel from "../models/upcoming";
 import categoryModel from "../models/country";
 export let create = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -106,54 +99,7 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
         "This genre can only be deleted by the person who created it"
       );
     }
-
-    const musics = await musicModel.find({ genre: id });
-    const singers = await singerModel.find({ musicStyle: id });
-    const upcoming = await upcomingModel.find({ genre: id });
-    const playLists = await playListModel.find({ genre: id });
-    const userPlaylists = await userPlaylistModel.find({ genre: id });
-    const publicFolder = path.join(process.cwd(), "public");
-    const musicPaths: string[] = [];
-    musics.forEach((music) => {
-      musicPaths.push(
-        `${publicFolder}${music.download_link}`,
-        `${publicFolder}${music.cover_image}`
-      );
-    });
-    singers.forEach((singer) => {
-      musicPaths.push(`${publicFolder}${singer.photo}`);
-    });
-
-    playLists.forEach((playlist) => {
-      musicPaths.push(`${publicFolder}${playlist.cover_image}`);
-    });
-    userPlaylists.forEach((userPlaylist) => {
-      musicPaths.push(`${publicFolder}${userPlaylist.cover}`);
-    });
-    upcoming.forEach((upcoming) => {
-      musicPaths.push(`${publicFolder}${upcoming.cover_image}`);
-    });
-
-    rimrafSync(musicPaths);
-
-    await musicModel.deleteMany({
-      genre: id,
-    });
-    await singerModel.deleteMany({
-      musicStyle: id,
-    });
-    await upcomingModel.deleteMany({
-      genre: id,
-    });
-
-    await playListModel.deleteMany({
-      genre: id,
-    });
-    await userPlaylistModel.deleteMany({
-      genre: id,
-    });
-
-    await genreModel.findByIdAndDelete(id);
+    await genreModel.deleteOne({ _id: id });
     res.json({ message: "Deleted genre successfully" });
   } catch (error) {
     next(error);

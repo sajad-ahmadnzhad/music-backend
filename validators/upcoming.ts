@@ -3,7 +3,7 @@ import singerModel from "../models/singer";
 import genreModel from "../models/genre";
 import countryModel from "../models/country";
 export default joi.object({
-  title: joi.string().trim().max(50).min(5).required(),
+  title: joi.string().trim().max(50).min(2).required(),
   artist: joi
     .string()
     .trim()

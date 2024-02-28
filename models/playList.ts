@@ -1,5 +1,7 @@
 import { Schema, model } from "mongoose";
-
+import commentModel from "./comment";
+import path from "path";
+import { rimrafSync } from "rimraf";
 const schema = new Schema(
   {
     title: { type: String, required: true },
@@ -14,5 +16,24 @@ const schema = new Schema(
   },
   { timestamps: true }
 );
+
+schema.pre("deleteMany", async function (next) {
+  try {
+    const deletedPlaylist = await this.model.find(this.getFilter());
+    const publicFolder = path.join(process.cwd(), "public");
+    const playListIds = deletedPlaylist.map((playList) => playList._id);
+    const playListFiles = deletedPlaylist.map(
+      (playList) => `${publicFolder}${playList.cover_image}`
+    );
+
+    rimrafSync(playListFiles);
+
+    await commentModel.deleteMany({ target_id: { $in: playListIds } });
+
+    next();
+  } catch (error: any) {
+    next(error);
+  }
+});
 
 export default model("playList", schema);

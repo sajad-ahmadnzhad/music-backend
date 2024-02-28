@@ -1,5 +1,10 @@
 import { Schema, model } from "mongoose";
-
+import { rimrafSync } from "rimraf";
+import path from "path";
+import commentModel from "./comment";
+import playListModel from "./playList";
+import userFavoriteModel from "./userFavorite";
+import userPlaylistModel from "./userPlaylist";
 const schema = new Schema(
   {
     title: { type: String, required: true },
@@ -21,5 +26,32 @@ const schema = new Schema(
   },
   { timestamps: true }
 );
+
+schema.pre("deleteMany", async function (next) {
+  try {
+    const deletedMusics = await this.model.find(this.getFilter());
+    const musicIds = deletedMusics.map((music) => music._id);
+    const publicFolder = path.join(process.cwd(), "public");
+    const musicFiles = deletedMusics.flatMap((music) => [
+      `${publicFolder}${music.download_link}`,
+      `${publicFolder}${music.cover_image}`,
+    ]);
+
+    await playListModel.updateMany({ $pull: { musics: { $in: musicIds } } });
+    await userFavoriteModel.deleteMany({ target_id: { $in: musicIds } });
+    await userPlaylistModel.updateMany({
+      $pull: { musics: { $in: musicIds } },
+      count_musics: -1,
+    });
+
+    rimrafSync(musicFiles);
+
+    await commentModel.deleteMany({ target_id: { $in: musicIds } });
+
+    next();
+  } catch (error: any) {
+    next(error);
+  }
+});
 
 export default model("music", schema);

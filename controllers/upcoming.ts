@@ -7,6 +7,7 @@ import httpErrors from "http-errors";
 import pagination from "../helpers/pagination";
 import countryModel from "../models/country";
 import genreModel from "../models/genre";
+import commentModel from "../models/comment";
 import fs from "fs";
 import path from "path";
 import { isValidObjectId } from "mongoose";
@@ -94,7 +95,7 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
       fs.unlinkSync(path.join(process.cwd(), "public", upcoming.cover_image));
     }
     await upcomingModel.findByIdAndDelete(id);
-
+    await commentModel.deleteMany({ target_id: id });
     res.json({ message: "Deleted upcoming successfully" });
   } catch (error) {
     next(error);

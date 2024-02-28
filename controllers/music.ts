@@ -6,6 +6,7 @@ import upcomingModel from "../models/upcoming";
 import httpStatus from "http-status";
 import singerArchiveModel from "../models/singerArchive";
 import singerModel from "../models/singer";
+import commentModel from "../models/comment";
 import fs from "fs";
 import { isValidObjectId } from "mongoose";
 import path from "path";
@@ -123,7 +124,7 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
     fs.unlinkSync(path.join(process.cwd(), "public", music.download_link));
 
     await musicModel.deleteOne({ _id: id });
-
+    await commentModel.deleteMany({ target_id: id });
     res.json({ message: "Deleted music successfully" });
   } catch (error) {
     next(error);

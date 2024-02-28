@@ -6,6 +6,7 @@ import singerModel from "../models/singer";
 import musicModel from "../models/music";
 import userFavoriteModel from "../models/userFavorite";
 import { AlbumBody } from "../interfaces/album";
+import commentModel from "../models/comment";
 import fs from "fs";
 import path from "path";
 import pagination from "../helpers/pagination";
@@ -96,6 +97,7 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
     await singerModel.updateOne({ albums: id }, { $pull: { albums: id } });
 
     await userFavoriteModel.deleteOne({ target_id: id });
+    await commentModel.deleteMany({ target_id: id });
 
     res.json({ message: "Deleted album successfully" });
   } catch (error) {

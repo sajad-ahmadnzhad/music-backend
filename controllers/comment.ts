@@ -2,26 +2,24 @@ import { Request, Response, NextFunction } from "express";
 import { CommentsBody } from "../interfaces/comment";
 import commentModel from "../models/comment";
 import httpStatus from "http-status";
-import musicModel from "../models/music";
 import pagination from "../helpers/pagination";
 import { isValidObjectId } from "mongoose";
 import httpErrors from "http-errors";
 export let create = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { musicId } = req.params;
     const body = req.body as CommentsBody;
     const { user } = req as any;
-    if (!isValidObjectId(musicId)) {
-      throw httpErrors.BadRequest("music id is not from mongodb");
+
+    if (!body.body) {
+      throw httpErrors.BadRequest("Body is required");
     }
 
-    const music = await musicModel.findById(musicId).lean();
-
-    if (!music) {
-      throw httpErrors.NotFound("Music not found");
-    }
-
-    await commentModel.create({ ...body, creator: user._id, musicId });
+    await commentModel.create({
+      ...body,
+      creator: user._id,
+      target_id: body.targetId,
+      commentType: body.type,
+    });
 
     res
       .status(httpStatus.CREATED)
@@ -32,27 +30,32 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
 };
 export let getAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { musicId } = req.params;
-
-    if (!isValidObjectId(musicId)) {
-      throw httpErrors.BadRequest("music id is not from mongodb");
-    }
-
-    const music = await musicModel.findById(musicId).lean();
-
-    if (!music) {
-      throw httpErrors.NotFound("Music not found");
-    }
+    const { type, targetId } = req.body;
 
     const query = commentModel
-      .find({ musicId })
+      .find({ target_id: targetId, commentType: type })
       .select("-__v")
       .sort({ createdAt: "desc" })
       .populate("creator", "name username profile")
+      .populate("like", "name username profile")
+      .populate("dislike", "name username profile")
+      .populate("reports", "name username profile")
       .populate({
-        path: "musicId",
-        select: "title artist cover_image download_link",
-        populate: [{ path: "artist", select: "fullName photo" }],
+        path: "parentComment",
+        select: "body creator",
+        populate: { path: "creator", select: "name username profile" },
+      })
+      .populate({
+        path: "replies",
+        select: "body creator",
+        populate: { path: "creator", select: "name username profile" },
+      })
+      .populate({
+        path: "target_id",
+        select: "title artist cover_image download_link photo",
+        populate: [
+          { path: "artist", select: "fullName photo", strictPopulate: false },
+        ],
       })
       .lean();
 
@@ -69,14 +72,12 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
 };
 export let reply = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { commentId, musicId } = req.params;
-    const { body } = req.body;
+    const { commentId } = req.params;
+    const { body, type, targetId } = req.body;
     const { user } = req as any;
 
-    if (!body || body > 3) {
-      throw httpErrors.BadRequest(
-        "The body is mandatory and requires at least 3 characters"
-      );
+    if (!body) {
+      throw httpErrors.BadRequest("Body is required");
     }
 
     if (!isValidObjectId(commentId)) {
@@ -89,25 +90,16 @@ export let reply = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("Comment not found");
     }
 
-    if (!isValidObjectId(musicId)) {
-      throw httpErrors.BadRequest("Music id is not from mongodb");
-    }
-
-    const music = await musicModel.findById(musicId).lean();
-
-    if (!music) {
-      throw httpErrors.NotFound("Music not found");
-    }
-
     const replay = await commentModel.create({
       creator: user._id,
       body: body?.trim(),
-      musicId,
       parentComment: commentId,
+      commentType: type,
+      target_id: targetId,
     });
 
     await commentModel.findOneAndUpdate(
-      { _id: commentId, musicId },
+      { _id: commentId },
       { $push: { replies: replay._id } }
     );
 
@@ -166,7 +158,10 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
       );
     }
 
-    await commentModel.findByIdAndUpdate(commentId, { ...body, edited: true });
+    await commentModel.findByIdAndUpdate(commentId, {
+      ...body,
+      isEdited: true,
+    });
 
     res.json({ message: "Comment updated successfully" });
   } catch (error) {
@@ -401,29 +396,80 @@ export let allReports = async (
   next: NextFunction
 ) => {
   try {
-    const { musicId } = req.params;
+    const { targetId, type } = req.body;
     const { user } = req as any;
-    if (!isValidObjectId(musicId)) {
-      throw httpErrors.BadRequest("Music id is not from mongodb");
-    }
 
-    const music = await musicModel.findById(musicId).lean();
+    const comments = (await commentModel
+      .find({
+        target_id: targetId,
+        commentType: type,
+        reports: { $exists: true, $ne: [] },
+      })
+      .populate("creator", "name username profile")
+      .populate("reports", "name username profile")
+      .populate({
+        path: "target_id",
+        select: "title artist cover_image download_link photo",
+        populate: [
+          { path: "artist", select: "fullName photo", strictPopulate: false },
+        ],
+      })
+      .sort({ isReviewed: 1  , createdAt: -1})
+      .select("-like -dislike -replies -parentComment -__v -isEdited")
+      .lean()) as any;
 
-    if (!music) {
-      throw httpErrors.NotFound("Music not found");
-    }
-
-    if (String(user._id) !== String(music.createBy) && !user.isSupperAdmin) {
+    if (
+      String(user._id) !== String(comments[0].target_id.createBy) &&
+      !user.isSuperAdmin
+    ) {
       throw httpErrors.Forbidden(
-        "Only the admin who created this music can receive reports"
+        `Only the admin who created the ${type} can receive the reports`
       );
     }
 
-    const comments = (await commentModel.find({ musicId })).filter(
-      (comment) => comment.reports.length >= 3
-    );
-
     res.json(comments);
+  } catch (error) {
+    next(error);
+  }
+};
+export let reviewed = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { commentId } = req.params;
+    const { user } = req as any;
+
+    if (!isValidObjectId(commentId)) {
+      throw httpErrors.BadRequest("Comment id is not from mongodb");
+    }
+    const comment = (await commentModel
+      .findById(commentId)
+      .populate("target_id")) as any;
+
+    if (!comment) {
+      throw httpErrors.NotFound("Comment not found");
+    }
+
+    if (
+      String(user._id) !== String(comment.target_id?.createBy) &&
+      !user.isSuperAdmin
+    ) {
+      throw httpErrors.Forbidden(
+        `Only the person who created the ${comment.commentType} can review the comment`
+      );
+    }
+
+    if (comment.isReviewed) {
+      throw httpErrors.Conflict("This comment has already been reviewed");
+    }
+
+    await commentModel.findByIdAndUpdate(commentId, {
+      isReviewed: true,
+    });
+
+    res.json({ message: "Reviewed comment successfully" });
   } catch (error) {
     next(error);
   }

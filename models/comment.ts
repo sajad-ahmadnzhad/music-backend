@@ -27,14 +27,14 @@ const schema = new Schema(
         default: [],
       },
     ],
-    edited: {
+    isEdited: {
       type: Boolean,
       default: false,
     },
-    musicId: {
+    target_id: {
       type: Schema.Types.ObjectId,
+      refPath: "commentType",
       required: true,
-      ref: "music",
     },
     body: {
       type: String,
@@ -51,6 +51,15 @@ const schema = new Schema(
         ref: "comment",
       },
     ],
+    commentType: {
+      type: String,
+      enum: ["music", "album", "upcoming", "playList"],
+      required: true,
+    },
+    isReviewed: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

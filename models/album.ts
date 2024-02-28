@@ -14,4 +14,4 @@ const schema = new Schema(
   { timestamps: true }
 );
 
-export default model("albums", schema);
+export default model("album", schema);

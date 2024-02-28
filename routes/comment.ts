@@ -12,6 +12,7 @@ import {
   dislike,
   unDislike,
   allReports,
+  reviewed,
 } from "../controllers/comment";
 import isBanMiddlewares from "../middlewares/isBan";
 import authMiddlewares from "../middlewares/auth";
@@ -21,19 +22,20 @@ import commentValidatorSchema from "../validators/comment";
 const router = express.Router();
 
 router
-  .route("/:musicId")
+  .route("/")
   .post(
     authMiddlewares,
     isBanMiddlewares,
     validatorMiddlewares(commentValidatorSchema),
     create
   )
-  .get(getAll);
+  .get(validatorMiddlewares(commentValidatorSchema), getAll);
 
 router.post(
-  "/:commentId/reply/:musicId",
+  "/:commentId/reply",
   authMiddlewares,
   isBanMiddlewares,
+  validatorMiddlewares(commentValidatorSchema),
   reply
 );
 router.post("/:commentId/like", authMiddlewares, isBanMiddlewares, like);
@@ -52,11 +54,21 @@ router.post(
   isBanMiddlewares,
   unDislike
 );
-router.get(
-  "/:musicId/reports",
+
+router.put(
+  "/:commentId/reviewed",
   authMiddlewares,
   isBanMiddlewares,
   isAdminMiddlewares,
+  reviewed
+);
+
+router.get(
+  "/reports",
+  authMiddlewares,
+  isBanMiddlewares,
+  isAdminMiddlewares,
+  validatorMiddlewares(commentValidatorSchema),
   allReports
 );
 router

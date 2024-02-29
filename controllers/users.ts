@@ -183,9 +183,13 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
     }
 
     const hashedPassword = bcrypt.hashSync(body.password, 10);
-
+    const foundUser = await usersModel.findById(user._id);
+    if (foundUser?.email !== body.email) {
+      await usersModel.findByIdAndUpdate(user._id, { isVerified: false });
+      res.clearCookie("token");
+    }
     await usersModel
-      .findOneAndUpdate(
+      .updateOne(
         { _id: user._id },
         {
           ...body,

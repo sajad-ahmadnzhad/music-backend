@@ -60,7 +60,7 @@ export let login = async (req: Request, res: Response, next: NextFunction) => {
           throw httpErrors(error?.message || "");
         }
       }
-      throw httpErrors.BadRequest(
+      throw httpErrors(200,
         "An email sent to your account please verify"
       );
     }

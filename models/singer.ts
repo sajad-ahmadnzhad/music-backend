@@ -25,6 +25,7 @@ const schema = new Schema(
 schema.pre("deleteOne", async function (next) {
   try {
     const deletedSinger = await this.model.findOne(this.getFilter());
+    if(!deletedSinger)return next()
     const publicFolder = path.join(process.cwd(), "public");
     const file = `${publicFolder}${deletedSinger.photo}`;
     rimrafSync(file);

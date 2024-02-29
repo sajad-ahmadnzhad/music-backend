@@ -1,6 +1,9 @@
 import { Schema, model } from "mongoose";
-
-const usersSchema = new Schema(
+import userPlaylistModel from "./userPlaylist";
+import userFavoriteModel from "./userFavorite";
+import { rimrafSync } from "rimraf";
+import path from "path";
+const schema = new Schema(
   {
     name: { type: String, required: true, trim: true },
     username: { type: String, require: true, trim: true },
@@ -14,4 +17,20 @@ const usersSchema = new Schema(
   { timestamps: true }
 );
 
-export default model("users", usersSchema);
+schema.pre("deleteOne", async function (next) {
+  try {
+    const deletedUser = await this.model.findOne(this.getFilter());
+    if (!deletedUser) return next();
+    const publicFolder = path.join(process.cwd(), "public");
+    if (!deletedUser.profile.includes("customProfile")) {
+      rimrafSync(`${publicFolder}${deletedUser.profile}`);
+    }
+    await userFavoriteModel.deleteMany({ user: deletedUser._id });
+    await userPlaylistModel.deleteMany({ createBy: deletedUser._id });
+    next();
+  } catch (error: any) {
+    next(error);
+  }
+});
+
+export default model("users", schema);

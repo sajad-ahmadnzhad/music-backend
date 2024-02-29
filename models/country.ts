@@ -16,6 +16,7 @@ const schema = new Schema(
 schema.pre("deleteOne", async function (next) {
   try {
     const deletedCountry = await this.model.findOne(this.getFilter());
+    if(!deletedCountry) return next()
     const publicFolder = path.join(process.cwd(), "public");
     rimrafSync(`${publicFolder}${deletedCountry.image}`);
     await singerModel.deleteMany({ country: deletedCountry._id });

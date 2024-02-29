@@ -37,6 +37,7 @@ schema.pre("deleteMany", async function (next) {
 schema.pre("deleteOne", async function (next) {
   try {
     const deletedUpcoming = await this.model.findOne(this.getFilter());
+    if(!deletedUpcoming) return next()
     const publicFolder = path.join(process.cwd(), "public");
 
     rimrafSync(`${publicFolder}${deletedUpcoming.cover_image}`);

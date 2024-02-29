@@ -18,6 +18,7 @@ const schema = new Schema(
 schema.pre("deleteOne", async function (next) {
   try {
     const deletedArchive = await this.model.findOne(this.getFilter());
+    if(!deletedArchive) return next()
     const publicFolder = path.join(process.cwd(), "public");
     rimrafSync(`${publicFolder}${deletedArchive.cover_image}`);
     next();

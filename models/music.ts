@@ -5,6 +5,10 @@ import commentModel from "./comment";
 import playListModel from "./playList";
 import userFavoriteModel from "./userFavorite";
 import userPlaylistModel from "./userPlaylist";
+import upcomingModel from "./upcoming";
+import albumModel from "./album";
+import singerArchiveModel from "./singerArchive";
+
 const schema = new Schema(
   {
     title: { type: String, required: true },
@@ -38,6 +42,7 @@ schema.pre("deleteMany", async function (next) {
     ]);
 
     await playListModel.updateMany({ $pull: { musics: { $in: musicIds } } });
+    await albumModel.updateMany({ $pull: { musics: { $in: musicIds } } });
     await userFavoriteModel.deleteMany({ target_id: { $in: musicIds } });
     await userPlaylistModel.updateMany({
       $pull: { musics: { $in: musicIds } },
@@ -47,6 +52,34 @@ schema.pre("deleteMany", async function (next) {
     rimrafSync(musicFiles);
 
     await commentModel.deleteMany({ target_id: { $in: musicIds } });
+
+    next();
+  } catch (error: any) {
+    next(error);
+  }
+});
+
+schema.pre("save", async function (next) {
+  try {
+    await upcomingModel.deleteOne({
+      title: this.title,
+      artist: this.artist,
+    });
+
+    await singerArchiveModel.findOneAndUpdate(
+      { artist: this.artist },
+      {
+        $push: { musics: this._id },
+        $inc: { count_musics: 1 },
+      }
+    );
+
+    await albumModel.findOneAndUpdate(
+      { artist: this.artist },
+      {
+        $push: { musics: this._id },
+      }
+    );
 
     next();
   } catch (error: any) {

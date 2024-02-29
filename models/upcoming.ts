@@ -34,5 +34,19 @@ schema.pre("deleteMany", async function (next) {
     next(error);
   }
 });
+schema.pre("deleteOne", async function (next) {
+  try {
+    const deletedUpcoming = await this.model.findOne(this.getFilter());
+    const publicFolder = path.join(process.cwd(), "public");
+
+    rimrafSync(`${publicFolder}${deletedUpcoming.cover_image}`);
+
+    await commentModel.deleteMany({ target_id: deletedUpcoming._id });
+
+    next();
+  } catch (error: any) {
+    next(error);
+  }
+});
 
 export default model("upcoming", schema);

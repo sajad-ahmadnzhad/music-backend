@@ -2,10 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import musicModel from "./../models/music";
 import countryModel from "../models/country";
 import { MusicBody, MusicFile } from "./../interfaces/music";
-import upcomingModel from "../models/upcoming";
 import httpStatus from "http-status";
-import singerArchiveModel from "../models/singerArchive";
-import singerModel from "../models/singer";
 import commentModel from "../models/comment";
 import fs from "fs";
 import { isValidObjectId } from "mongoose";
@@ -39,35 +36,13 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
     const minutes = Math.floor(duration / 60).toString();
     const seconds = Math.floor(duration % 60).toString();
 
-    const deletedUpcoming = await upcomingModel.findOneAndDelete({
-      title: body.title,
-      artist: body.artist,
-    });
-
-    if (deletedUpcoming?.cover_image) {
-      fs.unlinkSync(
-        path.join(process.cwd(), "public", deletedUpcoming.cover_image)
-      );
-    }
-
-    const newMusic = await musicModel.create({
+    await musicModel.create({
       ...body,
       duration: `${minutes.padStart(2, "0")}:${seconds.padStart(2, "0")}`,
       cover_image: `/coverMusics/${files.cover[0].filename}`,
       download_link: `/musics/${files.music[0].filename}`,
       createBy: user._id,
     });
-
-    const singer = await singerModel.findById(body.artist);
-    if (singer) {
-      await singerArchiveModel.findOneAndUpdate(
-        { artist: singer._id },
-        {
-          $push: { musics: newMusic._id },
-          $inc: { count_musics: 1 },
-        }
-      );
-    }
 
     res
       .status(httpStatus.CREATED)

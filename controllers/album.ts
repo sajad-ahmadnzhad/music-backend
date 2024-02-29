@@ -274,7 +274,7 @@ export let addMusic = async (
       $inc: { countMusics: 1 },
       duration: albumDuration,
     });
-
+    await music.updateOne({ isSingle: false });
     res.json({ message: "Added music to album successfully" });
   } catch (error) {
     next(error);
@@ -336,6 +336,7 @@ export let removeMusic = async (
       $inc: { countMusics: -1 },
       duration: albumDuration,
     });
+    await music.updateOne({ isSingle: true });
 
     res.json({ message: "Deleted music from album successfully" });
   } catch (error) {

@@ -1,6 +1,4 @@
 import joi from "joi";
-import singerModel from "../models/singer";
-import albumModel from "../models/album";
 import genreModel from "../models/genre";
 export default joi.object({
   title: joi.string().trim().max(50).min(5).required(),

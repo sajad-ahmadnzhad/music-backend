@@ -42,6 +42,7 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
       cover_image: `/coverMusics/${files.cover[0].filename}`,
       download_link: `/musics/${files.music[0].filename}`,
       createBy: user._id,
+      isSingle: !body.album,
     });
 
     res
@@ -95,11 +96,7 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
       );
     }
 
-    fs.unlinkSync(path.join(process.cwd(), "public", music.cover_image));
-    fs.unlinkSync(path.join(process.cwd(), "public", music.download_link));
-
     await musicModel.deleteOne({ _id: id });
-    await commentModel.deleteMany({ target_id: id });
     res.json({ message: "Deleted music successfully" });
   } catch (error) {
     next(error);

@@ -19,7 +19,7 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("Music not found");
     }
 
-    if (type === "albums" && !album) {
+    if (type === "album" && !album) {
       throw httpErrors.NotFound("Album not found");
     }
 

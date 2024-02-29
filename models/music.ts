@@ -17,6 +17,7 @@ const schema = new Schema(
     release_year: { type: Number, default: new Date().getFullYear() },
     cover_image: { type: String, required: true },
     download_link: { type: String, required: true },
+    isSingle: { type: Boolean, required: true },
     description: { type: String },
     lyrics: { type: String },
     rating: { type: Number, default: 3 },
@@ -46,13 +47,46 @@ schema.pre("deleteMany", async function (next) {
     await userFavoriteModel.deleteMany({ target_id: { $in: musicIds } });
     await userPlaylistModel.updateMany({
       $pull: { musics: { $in: musicIds } },
-      count_musics: -1,
+      $inc: { count_musics: -1 },
     });
 
     rimrafSync(musicFiles);
 
     await commentModel.deleteMany({ target_id: { $in: musicIds } });
 
+    next();
+  } catch (error: any) {
+    next(error);
+  }
+});
+
+schema.pre("deleteOne", async function (next) {
+  try {
+    const deletedMusic = await this.model.findOne(this.getFilter());
+    if (!deletedMusic) return next();
+    const publicFolder = path.join(process.cwd(), "public");
+    rimrafSync([
+      `${publicFolder}${deletedMusic.cover_image}`,
+      `${publicFolder}${deletedMusic.download_link}`,
+    ]);
+
+    await playListModel.updateMany({ $pull: { musics: deletedMusic._id } });
+    await albumModel.updateMany({ $pull: { musics: deletedMusic._id } });
+    await userFavoriteModel.deleteMany({ target_id: deletedMusic._id });
+    await userPlaylistModel.updateMany({
+      $pull: { musics: deletedMusic._id },
+      $inc: { count_musics: -1 },
+    });
+
+    await commentModel.deleteMany({ target_id: deletedMusic._id });
+
+    await singerArchiveModel.findOneAndUpdate(
+      { artist: deletedMusic.artist },
+      {
+        $pull: { musics: deletedMusic._id },
+        $inc: { count_musics: -1 },
+      }
+    );
     next();
   } catch (error: any) {
     next(error);

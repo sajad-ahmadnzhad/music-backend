@@ -1,6 +1,6 @@
 import joi from "joi";
 export default joi.object({
-  type: joi.string().trim().valid("music", "albums").required(),
+  type: joi.string().trim().valid("music", "album").required(),
   target_id: joi
     .string()
     .trim()

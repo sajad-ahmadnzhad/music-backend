@@ -5,4 +5,5 @@ export interface ArchiveBody{
     description: string
     artist: ObjectId
     genre: ObjectId
+    country: ObjectId
 }

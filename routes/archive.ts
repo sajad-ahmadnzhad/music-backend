@@ -1,5 +1,5 @@
 import express from "express";
-import { create, getAll, update } from "../controllers/archive";
+import { create, getAll, update, remove } from "../controllers/archive";
 import authMiddlewares from "../middlewares/auth";
 import isAdminMiddlewares from "../middlewares/isAdmin";
 import validatorMiddlewares from "../middlewares/validator";
@@ -20,14 +20,16 @@ router
   )
   .get(getAll);
 
-router.put(
-  "/:id",
-  authMiddlewares,
-  isBanMiddlewares,
-  isAdminMiddlewares,
-  imageUploader.single("archiveCover"),
-  validatorMiddlewares(archiveValidator),
-  update
-);
+router
+  .route("/:id")
+  .put(
+    authMiddlewares,
+    isBanMiddlewares,
+    isAdminMiddlewares,
+    imageUploader.single("archiveCover"),
+    validatorMiddlewares(archiveValidator),
+    update
+  )
+  .delete(authMiddlewares, isBanMiddlewares, isAdminMiddlewares, remove);
 
 export default router;

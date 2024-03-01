@@ -46,6 +46,7 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
         populate: [{ path: "artist" }],
       })
       .select("-__v")
+      .sort({ createdAt: -1 })
       .lean();
     const data = await pagination(req, query, archiveModel);
 
@@ -83,7 +84,11 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
       title: body.title,
     });
 
-    if (existingArchiveTitle && id !== String(existingArchiveTitle._id)) {
+    if (
+      existingArchiveTitle &&
+      id !== String(existingArchiveTitle._id) &&
+      !user.isSuperAdmin
+    ) {
       throw httpErrors.Conflict("This archive title already exists");
     }
 
@@ -98,6 +103,41 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
     });
 
     res.json({ message: "Updated archive successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+export let remove = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { user } = req as any;
+
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("This archive id is not from mongodb");
+    }
+
+    const existingArchive = await archiveModel.findById(id);
+
+    if (!existingArchive) {
+      throw httpErrors.NotFound("Archive not found");
+    }
+
+    if (
+      String(user._id) !== String(existingArchive.createBy) &&
+      !user.isSuperAdmin
+    ) {
+      throw httpErrors.BadRequest(
+        "The archive can only be deleted by the person who created it"
+      );
+    }
+
+    if (existingArchive.cover_image) {
+      const publicFolder = path.join(process.cwd(), "public");
+      rimrafSync(`${publicFolder}${existingArchive.cover_image}`);
+    }
+
+    await archiveModel.findByIdAndDelete(id);
+    res.json({ message: "Deleted archive successfully" });
   } catch (error) {
     next(error);
   }

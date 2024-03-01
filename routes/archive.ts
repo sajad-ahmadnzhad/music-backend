@@ -1,5 +1,5 @@
 import express from "express";
-import { create, getAll } from "../controllers/archive";
+import { create, getAll, update } from "../controllers/archive";
 import authMiddlewares from "../middlewares/auth";
 import isAdminMiddlewares from "../middlewares/isAdmin";
 import validatorMiddlewares from "../middlewares/validator";
@@ -19,5 +19,15 @@ router
     create
   )
   .get(getAll);
+
+router.put(
+  "/:id",
+  authMiddlewares,
+  isBanMiddlewares,
+  isAdminMiddlewares,
+  imageUploader.single("archiveCover"),
+  validatorMiddlewares(archiveValidator),
+  update
+);
 
 export default router;

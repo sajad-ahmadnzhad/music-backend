@@ -4,6 +4,9 @@ import httpStatus from "http-status";
 import archiveModel from "../models/archive";
 import httpErrors from "http-errors";
 import pagination from "../helpers/pagination";
+import { isValidObjectId } from "mongoose";
+import path from "path";
+import { rimrafSync } from "rimraf";
 
 export let create = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -51,6 +54,50 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
     }
 
     res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+export let update = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const body = req.body as ArchiveBody;
+    const { user } = req as any;
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("This archive id is not from mongodb");
+    }
+
+    const existingArchive = await archiveModel.findById(id);
+
+    if (!existingArchive) {
+      throw httpErrors.NotFound("Archive not found");
+    }
+
+    if (String(user._id) !== String(existingArchive.createBy)) {
+      throw httpErrors.BadRequest(
+        "The archive can only be edited by the person who created it"
+      );
+    }
+
+    const existingArchiveTitle = await archiveModel.findOne({
+      title: body.title,
+    });
+
+    if (existingArchiveTitle && id !== String(existingArchiveTitle._id)) {
+      throw httpErrors.Conflict("This archive title already exists");
+    }
+
+    if (req.file && existingArchive.cover_image) {
+      const publicFolder = path.join(process.cwd(), "public");
+      rimrafSync(`${publicFolder}${existingArchive.cover_image}`);
+    }
+
+    await archiveModel.findByIdAndUpdate(id, {
+      ...body,
+      cover_image: req.file && `/archiveCovers/${req.file.filename}`,
+    });
+
+    res.json({ message: "Updated archive successfully" });
   } catch (error) {
     next(error);
   }

@@ -26,6 +26,7 @@ const schema = new Schema(
     count_downloads: { type: Number, default: 0 },
     likes: [{ type: Schema.ObjectId, ref: "users", default: [] }],
     country: { type: Schema.ObjectId, ref: "country", required: true },
+    album: { type: Schema.ObjectId, ref: "album" },
     genre: { type: Schema.ObjectId, ref: "genre", required: true },
     createBy: { type: Schema.ObjectId, ref: "users", required: true },
   },
@@ -47,7 +48,7 @@ schema.pre("deleteMany", async function (next) {
     await userFavoriteModel.deleteMany({ target_id: { $in: musicIds } });
     await userPlaylistModel.updateMany({
       $pull: { musics: { $in: musicIds } },
-      $inc: { count_musics: -1 },
+      $set: { count_musics: { $subtract: ["$count_musics", { $literal: 1 }] } },
     });
 
     rimrafSync(musicFiles);
@@ -71,8 +72,8 @@ schema.pre("deleteOne", async function (next) {
     ]);
 
     await playListModel.updateMany({ $pull: { musics: deletedMusic._id } });
-    await albumModel.updateMany({ $pull: { musics: deletedMusic._id } });
     await userFavoriteModel.deleteMany({ target_id: deletedMusic._id });
+    await albumModel.updateMany({ $pull: { musics: deletedMusic._id } });
     await userPlaylistModel.updateMany({
       $pull: { musics: deletedMusic._id },
       $inc: { count_musics: -1 },
@@ -87,6 +88,7 @@ schema.pre("deleteOne", async function (next) {
         $inc: { count_musics: -1 },
       }
     );
+
     next();
   } catch (error: any) {
     next(error);

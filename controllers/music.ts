@@ -3,12 +3,13 @@ import musicModel from "./../models/music";
 import countryModel from "../models/country";
 import { MusicBody, MusicFile } from "./../interfaces/music";
 import httpStatus from "http-status";
-import commentModel from "../models/comment";
 import fs from "fs";
 import { isValidObjectId } from "mongoose";
 import path from "path";
 import httpErrors from "http-errors";
 import nodeMediainfo from "node-mediainfo";
+import albumModel from "../models/album";
+import singerModel from "../models/singer";
 import genreModel from "../models/genre";
 import pagination from "../helpers/pagination";
 export let create = async (req: Request, res: Response, next: NextFunction) => {
@@ -28,7 +29,23 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
     });
 
     if (music) {
-      throw httpErrors.BadRequest("This music already exists");
+      throw httpErrors.Conflict("This music already exists");
+    }
+
+    if (body.album) {
+      const album = await albumModel.findOne({
+        _id: body.album,
+        artist: body.artist,
+      });
+
+      if (!album) throw httpErrors.NotFound("No album found for this singer");
+    }
+    const singer = await singerModel.findById(body.artist);
+
+    if (String(singer!.country) !== String(body.country)) {
+      throw httpErrors.BadRequest(
+        "The country entered is not the same as the country of the singer"
+      );
     }
 
     const result = await nodeMediainfo(files.music[0].path);
@@ -61,6 +78,7 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
       .populate("genre", "title description")
       .populate("createBy", "name username profile")
       .populate("likes", "name username profile")
+      .populate("album", "title photo description")
       .sort({ createdAt: -1 })
       .select("-__v")
       .lean();
@@ -174,6 +192,7 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
       .populate("genre", "title description")
       .populate("createBy", "name username profile")
       .populate("likes", "name username profile")
+      .populate("album", "title photo description")
       .select("-__v")
       .lean();
 
@@ -211,6 +230,7 @@ export let popular = async (
       .populate("genre", "title description")
       .populate("createBy", "name username profile")
       .populate("likes", "name username profile")
+      .populate("album", "title photo description")
       .sort({ createdAt: -1 })
       .select("-__v")
       .sort({ [type as string]: -1 })
@@ -345,6 +365,7 @@ export let getOne = async (req: Request, res: Response, next: NextFunction) => {
       .populate("genre", "-__v")
       .populate("createBy", "name username profile")
       .populate("likes", "name username profile")
+      .populate("album", "title photo description")
       .select("-__v")
       .lean();
 
@@ -387,6 +408,7 @@ export let getByGenreAndCountry = async (
       .populate("country", "title description image")
       .populate("genre", "title description")
       .populate("createBy", "name username profile")
+      .populate("album", "title photo description")
       .populate("likes", "name username profile")
       .select("-__v")
       .lean();

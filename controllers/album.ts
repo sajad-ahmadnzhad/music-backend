@@ -3,9 +3,7 @@ import httpStatus from "http-status";
 import albumModel from "../models/album";
 import singerModel from "../models/singer";
 import musicModel from "../models/music";
-import userFavoriteModel from "../models/userFavorite";
 import { AlbumBody } from "../interfaces/album";
-import commentModel from "../models/comment";
 import fs from "fs";
 import path from "path";
 import pagination from "../helpers/pagination";
@@ -87,17 +85,7 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
       );
     }
 
-    fs.unlinkSync(path.join(process.cwd(), "public", album.photo));
-
     await albumModel.deleteOne({ _id: id });
-
-    await singerModel.updateOne(
-      { _id: album.artist },
-      { $pull: { album: id } }
-    );
-
-    await userFavoriteModel.deleteOne({ target_id: id });
-    await commentModel.deleteMany({ target_id: id });
 
     res.json({ message: "Deleted album successfully" });
   } catch (error) {
@@ -243,6 +231,12 @@ export let addMusic = async (
       );
     }
 
+    if (String(music.artist) !== String(album.artist)) {
+      throw httpErrors.BadRequest(
+        "Another singer's music cannot be added to the album"
+      );
+    }
+
     const albums = await albumModel.find().lean();
     let isMusicInAlbum = albums.some((album) =>
       album.musics.some((music) => music.toString() == musicId)
@@ -254,25 +248,9 @@ export let addMusic = async (
       );
     }
 
-    const [albumMinutes, albumSeconds] = album.duration.split(":").map(Number);
-    const [musicMinutes, musicSeconds] = music.duration.split(":").map(Number);
-
-    let totalMinutes = albumMinutes + musicMinutes;
-    let totalSeconds = albumSeconds + musicSeconds;
-
-    if (totalSeconds >= 60) {
-      totalMinutes++;
-      totalSeconds -= 60;
-    }
-
-    const albumDuration = `${String(totalMinutes).padStart(2, "0")}:${String(
-      totalSeconds
-    ).padStart(2, "0")}`;
-
     await albumModel.findByIdAndUpdate(albumId, {
       $addToSet: { musics: musicId },
       $inc: { countMusics: 1 },
-      duration: albumDuration,
     });
     await music.updateOne({ isSingle: false });
     res.json({ message: "Added music to album successfully" });
@@ -316,25 +294,9 @@ export let removeMusic = async (
       );
     }
 
-    const [albumMinutes, albumSeconds] = album.duration.split(":").map(Number);
-    const [musicMinutes, musicSeconds] = music.duration.split(":").map(Number);
-
-    let minutesDiff = albumMinutes - musicMinutes;
-    let secondsDiff = albumSeconds - musicSeconds;
-
-    if (secondsDiff >= 60) {
-      secondsDiff += 60;
-      minutesDiff--;
-    }
-
-    const albumDuration = `${String(minutesDiff).padStart(2, "0")}:${String(
-      secondsDiff
-    ).padStart(2, "0")}`;
-
     await albumModel.findByIdAndUpdate(albumId, {
       $pull: { musics: musicId },
       $inc: { countMusics: -1 },
-      duration: albumDuration,
     });
     await music.updateOne({ isSingle: true });
 

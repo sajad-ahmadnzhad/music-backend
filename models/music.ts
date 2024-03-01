@@ -48,7 +48,6 @@ schema.pre("deleteMany", async function (next) {
     await userFavoriteModel.deleteMany({ target_id: { $in: musicIds } });
     await userPlaylistModel.updateMany({
       $pull: { musics: { $in: musicIds } },
-      $set: { count_musics: { $subtract: ["$count_musics", { $literal: 1 }] } },
     });
 
     rimrafSync(musicFiles);
@@ -74,10 +73,7 @@ schema.pre("deleteOne", async function (next) {
     await playListModel.updateMany({ $pull: { musics: deletedMusic._id } });
     await userFavoriteModel.deleteMany({ target_id: deletedMusic._id });
     await albumModel.updateMany({ $pull: { musics: deletedMusic._id } });
-    await userPlaylistModel.updateMany({
-      $pull: { musics: deletedMusic._id },
-      $inc: { count_musics: -1 },
-    });
+    await userPlaylistModel.updateMany({ $pull: { musics: deletedMusic._id } });
 
     await commentModel.deleteMany({ target_id: deletedMusic._id });
 

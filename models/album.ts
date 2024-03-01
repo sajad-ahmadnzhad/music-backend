@@ -13,7 +13,6 @@ const schema = new Schema(
     photo: { type: String, required: true },
     musics: [{ type: Schema.ObjectId, ref: "music", default: [] }],
     description: { type: String },
-    countMusics: { type: Number, default: 0 },
     createBy: { type: Schema.ObjectId, ref: "users", required: true },
   },
   { timestamps: true }

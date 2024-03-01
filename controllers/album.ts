@@ -250,7 +250,6 @@ export let addMusic = async (
 
     await albumModel.findByIdAndUpdate(albumId, {
       $addToSet: { musics: musicId },
-      $inc: { countMusics: 1 },
     });
     await music.updateOne({ isSingle: false });
     res.json({ message: "Added music to album successfully" });
@@ -296,7 +295,6 @@ export let removeMusic = async (
 
     await albumModel.findByIdAndUpdate(albumId, {
       $pull: { musics: musicId },
-      $inc: { countMusics: -1 },
     });
     await music.updateOne({ isSingle: true });
 

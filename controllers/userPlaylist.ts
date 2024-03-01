@@ -235,7 +235,6 @@ export let addMusic = async (
 
     await userPlaylistModel.findByIdAndUpdate(playlistId, {
       $addToSet: { musics: musicId },
-      $inc: { count_musics: 1 },
     });
 
     res.json({ message: "Music added to user playlist successfully" });
@@ -281,7 +280,6 @@ export let removeMusic = async (
 
     await userPlaylistModel.findByIdAndUpdate(playlistId, {
       $pull: { musics: musicId },
-      $inc: { count_musics: -1 },
     });
 
     res.json({

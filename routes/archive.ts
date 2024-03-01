@@ -1,5 +1,5 @@
 import express from "express";
-import { create } from "../controllers/archive";
+import { create, getAll } from "../controllers/archive";
 import authMiddlewares from "../middlewares/auth";
 import isAdminMiddlewares from "../middlewares/isAdmin";
 import validatorMiddlewares from "../middlewares/validator";
@@ -17,6 +17,7 @@ router
     imageUploader.single("archiveCover"),
     validatorMiddlewares(archiveValidator),
     create
-  );
+  )
+  .get(getAll);
 
 export default router;

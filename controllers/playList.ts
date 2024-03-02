@@ -152,7 +152,6 @@ export let like = async (req: Request, res: Response, next: NextFunction) => {
 
     await playListModel.findByIdAndUpdate(id, {
       $addToSet: { likes: user._id },
-      $inc: { count_likes: 1 },
     });
 
     res.json({ message: "Liked play list successfully" });
@@ -180,7 +179,6 @@ export let unlike = async (req: Request, res: Response, next: NextFunction) => {
 
     await playListModel.findByIdAndUpdate(id, {
       $pull: { likes: user._id },
-      $inc: { count_likes: -1 },
     });
 
     res.json({ message: "Un linked play list successfully" });
@@ -201,7 +199,9 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
       })
       .populate("createBy", "name username profile")
       .populate("musics", "title cover_image download_link")
-      .populate("category", "-__v")
+      .populate("country", "title description image")
+      .populate("likes", "name username profile")
+      .populate("genre", "title description")
       .select("-__v")
       .lean();
 
@@ -227,7 +227,9 @@ export let getOne = async (req: Request, res: Response, next: NextFunction) => {
       .findById(id)
       .populate("createBy", "name username profile")
       .populate("musics", "title cover_image download_link")
-      .populate("category", "-__v")
+      .populate("country", "title description image")
+      .populate("likes", "name username profile")
+      .populate("genre", "title description")
       .select("-__v")
       .lean();
 
@@ -249,8 +251,10 @@ export let popular = async (
       .find()
       .populate("createBy", "name username profile")
       .populate("musics", "title cover_image download_link")
-      .populate("category", "-__v")
-      .sort({ count_likes: "desc" })
+      .populate("country", "title description image")
+      .populate("likes", "name username profile")
+      .populate("genre", "title description")
+      .sort({ likes: "desc" })
       .select("-__v")
       .lean();
 

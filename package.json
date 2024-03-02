@@ -39,7 +39,7 @@
     "express-validator": "^7.0.1",
     "http-errors": "^2.0.0",
     "http-status": "^1.7.3",
-    "ip": "^1.1.8",
+    "ip": "^1.1.9",
     "joi": "^17.11.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.0.4",

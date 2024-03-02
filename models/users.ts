@@ -1,6 +1,9 @@
 import { Schema, model } from "mongoose";
 import userPlaylistModel from "./userPlaylist";
 import userFavoriteModel from "./userFavorite";
+import commentModel from "./comment";
+import musicModel from "./music";
+import singerModel from "./singer";
 import { rimrafSync } from "rimraf";
 import path from "path";
 const schema = new Schema(
@@ -27,6 +30,28 @@ schema.pre("deleteOne", async function (next) {
     }
     await userFavoriteModel.deleteMany({ user: deletedUser._id });
     await userPlaylistModel.deleteMany({ createBy: deletedUser._id });
+    const userComments = (
+      await commentModel.find({ creator: deletedUser._id })
+    ).map((comment) => comment._id);
+    await commentModel.deleteMany({ creator: deletedUser._id });
+    await commentModel.updateMany({
+      $pull: {
+        reports: deletedUser._id,
+        like: deletedUser._id,
+        dislike: deletedUser._id,
+        replies: { $in: userComments },
+      },
+    });
+    await musicModel.updateMany({
+      $pull: {
+        likes: deletedUser._id,
+      },
+    });
+    await singerModel.updateMany({
+      $pull: {
+        likes: deletedUser._id,
+      },
+    });
     next();
   } catch (error: any) {
     next(error);

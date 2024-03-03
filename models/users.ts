@@ -30,7 +30,7 @@ schema.pre("deleteOne", async function (next) {
     }
     await userFavoriteModel.deleteMany({ user: deletedUser._id });
     await userPlaylistModel.deleteMany({ createBy: deletedUser._id });
-    const userComments = (
+    const userCommentsId = (
       await commentModel.find({ creator: deletedUser._id })
     ).map((comment) => comment._id);
     await commentModel.deleteMany({ creator: deletedUser._id });
@@ -39,9 +39,12 @@ schema.pre("deleteOne", async function (next) {
         reports: deletedUser._id,
         like: deletedUser._id,
         dislike: deletedUser._id,
-        replies: { $in: userComments },
+        replies: { $in: userCommentsId },
       },
     });
+
+    await commentModel.deleteMany({ parentComment: { $in: userCommentsId } });
+
     await musicModel.updateMany({
       $pull: {
         likes: deletedUser._id,

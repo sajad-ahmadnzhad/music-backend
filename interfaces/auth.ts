@@ -1,4 +1,5 @@
 //body auth register controller 
+import {Types} from 'mongoose'
 export interface RegisterBody {
   name: string;
   username: string;
@@ -17,4 +18,5 @@ export interface SendMailOptions {
   to: string
   subject: string
   html: string
+  userId?: Types.ObjectId
 }

@@ -52,6 +52,7 @@ export let login = async (req: Request, res: Response, next: NextFunction) => {
           html: `<p>Click on the link below to confirm the email:</p>
        <h1>${url}</h1>
        `,
+          userId: user._id,
         };
 
         const { error }: any = sendMail(mailOptions);
@@ -60,9 +61,7 @@ export let login = async (req: Request, res: Response, next: NextFunction) => {
           throw httpErrors(error?.message || "");
         }
       }
-      throw httpErrors(200,
-        "An email sent to your account please verify"
-      );
+      throw httpErrors(200, "An email sent to your account please verify");
     }
 
     const twoMonths = 60 * 60 * 24 * 60 * 1000;
@@ -96,7 +95,7 @@ export let register = async (
 
     const hashPassword = bcrypt.hashSync(password, 10);
     const profile = req.file?.filename;
-    const users = await usersModel.find().lean();
+    const countUsers = await usersModel.countDocuments().lean();
 
     const newUser = await usersModel.create({
       ...req.body,
@@ -104,8 +103,8 @@ export let register = async (
         ? `/usersProfile/${profile}`
         : "/usersProfile/customProfile.png",
       password: hashPassword,
-      isAdmin: users.length == 0,
-      isSuperAdmin: users.length == 0,
+      isAdmin: countUsers == 0,
+      isSuperAdmin: countUsers == 0,
     });
 
     const token = await tokenModel.create({
@@ -122,6 +121,7 @@ export let register = async (
       html: `<p>Click on the link below to confirm the email:</p>
        <h1>${url}</h1>
        `,
+      userId: newUser._id
     };
 
     const { error }: any = sendMail(mailOptions);

@@ -254,7 +254,7 @@ export let popular = async (
       .populate("country", "title description image")
       .populate("likes", "name username profile")
       .populate("genre", "title description")
-      .sort({ likes: "desc" })
+      .sort({ likes: -1 })
       .select("-__v")
       .lean();
 

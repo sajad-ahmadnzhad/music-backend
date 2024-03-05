@@ -6,7 +6,7 @@ const schema = new Schema(
       enum: ["playList", "singer", "album", "music", "upcoming"],
       required: true,
     },
-    target_id: [{ type: Schema.ObjectId, refPath: "type", default: [] }],
+    target_ids: [{ type: Schema.ObjectId, refPath: "type", default: [] }],
     country: { type: String, ref: "country", required: true },
   },
   { timestamps: true }

@@ -19,10 +19,13 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.BadRequest("cover play list is required");
     }
 
-    const playList = await playListModel.findOne({ title: body.title });
+    const playList = await playListModel.findOne({
+      title: body.title,
+      country: body.country,
+    });
 
     if (playList) {
-      throw httpErrors.BadRequest("This play list already exists");
+      throw httpErrors.Conflict("This play list already exists");
     }
 
     await playListModel.create({
@@ -86,6 +89,7 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
     }
     const existingPlaylist = await playListModel.findOne({
       title: body.title,
+      country: body.country
     });
 
     if (existingPlaylist && existingPlaylist._id.toString() !== id) {

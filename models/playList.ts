@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import autoArchiveModel from "../models/autoArchive";
 import commentModel from "./comment";
 import path from "path";
 import { rimrafSync } from "rimraf";
@@ -28,6 +29,31 @@ schema.pre("deleteMany", async function (next) {
     rimrafSync(playListFiles);
 
     await commentModel.deleteMany({ target_id: { $in: playListIds } });
+
+    next();
+  } catch (error: any) {
+    next(error);
+  }
+});
+
+schema.pre("save", async function (next) {
+  try {
+    const existingAutoArchive = await autoArchiveModel.findOne({
+      type: "playList",
+      country: this.country,
+    });
+
+    if (existingAutoArchive) {
+      await existingAutoArchive.updateOne({
+        $push: { target_ids: this._id },
+      });
+    } else {
+      await autoArchiveModel.create({
+        type: "playList",
+        country: this.country,
+        target_ids: this._id,
+      });
+    }
 
     next();
   } catch (error: any) {

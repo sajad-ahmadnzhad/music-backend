@@ -4,6 +4,7 @@ import commentModel from "./comment";
 import userFavoriteModel from "./userFavorite";
 import singerModel from "./singer";
 import archiveModel from "./archive";
+import autoArchiveModel from "./autoArchive";
 import musicModel from "./music";
 import path from "path";
 const schema = new Schema(
@@ -53,6 +54,32 @@ schema.pre("deleteOne", async function (next) {
     await musicModel.deleteMany({
       album: deletedAlbum._id,
     });
+    next();
+  } catch (error: any) {
+    next(error);
+  }
+});
+
+schema.pre("save", async function (next) {
+  try {
+    const album = (await this.populate("artist", "country")) as any;
+    const existingAutoArchive = await autoArchiveModel.findOne({
+      type: "album",
+      country: album.artist.country,
+    });
+
+    if (existingAutoArchive) {
+      await existingAutoArchive.updateOne({
+        $push: { target_ids: this._id },
+      });
+    } else {
+      await autoArchiveModel.create({
+        type: "album",
+        country: album.artist.country,
+        target_ids: this._id,
+      });
+    }
+
     next();
   } catch (error: any) {
     next(error);

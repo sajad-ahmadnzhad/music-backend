@@ -5,11 +5,11 @@ import autoArchiveModel from "./autoArchive";
 import commentModel from "./comment";
 const schema = new Schema(
   {
-    title: { type: String, required: true },
+    title: { type: String, trim: true, required: true },
     artist: { type: Schema.ObjectId, ref: "singer", required: true },
     release_date: { type: Number },
     genre: { type: Schema.ObjectId, ref: "genre", required: true },
-    description: { type: String },
+    description: { type: String, trim: true },
     cover_image: { type: String },
     createBy: { type: Schema.ObjectId, ref: "users", required: true },
   },

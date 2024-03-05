@@ -10,8 +10,8 @@ import upcomingModel from "../models/upcoming";
 const schema = new Schema(
   {
     fullName: { type: String, trim: true, required: true },
-    englishName: { type: String, required: true },
-    nickname: { type: String },
+    englishName: { type: String, trim: true, required: true },
+    nickname: { type: String, trim: true },
     photo: { type: String, required: true },
     country: { type: Schema.ObjectId, ref: "country", required: true },
     count_likes: { type: Number, default: 0 },

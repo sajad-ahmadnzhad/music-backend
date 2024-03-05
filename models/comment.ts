@@ -38,6 +38,7 @@ const schema = new Schema(
     },
     body: {
       type: String,
+      trim: true,
       required: true,
     },
     parentComment: {

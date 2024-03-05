@@ -3,8 +3,8 @@ import { rimrafSync } from "rimraf";
 import path from "path";
 const schema = new Schema(
   {
-    title: { type: String, required: true },
-    description: { type: String },
+    title: { type: String, trim: true, required: true },
+    description: { type: String, trim: true },
     musics: [{ type: Schema.ObjectId, ref: "music", default: [] }],
     cover: { type: String },
     createBy: { type: Schema.ObjectId, ref: "users", required: true },

@@ -9,11 +9,11 @@ import musicModel from "./music";
 import path from "path";
 const schema = new Schema(
   {
-    title: { type: String, required: true },
+    title: { type: String, trim: true, required: true },
     artist: { type: Schema.ObjectId, ref: "singer", required: true },
     photo: { type: String, required: true },
     musics: [{ type: Schema.ObjectId, ref: "music", default: [] }],
-    description: { type: String },
+    description: { type: String, trim: true },
     createBy: { type: Schema.ObjectId, ref: "users", required: true },
   },
   { timestamps: true }

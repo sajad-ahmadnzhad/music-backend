@@ -5,9 +5,9 @@ import singerModel from "./singer";
 import playListModel from "./playList";
 const schema = new Schema(
   {
-    title: { type: String, required: true },
+    title: { type: String, trim: true, required: true },
     image: { type: String },
-    description: { type: String },
+    description: { type: String, trim: true },
     createBy: { type: Schema.ObjectId, ref: "users", required: true },
   },
   { timestamps: true }

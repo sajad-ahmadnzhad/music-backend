@@ -5,8 +5,8 @@ import path from "path";
 import { rimrafSync } from "rimraf";
 const schema = new Schema(
   {
-    title: { type: String, required: true },
-    description: { type: String },
+    title: { type: String, trim: true, required: true },
+    description: { type: String, trim: true },
     cover_image: { type: String, required: true },
     musics: [{ type: Schema.ObjectId, ref: "music", default: [] }],
     createBy: { type: Schema.ObjectId, ref: "users", required: true },

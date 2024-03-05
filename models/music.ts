@@ -12,15 +12,15 @@ import singerArchiveModel from "./singerArchive";
 
 const schema = new Schema(
   {
-    title: { type: String, required: true },
+    title: { type: String, trim: true, required: true },
     artist: { type: Schema.ObjectId, ref: "singer", required: true },
     duration: { type: String, required: true },
     release_year: { type: Number, default: new Date().getFullYear() },
     cover_image: { type: String, required: true },
     download_link: { type: String, required: true },
     isSingle: { type: Boolean, required: true },
-    description: { type: String },
-    lyrics: { type: String },
+    description: { type: String, trim: true },
+    lyrics: { type: String, trim: true },
     rating: { type: Number, default: 3 },
     count_views: { type: Number, default: 0 },
     count_likes: { type: Number, default: 0 },

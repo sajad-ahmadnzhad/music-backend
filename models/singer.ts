@@ -4,11 +4,12 @@ import { rimrafSync } from "rimraf";
 import musicModel from "../models/music";
 import albumModel from "../models/album";
 import archiveModel from "../models/archive";
+import autoArchiveModel from "../models/autoArchive";
 import singerArchiveModel from "../models/singerArchive";
 import upcomingModel from "../models/upcoming";
 const schema = new Schema(
   {
-    fullName: { type: String, required: true },
+    fullName: { type: String, trim: true, required: true },
     englishName: { type: String, required: true },
     nickname: { type: String },
     photo: { type: String, required: true },
@@ -25,7 +26,7 @@ const schema = new Schema(
 schema.pre("deleteOne", async function (next) {
   try {
     const deletedSinger = await this.model.findOne(this.getFilter());
-    if(!deletedSinger)return next()
+    if (!deletedSinger) return next();
     const publicFolder = path.join(process.cwd(), "public");
     const file = `${publicFolder}${deletedSinger.photo}`;
     rimrafSync(file);
@@ -56,6 +57,31 @@ schema.pre("deleteMany", async function (next) {
     await archiveModel.deleteMany({ artist: { $in: singerIds } });
     await singerArchiveModel.deleteOne({ artist: { $in: singerIds } });
     await upcomingModel.deleteMany({ artist: { $in: singerIds } });
+    next();
+  } catch (error: any) {
+    next(error);
+  }
+});
+
+schema.pre("save", async function (next) {
+  try {
+    const existingAutoArchive = await autoArchiveModel.findOne({
+      type: "singer",
+      country: this.country,
+    });
+
+    if (existingAutoArchive) {
+      await existingAutoArchive.updateOne({
+        $push: { target_ids: this._id },
+      });
+    } else {
+      await autoArchiveModel.create({
+        type: "singer",
+        country: this.country,
+        target_ids: this._id,
+      });
+    }
+
     next();
   } catch (error: any) {
     next(error);

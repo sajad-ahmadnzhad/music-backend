@@ -8,6 +8,7 @@ import pagination from "../helpers/pagination";
 import countryModel from "../models/country";
 import genreModel from "../models/genre";
 import commentModel from "../models/comment";
+import singerModel from "../models/singer";
 import fs from "fs";
 import path from "path";
 import { isValidObjectId } from "mongoose";
@@ -34,10 +35,13 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.Conflict("This music is already in the music list");
     }
 
+    const singer = await singerModel.findById(body.artist);
+
     await upcomingModel.create({
       ...body,
       cover_image: coverName && `/upcomingCovers/${coverName}`,
       createBy: (req as any).user._id,
+      country: singer!.country,
     });
 
     res

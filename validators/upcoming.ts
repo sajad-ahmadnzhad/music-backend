@@ -29,15 +29,5 @@ export default joi.object({
       const genre = await genreModel.findOne({ _id: value });
       if (!genre) return helpers.error("Genre not found");
     }),
-  country: joi
-    .string()
-    .trim()
-    .regex(/^[0-9a-fA-F]{24}$/)
-    .message("Genre id is not from mongodb")
-    .required()
-    .external(async (value, helpers) => {
-      const country = await countryModel.findOne({ _id: value });
-      if (!country) return helpers.error("Country not found");
-    }),
   description: joi.string().trim().max(400).min(10),
 });

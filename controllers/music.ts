@@ -40,9 +40,7 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
 
       if (!album) throw httpErrors.NotFound("No album found for this singer");
     }
-    const singer = await singerModel
-      .findById(body.artist)
-      .populate("country", "_id");
+    const singer = await singerModel.findById(body.artist);
 
     const result = await nodeMediainfo(files.music[0].path);
     const duration = result.media.track[0].Duration as any;
@@ -56,7 +54,7 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
       download_link: `/musics/${files.music[0].filename}`,
       createBy: user._id,
       isSingle: !body.album,
-      country: singer!.country._id,
+      country: singer!.country,
     });
 
     res

@@ -2,7 +2,7 @@ import Joi from "joi";
 import genreModel from "../models/genre";
 import countryModel from "../models/country";
 export default Joi.object({
-  fullName: Joi.string().trim().min(5).max(30).required(),
+  fullName: Joi.string().trim().min(2).max(30).required(),
   nickname: Joi.string().trim().min(5).max(30),
   englishName: Joi.string().trim().min(5).max(30).required(),
   musicStyle: Joi.string()

@@ -7,6 +7,7 @@ import userFavoriteModel from "./userFavorite";
 import userPlaylistModel from "./userPlaylist";
 import upcomingModel from "./upcoming";
 import albumModel from "./album";
+import autoArchiveModel from './autoArchive'
 import singerArchiveModel from "./singerArchive";
 
 const schema = new Schema(
@@ -93,6 +94,23 @@ schema.pre("deleteOne", async function (next) {
 
 schema.pre("save", async function (next) {
   try {
+    const existingAutoArchive = await autoArchiveModel.findOne({
+      type: "music",
+      country: this.country,
+    });
+
+    if (existingAutoArchive) {
+      await existingAutoArchive.updateOne({
+        $push: { target_ids: this._id },
+      });
+    } else {
+      await autoArchiveModel.create({
+        type: "music",
+        country: this.country,
+        target_ids: this._id,
+      });
+    }
+
     await upcomingModel.deleteOne({
       title: this.title,
       artist: this.artist,

@@ -1,6 +1,5 @@
 import joi from "joi";
 import singerModel from "../models/singer";
-import countryModel from "../models/country";
 import genreModel from "../models/genre";
 import albumModel from "../models/album";
 
@@ -15,16 +14,6 @@ export default joi.object({
     .external(async (value, helpers) => {
       const artist = await singerModel.findOne({ _id: value });
       if (!artist) return helpers.error("artist not found");
-    }),
-  country: joi
-    .string()
-    .trim()
-    .regex(/^[0-9a-fA-F]{24}$/)
-    .message("This country id is not from mongodb")
-    .required()
-    .external(async (value, helpers) => {
-      const country = await countryModel.findOne({ _id: value });
-      if (!country) return helpers.error("country not found");
     }),
   genre: joi
     .string()

@@ -5,7 +5,6 @@ export interface MusicBody {
   title: string;
   artist: Schema.Types.ObjectId;
   genre: Schema.Types.ObjectId;
-  country: Schema.Types.ObjectId;
   album: Schema.Types.ObjectId
   duration: string;
   release_year: number;

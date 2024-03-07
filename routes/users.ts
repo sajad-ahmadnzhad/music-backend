@@ -11,6 +11,7 @@ import {
   myAccount,
   search,
   getUnverified,
+  deleteAccount
 } from "../controllers/users";
 import authMiddlewares from "../middlewares/auth";
 import isBanMiddlewares from "../middlewares/isBan";
@@ -31,6 +32,7 @@ router
     update
   );
 router.get("/unverified", isAdminMiddlewares, getUnverified);
+router.delete("/delete-account", deleteAccount);
 router.route("/:id/role").put(isSuperAdminMiddlewares, changeRole);
 router.post("/:id/ban", isAdminMiddlewares, ban);
 router.put("/:id/unban", isAdminMiddlewares, unban);

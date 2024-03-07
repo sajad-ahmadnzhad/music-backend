@@ -196,7 +196,6 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
     if (user.email !== body.email) {
       await usersModel.findByIdAndUpdate(user._id, { isVerified: false });
       res.clearCookie("token");
-      console.log("clear cookie");
     }
     const hashedPassword = bcrypt.hashSync(body.password, 10);
 
@@ -266,6 +265,41 @@ export let getUnverified = async (
     }
 
     res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+export let deleteAccount = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { user } = req as any;
+    const body = req.body;
+
+    if(user.isSuperAdmin){
+      throw httpErrors.BadRequest('To delete your account, transfer ownership first')
+    }
+
+    if (!body.password) {
+      throw httpErrors.BadRequest("Password is required");
+    }
+
+    const foundUser = await usersModel.findById(user._id);
+
+    const comparePassword = bcrypt.compareSync(
+      body.password,
+      foundUser!.password
+    );
+
+    if (!comparePassword) {
+      throw httpErrors.BadRequest("Password is not valid");
+    }
+
+    await foundUser!.deleteOne();
+    res.clearCookie("token");
+    res.json({ message: "Deleted account successfully" });
   } catch (error) {
     next(error);
   }

@@ -8,7 +8,7 @@ const schema = new Schema({
     unique: true,
   },
   token: { type: String, required: true },
-  createdAt: { type: Date, expires: 3600, default: Date.now },
+  createdAt: { type: Date, expires: '1h', default: Date.now },
 });
 
 export default model("token", schema);

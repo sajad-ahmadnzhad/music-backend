@@ -127,7 +127,7 @@ export let register = async (
 
     const error: any = await sendMail(mailOptions);
 
-    if (error) throw error
+    if (error) throw error;
 
     res.json({ message: "An email sent to your account please verify" });
   } catch (error) {
@@ -168,11 +168,9 @@ export let forgotPassword = async (
        `,
     };
 
-    const { error }: any = sendMail(mailOptions);
+    const result: any = sendMail(mailOptions);
 
-    if (error) {
-      throw httpErrors(error?.message || "");
-    }
+    if (result?.error) throw result.error;
 
     res.json({
       message: "The password reset link has been sent to your email",

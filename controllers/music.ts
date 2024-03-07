@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import musicModel from "./../models/music";
 import countryModel from "../models/country";
-import { MusicBody, MusicFile } from "./../interfaces/music";
+import { MusicBody } from "./../interfaces/music";
 import httpStatus from "http-status";
 import fs from "fs";
 import { isValidObjectId } from "mongoose";
@@ -15,7 +15,7 @@ import pagination from "../helpers/pagination";
 export let create = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body = req.body as MusicBody;
-    const files = { ...req.files } as MusicFile;
+    const files = { ...req.files } as any;
     const countFiles = Object.entries({ ...files }).length;
     const { user } = req as any;
 
@@ -120,7 +120,7 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
     const body = req.body as MusicBody;
     const { user } = req as any;
-    const files = { ...req.files } as MusicFile;
+    const files = { ...req.files } as any;
 
     if (!isValidObjectId(id)) {
       throw httpErrors.BadRequest("This music id is not from mongodb");
@@ -405,6 +405,35 @@ export let getByGenreAndCountry = async (
       .populate("createBy", "name username profile")
       .populate("album", "title photo description")
       .populate("likes", "name username profile")
+      .select("-__v")
+      .lean();
+
+    const data = await pagination(req, query, musicModel);
+
+    if (data.error) {
+      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
+    }
+
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+export let getAllSingle = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const query = musicModel
+      .find({ isSingle: true  })
+      .populate("artist", "photo fullName")
+      .populate("country", "title description image")
+      .populate("genre", "title description")
+      .populate("createBy", "name username profile")
+      .populate("likes", "name username profile")
+      .populate("album", "title photo description")
+      .sort({ createdAt: -1 })
       .select("-__v")
       .lean();
 

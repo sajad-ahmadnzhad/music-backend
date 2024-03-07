@@ -12,6 +12,7 @@ import {
   getOne,
   unlike,
   getByGenreAndCountry,
+  getAllSingle
 } from "../controllers/music";
 import authMiddlewares from "../middlewares/auth";
 import isBanMiddlewares from "../middlewares/isBan";
@@ -43,6 +44,7 @@ router
   .get(getAll);
 
 router.get("/search", search);
+router.get('/single' , getAllSingle)
 router.get("/:countryId/:genreId/by-genre-country", getByGenreAndCountry);
 router.get("/popular", popular);
 router.put("/:id/like", authMiddlewares, isBanMiddlewares, like);

@@ -306,7 +306,7 @@ export let deleteAccount = async (
     next(error);
   }
 };
-export let changeSupperAdmin = async (
+export let changeSuperAdmin = async (
   req: Request,
   res: Response,
   next: NextFunction

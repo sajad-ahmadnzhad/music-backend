@@ -12,7 +12,7 @@ import {
   search,
   getUnverified,
   deleteAccount,
-  changeSupperAdmin
+  changeSuperAdmin
 } from "../controllers/users";
 import authMiddlewares from "../middlewares/auth";
 import isBanMiddlewares from "../middlewares/isBan";
@@ -33,7 +33,7 @@ router
     update
   );
 router.get("/unverified", isAdminMiddlewares, getUnverified);
-router.put("/:userId/change-super-admin",isSuperAdminMiddlewares , changeSupperAdmin);
+router.put("/:userId/change-super-admin",isSuperAdminMiddlewares , changeSuperAdmin);
 router.delete("/delete-account", deleteAccount);
 router.route("/:id/role").put(isSuperAdminMiddlewares, changeRole);
 router.post("/:id/ban", isAdminMiddlewares, ban);

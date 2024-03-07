@@ -248,4 +248,25 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+export let getUnverified = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    let query = usersModel
+      .find({ isVerified: false })
+      .sort({ createdAt: "desc" })
+      .select("-password -__v");
 
+    const data = await pagination(req, query, usersModel);
+
+    if (data.error) {
+      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
+    }
+
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};

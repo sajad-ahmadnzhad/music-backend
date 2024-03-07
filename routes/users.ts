@@ -10,6 +10,7 @@ import {
   getAllAdmin,
   myAccount,
   search,
+  getUnverified,
 } from "../controllers/users";
 import authMiddlewares from "../middlewares/auth";
 import isBanMiddlewares from "../middlewares/isBan";
@@ -29,6 +30,7 @@ router
     validatorMiddlewares(registerValidatorSchema),
     update
   );
+router.get("/unverified", isAdminMiddlewares, getUnverified);
 router.route("/:id/role").put(isSuperAdminMiddlewares, changeRole);
 router.post("/:id/ban", isAdminMiddlewares, ban);
 router.put("/:id/unban", isAdminMiddlewares, unban);

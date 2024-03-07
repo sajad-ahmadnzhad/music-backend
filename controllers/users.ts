@@ -278,8 +278,10 @@ export let deleteAccount = async (
     const { user } = req as any;
     const body = req.body;
 
-    if(user.isSuperAdmin){
-      throw httpErrors.BadRequest('To delete your account, transfer ownership first')
+    if (user.isSuperAdmin) {
+      throw httpErrors.BadRequest(
+        "To delete your account, transfer ownership first"
+      );
     }
 
     if (!body.password) {
@@ -300,6 +302,62 @@ export let deleteAccount = async (
     await foundUser!.deleteOne();
     res.clearCookie("token");
     res.json({ message: "Deleted account successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+export let changeSupperAdmin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { userId } = req.params;
+    const { user } = req as any;
+    const { password } = req.body;
+
+    if (!isValidObjectId(userId))
+      throw httpErrors.BadRequest("This user id is not from mongodb");
+
+    const existingUser = await usersModel.findById(userId);
+
+    if (!existingUser) throw httpErrors.NotFound("User not found");
+
+    if (userId == String(user._id)) {
+      throw httpErrors.BadRequest("The entered user id is super admin");
+    }
+
+    if (!password) {
+      throw httpErrors.BadRequest("Password is required");
+    }
+
+    if (!existingUser.isVerified) {
+      throw httpErrors.BadRequest(
+        "The logged in user has yet to confirm her email"
+      );
+    }
+
+    const foundSuperAdmin = await usersModel.findById(user._id);
+
+    const comparPassword = bcrypt.compareSync(
+      password,
+      foundSuperAdmin!.password
+    );
+
+    if (!comparPassword) {
+      throw httpErrors.BadRequest("Password is not valid");
+    }
+
+    await existingUser.updateOne({
+      isAdmin: true,
+      isSuperAdmin: true,
+    });
+
+    await foundSuperAdmin!.updateOne({
+      isSuperAdmin: false,
+    });
+
+    res.json({ message: "Super admin transferred successfully" });
   } catch (error) {
     next(error);
   }

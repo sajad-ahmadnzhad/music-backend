@@ -467,8 +467,15 @@ export let related = async (
     }
 
     const relatedMusic = await musicModel
-      .find({ artist: music.artist })
+      .find({ artist: music.artist , _id: {$ne: id} })
+      .populate("artist", "photo fullName")
+      .populate("country", "title description image")
+      .populate("genre", "title description")
+      .populate("createBy", "name username profile")
+      .populate("likes", "name username profile")
+      .populate("album", "title photo description")
       .sort({ createdAt: -1 })
+      .select("-__v")
       .limit(10)
       .lean();
 

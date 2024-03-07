@@ -426,7 +426,7 @@ export let getAllSingle = async (
 ) => {
   try {
     const query = musicModel
-      .find({ isSingle: true  })
+      .find({ isSingle: true })
       .populate("artist", "photo fullName")
       .populate("country", "title description image")
       .populate("genre", "title description")
@@ -444,6 +444,35 @@ export let getAllSingle = async (
     }
 
     res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+export let related = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("This music id is not from mongodb");
+    }
+
+    const music = await musicModel.findById(id);
+
+    if (!music) {
+      throw httpErrors.NotFound("Music not found");
+    }
+
+    const relatedMusic = await musicModel
+      .find({ artist: music.artist })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .lean();
+
+    res.json(relatedMusic);
   } catch (error) {
     next(error);
   }

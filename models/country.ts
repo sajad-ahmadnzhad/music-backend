@@ -3,6 +3,7 @@ import path from "path";
 import { rimrafSync } from "rimraf";
 import singerModel from "./singer";
 import playListModel from "./playList";
+import archiveModel from "./archive";
 const schema = new Schema(
   {
     title: { type: String, trim: true, required: true },
@@ -21,6 +22,7 @@ schema.pre("deleteOne", async function (next) {
     rimrafSync(`${publicFolder}${deletedCountry.image}`);
     await singerModel.deleteMany({ country: deletedCountry._id });
     await playListModel.deleteMany({ country: deletedCountry._id });
+    await archiveModel.deleteMany({country: deletedCountry._id})
     next();
   } catch (error: any) {
     next(error);
@@ -38,6 +40,7 @@ schema.pre("deleteMany", async function (next) {
     rimrafSync(countriesFile);
     await singerModel.deleteMany({ country: {$in: countryIds} });
     await playListModel.deleteMany({ country: {$in: countryIds} });
+    await archiveModel.deleteMany({ country: {$in: countryIds} });
     next();
   } catch (error: any) {
     next(error);

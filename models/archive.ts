@@ -28,4 +28,18 @@ schema.pre("deleteOne", async function (next) {
   }
 });
 
+schema.pre("deleteMany", async function (next) {
+  try {
+    const deletedArchive = await this.model.find(this.getFilter());
+    const publicFolder = path.join(process.cwd(), "public");
+    const ArchiveFile = deletedArchive.map(
+      (archive) => `${publicFolder}${archive.image}`
+    );
+    rimrafSync(ArchiveFile);
+    next();
+  } catch (error: any) {
+    next(error);
+  }
+});
+
 export default model("archive", schema);

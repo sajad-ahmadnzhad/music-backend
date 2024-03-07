@@ -36,8 +36,10 @@ export let login = async (req: Request, res: Response, next: NextFunction) => {
     }
 
     if (!user.isVerified) {
-      const token = await tokenModel.findOne({ _id: user._id });
-      if (!token) {
+      const token = await tokenModel.findOne({ userId: user._id });
+      if (token) {
+        throw httpErrors.Conflict("Token already exists. Try again in 1 hour");
+      } else {
         const token = await tokenModel.create({
           userId: user._id,
           token: randomBytes(32).toString("hex"),
@@ -55,13 +57,15 @@ export let login = async (req: Request, res: Response, next: NextFunction) => {
           userId: user._id,
         };
 
-        const { error }: any = sendMail(mailOptions);
+        const result: any = await sendMail(mailOptions);
 
-        if (error) {
-          throw httpErrors(error?.message || "");
+        if (result?.error) {
+          throw result.error;
         }
       }
-      throw httpErrors(200, "An email sent to your account please verify");
+      return res.json({
+        message: "An email sent to your account please verify",
+      });
     }
 
     const twoMonths = 60 * 60 * 24 * 60 * 1000;
@@ -94,14 +98,11 @@ export let register = async (
     }
 
     const hashPassword = bcrypt.hashSync(password, 10);
-    const profile = req.file?.filename;
     const countUsers = await usersModel.countDocuments().lean();
 
     const newUser = await usersModel.create({
       ...req.body,
-      profile: profile
-        ? `/usersProfile/${profile}`
-        : "/usersProfile/customProfile.png",
+      profile: "/usersProfile/customProfile.png",
       password: hashPassword,
       isAdmin: countUsers == 0,
       isSuperAdmin: countUsers == 0,
@@ -121,14 +122,12 @@ export let register = async (
       html: `<p>Click on the link below to confirm the email:</p>
        <h1>${url}</h1>
        `,
-      userId: newUser._id
+      userId: newUser._id,
     };
 
-    const { error }: any = sendMail(mailOptions);
+    const error: any = await sendMail(mailOptions);
 
-    if (error) {
-      throw httpErrors(error?.message || "");
-    }
+    if (error) throw error
 
     res.json({ message: "An email sent to your account please verify" });
   } catch (error) {

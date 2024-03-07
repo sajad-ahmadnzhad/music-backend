@@ -6,7 +6,7 @@ import { RegisterBody } from "./../interfaces/auth";
 import bcrypt from "bcrypt";
 import pagination from "../helpers/pagination";
 import path from "path";
-import fs from "fs";
+import { rimrafSync } from "rimraf";
 import httpErrors from "http-errors";
 
 export let myAccount = async (
@@ -24,7 +24,7 @@ export let myAccount = async (
 export let getAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
     let query = usersModel
-      .find()
+      .find({ isVerified: true })
       .sort({ createdAt: "desc" })
       .select("-password -__v");
 
@@ -179,25 +179,36 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
     const { user } = req as any;
 
     if (req.file && !user.profile?.includes("customProfile")) {
-      fs.unlinkSync(path.join(process.cwd(), "public", user.profile));
+      rimrafSync(path.join(process.cwd(), "public", user.profile));
     }
 
-    const hashedPassword = bcrypt.hashSync(body.password, 10);
-    const foundUser = await usersModel.findById(user._id);
-    if (foundUser?.email !== body.email) {
+    const foundUser = await usersModel.findOne({
+      $or: [
+        { email: body.email, _id: { $ne: user._id } },
+        { username: body.username, _id: { $ne: user._id } },
+      ],
+    });
+
+    if (foundUser) {
+      throw httpErrors.Conflict("Username or email already exists");
+    }
+
+    if (user.email !== body.email) {
       await usersModel.findByIdAndUpdate(user._id, { isVerified: false });
       res.clearCookie("token");
+      console.log("clear cookie");
     }
-    await usersModel
-      .updateOne(
-        { _id: user._id },
-        {
-          ...body,
-          password: hashedPassword,
-          profile: req.file && `/usersProfile/${req.file.filename}`,
-        }
-      )
-      .select("-password");
+    const hashedPassword = bcrypt.hashSync(body.password, 10);
+
+    await usersModel.updateOne(
+      { _id: user._id },
+      {
+        ...body,
+        password: hashedPassword,
+        profile: req.file && `/usersProfile/${req.file.filename}`,
+      }
+    );
+
     res.json({ message: "user updated successfully" });
   } catch (error) {
     next(error);
@@ -237,3 +248,4 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+

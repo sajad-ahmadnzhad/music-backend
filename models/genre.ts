@@ -26,4 +26,18 @@ schema.pre("deleteOne", async function (next) {
   }
 });
 
+schema.pre("deleteMany", async function (next) {
+  try {
+    const deletedGenres = await this.model.find(this.getFilter());
+    const genreIds = deletedGenres.map((genre) => genre._id);
+    await singerModel.deleteMany({ musicStyle: {$in: genreIds} });
+    await playListModel.deleteMany({ genre: {$in: genreIds} });
+    await userPlaylistModel.deleteMany({ genre: {$in: genreIds} });
+    await archiveModel.deleteMany({ genre: {$in: genreIds} });
+    next();
+  } catch (error: any) {
+    next(error);
+  }
+});
+
 export default model("genre", schema);

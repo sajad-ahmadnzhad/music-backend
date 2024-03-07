@@ -18,7 +18,8 @@ import {
   popular,
   getOne,
   searchMusic,
-  getByCountry
+  getByCountry,
+  related,
 } from "../controllers/playList";
 const router = express.Router();
 
@@ -33,10 +34,10 @@ router
     create
   )
   .get(getAll);
-
+router.get("/:id/related" , related);
 router.post("/like/:id", authMiddlewares, like);
 router.post("/unlike/:id", authMiddlewares, unlike);
-router.get('/by-country/:countryId' , getByCountry)
+router.get("/by-country/:countryId", getByCountry);
 router.post(
   "/add-music/:playListId",
   authMiddlewares,

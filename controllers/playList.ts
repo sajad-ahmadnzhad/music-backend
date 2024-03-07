@@ -9,7 +9,6 @@ import pagination from "../helpers/pagination";
 import countryModel from "../models/country";
 import { isValidObjectId } from "mongoose";
 import httpErrors from "http-errors";
-
 export let create = async (req: Request, res: Response, next: NextFunction) => {
   const cover = req.file?.filename;
   try {
@@ -89,7 +88,7 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
     }
     const existingPlaylist = await playListModel.findOne({
       title: body.title,
-      country: body.country
+      country: body.country,
     });
 
     if (existingPlaylist && existingPlaylist._id.toString() !== id) {
@@ -468,6 +467,44 @@ export let getByCountry = async (
     }
 
     res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+export let related = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("Playlist id is not from mongodb");
+    }
+
+    const playList = await playListModel.findById(id);
+
+    if (!playList) {
+      throw httpErrors.NotFound("Playlist not found");
+    }
+
+    const relatedPlayLists = await playListModel
+      .find({
+        genre: playList.genre,
+        country: playList.country,
+        _id: { $ne: playList._id },
+      })
+      .populate("createBy", "name username profile")
+      .populate("musics", "title cover_image download_link")
+      .populate("likes", "name username profile")
+      .populate("genre", "title description")
+      .populate("country", "title description image")
+      .sort({ createdAt: "desc" })
+      .select("-__v")
+      .limit(10)
+      .lean();
+
+    res.json(relatedPlayLists);
   } catch (error) {
     next(error);
   }

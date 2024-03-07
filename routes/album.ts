@@ -8,6 +8,7 @@ import {
   update,
   addMusic,
   removeMusic,
+  related,
 } from "../controllers/album";
 import isAdminMiddleware from "../middlewares/isAdmin";
 import authMiddleware from "../middlewares/auth";
@@ -30,6 +31,7 @@ router
   .get(getAll);
 
 router.get("/search", search);
+router.get("/:id/related", related);
 router.post(
   "/add-music/:albumId",
   authMiddleware,

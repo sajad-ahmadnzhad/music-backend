@@ -303,3 +303,36 @@ export let removeMusic = async (
     next(error);
   }
 };
+export let related = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("This album id is not from mongodb");
+    }
+
+    const album = await albumModel.findById(id);
+
+    if (!album) {
+      throw httpErrors.NotFound("Album not found");
+    }
+
+    const relatedAlbum = await albumModel
+      .find({ artist: album.artist, _id: { $ne: id } })
+      .populate("artist", "fullName englishName photo")
+      .populate("musics", "title duration download_link cover_image")
+      .populate("createBy", "name username profile")
+      .select("-__v")
+      .sort({ createdAt: "desc" })
+      .limit(10)
+      .lean();
+
+    res.json(relatedAlbum);
+  } catch (error) {
+    next(error);
+  }
+};

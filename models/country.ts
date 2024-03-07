@@ -16,11 +16,28 @@ const schema = new Schema(
 schema.pre("deleteOne", async function (next) {
   try {
     const deletedCountry = await this.model.findOne(this.getFilter());
-    if(!deletedCountry) return next()
+    if (!deletedCountry) return next();
     const publicFolder = path.join(process.cwd(), "public");
     rimrafSync(`${publicFolder}${deletedCountry.image}`);
     await singerModel.deleteMany({ country: deletedCountry._id });
     await playListModel.deleteMany({ country: deletedCountry._id });
+    next();
+  } catch (error: any) {
+    next(error);
+  }
+});
+
+schema.pre("deleteMany", async function (next) {
+  try {
+    const deletedCountries = await this.model.find(this.getFilter());
+    const publicFolder = path.join(process.cwd(), "public");
+    const countryIds = deletedCountries.map((country) => country._id);
+    const countriesFile = deletedCountries.map(
+      (country) => `${publicFolder}${country.image}`
+    );
+    rimrafSync(countriesFile);
+    await singerModel.deleteMany({ country: {$in: countryIds} });
+    await playListModel.deleteMany({ country: {$in: countryIds} });
     next();
   } catch (error: any) {
     next(error);

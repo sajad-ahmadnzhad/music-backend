@@ -4,6 +4,12 @@ import userFavoriteModel from "./userFavorite";
 import commentModel from "./comment";
 import musicModel from "./music";
 import singerModel from "./singer";
+import albumModel from "./album";
+import upcomingModel from "./upcoming";
+import genreModel from "./genre";
+import countryModel from "./country";
+import archiveModel from "./archive";
+import playListModel from "./playList";
 import { rimrafSync } from "rimraf";
 import path from "path";
 const schema = new Schema(
@@ -28,6 +34,18 @@ schema.pre("deleteOne", async function (next) {
     if (!deletedUser.profile.includes("customProfile")) {
       rimrafSync(`${publicFolder}${deletedUser.profile}`);
     }
+
+    if (deletedUser.isAdmin) {
+      await albumModel.deleteMany({ createBy: deletedUser._id });
+      await singerModel.deleteMany({ createBy: deletedUser._id });
+      await playListModel.deleteMany({ createBy: deletedUser._id });
+      await upcomingModel.deleteMany({ createBy: deletedUser._id });
+      await archiveModel.deleteMany({ createBy: deletedUser._id });
+      await countryModel.deleteMany({ createBy: deletedUser._id });
+      await genreModel.deleteMany({ createBy: deletedUser._id });
+      await musicModel.deleteMany({ createBy: deletedUser._id });
+    }
+
     await userFavoriteModel.deleteMany({ user: deletedUser._id });
     await userPlaylistModel.deleteMany({ createBy: deletedUser._id });
     const userCommentsId = (

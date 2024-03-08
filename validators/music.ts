@@ -20,10 +20,11 @@ export default joi.object({
     .trim()
     .regex(/^[0-9a-fA-F]{24}$/)
     .message("This genre id is not from mongodb")
-    .required()
     .external(async (value, helpers) => {
-      const genre = await genreModel.findOne({ _id: value });
-      if (!genre) return helpers.error("genre not found");
+      if (value) {
+        const genre = await genreModel.findOne({ _id: value });
+        if (!genre) return helpers.error("genre not found");
+      }
     }),
   album: joi
     .string()

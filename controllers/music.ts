@@ -55,6 +55,7 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
       createBy: user._id,
       isSingle: !body.album,
       country: singer!.country,
+      genre: body.genre || singer!.musicStyle
     });
 
     res

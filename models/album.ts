@@ -6,6 +6,7 @@ import singerModel from "./singer";
 import archiveModel from "./archive";
 import autoArchiveModel from "./autoArchive";
 import musicModel from "./music";
+import singerArchiveModel from "./singerArchive";
 import path from "path";
 const schema = new Schema(
   {
@@ -69,7 +70,7 @@ schema.pre("save", async function (next) {
     });
 
     if (existingAutoArchive) {
-      await existingAutoArchive.updateOne({
+      await autoArchiveModel.findByIdAndUpdate( existingAutoArchive._id, {
         $push: { target_ids: this._id },
       });
     } else {
@@ -79,6 +80,15 @@ schema.pre("save", async function (next) {
         target_ids: this._id,
       });
     }
+
+    await singerArchiveModel.findOneAndUpdate(
+      { artist: album.artist },
+      {
+        $push: {
+          albums: this._id,
+        },
+      }
+    );
 
     next();
   } catch (error: any) {

@@ -1,4 +1,4 @@
-import { Document, Schema, model } from "mongoose";
+import { Schema, model } from "mongoose";
 import path from "path";
 import { rimrafSync } from "rimraf";
 import musicModel from "../models/music";
@@ -55,7 +55,7 @@ schema.pre("deleteMany", async function (next) {
     await albumModel.deleteMany({ artist: { $in: singerIds } });
     await musicModel.deleteMany({ artist: { $in: singerIds } });
     await archiveModel.deleteMany({ artist: { $in: singerIds } });
-    await singerArchiveModel.deleteOne({ artist: { $in: singerIds } });
+    await singerArchiveModel.deleteMany({ artist: { $in: singerIds } });
     await upcomingModel.deleteMany({ artist: { $in: singerIds } });
     next();
   } catch (error: any) {
@@ -71,9 +71,12 @@ schema.pre("save", async function (next) {
     });
 
     if (existingAutoArchive) {
-      await existingAutoArchive.updateOne({
-        $push: { target_ids: this._id },
-      });
+      await autoArchiveModel.findOneAndUpdate(
+        { _id: existingAutoArchive._id },
+        {
+          $push: { target_ids: this._id },
+        }
+      );
     } else {
       await autoArchiveModel.create({
         type: "singer",

@@ -59,9 +59,9 @@ schema.pre("save", async function (next) {
     });
 
     if (existingAutoArchive) {
-      await existingAutoArchive.updateOne({
-        $push: { target_ids: this._id },
-      });
+     await autoArchiveModel.findOneAndUpdate(existingAutoArchive._id, {
+       $push: { target_ids: this._id },
+     });
     } else {
       await autoArchiveModel.create({
         type: "upcoming",

@@ -9,15 +9,15 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
       .find()
       .populate("musics", "-__v -artist")
       .populate("artist", "fullName englishName photo")
+      .populate("albums")
       .select("-__v")
       .sort({ createdAt: "desc" })
+      .limit(0)
       .lean();
     
     const data = await pagination(req, query, singerArchiveModel);
 
-    if (data.error) {
-      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
-    }
+    if (data.error) throw data.error;
 
     res.json(data);
   } catch (error) {

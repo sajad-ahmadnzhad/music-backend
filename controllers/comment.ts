@@ -158,10 +158,17 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
       );
     }
 
-    await commentModel.findByIdAndUpdate(commentId, {
-      ...body,
-      isEdited: true,
-    });
+    const isModifyComment = await commentModel.findByIdAndUpdate(
+      commentId,
+      {
+        ...body,
+      },
+      { new: true }
+    );
+
+    if (isModifyComment!.body !== comment.body) {
+      await commentModel.findByIdAndUpdate(commentId, { isEdited: true });
+    }
 
     res.json({ message: "Comment updated successfully" });
   } catch (error) {
@@ -414,7 +421,7 @@ export let allReports = async (
           { path: "artist", select: "fullName photo", strictPopulate: false },
         ],
       })
-      .sort({ isReviewed: 1  , createdAt: -1})
+      .sort({ isReviewed: 1, createdAt: -1 })
       .select("-like -dislike -replies -parentComment -__v -isEdited")
       .lean()) as any;
 

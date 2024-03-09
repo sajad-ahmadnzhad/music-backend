@@ -1,0 +1,42 @@
+import joi from "joi";
+import categoryModel from "../models/category";
+import genreModel from "../models/genre";
+export default joi.object({
+  title: joi
+    .string()
+    .min(2)
+    .max(40)
+    .required()
+    .external(async (value, helpers) => {
+      const existingCategory = await categoryModel.findOne({ title: value });
+      if (existingCategory)
+        return helpers.error("This category already exists");
+    }),
+  description: joi.string().min(5).max(100),
+  type: joi
+    .string()
+    .valid("music", "album", "playList", "archive", "upcoming", "signer")
+    .required(),
+  accessLevel: joi
+    .string()
+    .valid("private", "allAdmins", "selectedCollaborators")
+    .required(),
+  genre: joi
+    .string()
+    .regex(/^[0-9a-fA-F]{24}$/)
+    .message("Genre id is not from mongodb")
+    .external(async (value, helpers) => {
+      if (value) {
+        const genre = await genreModel.findById(value);
+        if (!genre) return helpers.error("Genre not found");
+      }
+    }),
+  collaborators: joi.array().items(
+    joi
+      .string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .message("id is not from mongodb")
+      .required()
+      .label("This id is not from mongodb")
+  ),
+});

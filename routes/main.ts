@@ -12,6 +12,7 @@ import commentRouter from "./comment";
 import singerArchiveRouter from "./singerArchive";
 import userPlaylistRouter from "./userPlaylist";
 import autoArchiveRouter from "./autoArchive";
+import categoryRouter from './category'
 import genreRouter from "./genre";
 import express from "express";
 const mainRouter = express.Router();
@@ -31,5 +32,6 @@ mainRouter.use("/v1/singer-archive", singerArchiveRouter);
 mainRouter.use("/v1/user-playlist", userPlaylistRouter);
 mainRouter.use("/v1/genre", genreRouter);
 mainRouter.use("/v1/auto-archive", autoArchiveRouter);
+mainRouter.use("/v1/category", categoryRouter);
 
 export default mainRouter;

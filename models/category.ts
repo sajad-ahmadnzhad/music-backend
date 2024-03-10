@@ -1,4 +1,6 @@
 import { Schema, model } from "mongoose";
+import httpErrors from "http-errors";
+import usersModel from "./users";
 
 const schema = new Schema(
   {
@@ -30,5 +32,63 @@ const schema = new Schema(
   },
   { timestamps: true }
 );
+
+schema.pre("save", function (next) {
+  try {
+    const { accessLevel, collaborators } = this;
+    if (accessLevel == "selectedCollaborators" && !collaborators?.length) {
+      throw httpErrors.BadRequest("No admin has been selected");
+    } else if (
+      accessLevel !== "selectedCollaborators" &&
+      collaborators?.length
+    ) {
+      throw httpErrors.BadRequest("The collaborators field is not allowed");
+    }
+
+    if (collaborators?.length) {
+      const findDuplicates = (collaborators as []).filter((item, index) => {
+        return collaborators.indexOf(item) !== index;
+      });
+      if (findDuplicates.length) {
+        throw httpErrors.BadRequest(
+          `Duplicate ids found in the array: ${findDuplicates}`
+        );
+      }
+    }
+
+    next();
+  } catch (error: any) {
+    next(error);
+  }
+});
+
+schema.pre("findOneAndUpdate", async function (next) {
+  try {
+    const { accessLevel, collaborators }: any = this.getUpdate();
+    if (accessLevel == "selectedCollaborators" && !collaborators?.length) {
+      throw httpErrors.BadRequest("No admin has been selected");
+    } else if (
+      accessLevel !== "selectedCollaborators" &&
+      collaborators?.length
+    ) {
+      throw httpErrors.BadRequest("The collaborators field is not allowed");
+    }
+
+    if (collaborators?.length) {
+      const findDuplicates = (collaborators as []).filter((item, index) => {
+        return collaborators.indexOf(item) !== index;
+      });
+      if (findDuplicates.length) {
+        throw httpErrors.BadRequest(
+          `Duplicate ids found in the array: ${findDuplicates}`
+        );
+      }
+    }
+
+    next();
+  } catch (error: any) {
+    next(error);
+  }
+});
 
 export default model("category", schema);

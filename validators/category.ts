@@ -1,19 +1,9 @@
 import joi from "joi";
-import categoryModel from "../models/category";
 import genreModel from "../models/genre";
 import countryModel from "../models/country";
 import usersModel from "../models/users";
 export default joi.object({
-  title: joi
-    .string()
-    .min(2)
-    .max(40)
-    .required()
-    .external(async (value, helpers) => {
-      const existingCategory = await categoryModel.findOne({ title: value });
-      if (existingCategory)
-        return helpers.error("This category already exists");
-    }),
+  title: joi.string().min(2).max(40).required(),
   description: joi.string().min(5).max(100),
   type: joi
     .string()
@@ -36,11 +26,10 @@ export default joi.object({
     .string()
     .regex(/^[0-9a-fA-F]{24}$/)
     .message("Country id is not from mongodb")
+    .required()
     .external(async (value, helpers) => {
-      if (value) {
-        const country = await countryModel.findById(value);
-        if (!country) return helpers.error("Country not found");
-      }
+      const country = await countryModel.findById(value);
+      if (!country) return helpers.error("Country not found");
     }),
   collaborators: joi.array().items(
     joi

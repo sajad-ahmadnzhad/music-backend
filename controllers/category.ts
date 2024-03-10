@@ -168,3 +168,27 @@ export let getOne = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+export let search = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { category } = req.query;
+
+    if (!category) throw httpErrors.BadRequest("Category is required");
+
+    const query = categoryModel
+      .find({
+        title: { $regex: category },
+      })
+      .populate("createBy", "name username profile")
+      .populate("collaborators", "name username profile")
+      .populate("genre", "title description")
+      .populate("country", "title description image")
+      .select("-__v")
+      .lean();
+
+    const data = await pagination(req, query, categoryModel);
+
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};

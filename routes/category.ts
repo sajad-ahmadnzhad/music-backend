@@ -4,6 +4,7 @@ import {
   getAll,
   getOne,
   remove,
+  search,
   update,
 } from "../controllers/category";
 import categoryUploader from "../utils/uploader/profile";
@@ -23,6 +24,8 @@ router
     create
   )
   .get(getAll);
+
+router.get('/search' , search)
 
 router
   .route("/:id")

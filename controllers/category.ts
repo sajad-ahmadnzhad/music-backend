@@ -108,3 +108,31 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+export let remove = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { user } = req as any;
+
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("This category id is not form mongodb");
+    }
+
+    const category = await categoryModel.findById(id);
+
+    if (!category) {
+      throw httpErrors.NotFound("Category not found");
+    }
+
+    if (String(category.createBy) !== user._id && !user.isSuperAdmin) {
+      throw httpErrors.Forbidden(
+        "This category can only be removed by the person who created it"
+      );
+    }
+
+    await categoryModel.deleteOne({ _id: id });
+
+    res.json({ message: "Deleted category successfully" });
+  } catch (error) {
+    next(error);
+  }
+};

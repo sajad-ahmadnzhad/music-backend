@@ -1,7 +1,7 @@
 import { Schema, model } from "mongoose";
 import httpErrors from "http-errors";
-import usersModel from "./users";
-
+import { rimrafSync } from "rimraf";
+import path from "path";
 const schema = new Schema(
   {
     title: { type: String, trim: true, required: true },
@@ -84,6 +84,18 @@ schema.pre("findOneAndUpdate", async function (next) {
         );
       }
     }
+
+    next();
+  } catch (error: any) {
+    next(error);
+  }
+});
+
+schema.pre("deleteOne", async function (next) {
+  try {
+    const deletedCategory = await this.model.findOne(this.getFilter());
+
+    rimrafSync(path.join(process.cwd(), "public", deletedCategory.image));
 
     next();
   } catch (error: any) {

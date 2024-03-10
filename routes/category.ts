@@ -1,5 +1,5 @@
 import express from "express";
-import { create, getAll, update } from "../controllers/category";
+import { create, getAll, remove, update } from "../controllers/category";
 import categoryUploader from "../utils/uploader/profile";
 import validatorMiddleware from "../middlewares/validator";
 import categoryValidator from "../validators/category";
@@ -18,13 +18,15 @@ router
   )
   .get(getAll);
 
-router.put(
-  "/:id",
-  authMiddlewares,
-  isAdminMiddlewares,
-  categoryUploader.single("categoryImage"),
-  validatorMiddleware(categoryValidator),
-  update
-);
+router
+  .route("/:id")
+  .put(
+    authMiddlewares,
+    isAdminMiddlewares,
+    categoryUploader.single("categoryImage"),
+    validatorMiddleware(categoryValidator),
+    update
+  )
+  .delete(authMiddlewares, isAdminMiddlewares , remove);
 
 export default router;

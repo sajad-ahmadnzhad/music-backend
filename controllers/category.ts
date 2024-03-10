@@ -4,6 +4,7 @@ import { CategoryBody } from "../interfaces/category";
 import httpErrors from "http-errors";
 import usersModel from "../models/users";
 import { rimrafSync } from "rimraf";
+import pagination from "../helpers/pagination";
 import path from "path";
 import { isValidObjectId } from "mongoose";
 
@@ -39,7 +40,7 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
 };
 export let getAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const allCategories = await categoryModel
+    const query = categoryModel
       .find()
       .populate("createBy", "name username profile")
       .populate("collaborators", "name username profile")
@@ -47,7 +48,12 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
       .populate("country", "title description image")
       .select("-__v")
       .lean();
-    res.json(allCategories);
+
+    const data = await pagination(req, query, categoryModel);
+
+    if (data.error) throw data.error;
+
+    res.json(data);
   } catch (error) {
     next(error);
   }

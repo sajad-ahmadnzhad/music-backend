@@ -3,6 +3,12 @@ import categoryModel from "../models/category";
 import { CategoryBody } from "../interfaces/category";
 import httpErrors from "http-errors";
 import usersModel from "../models/users";
+import musicModel from "../models/music";
+import albumModel from "../models/album";
+import archiveModel from "../models/archive";
+import playListModel from "../models/playList";
+import upcomingModel from "../models/upcoming";
+import singerModel from "../models/singer";
 import { rimrafSync } from "rimraf";
 import pagination from "../helpers/pagination";
 import path from "path";
@@ -10,10 +16,10 @@ import { isValidObjectId } from "mongoose";
 
 export let create = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { collaborators, title } = req.body as CategoryBody;
+    const { collaborators, title, country } = req.body as CategoryBody;
     const { user } = req as any;
 
-    const existingCategory = await categoryModel.findOne({ title });
+    const existingCategory = await categoryModel.findOne({ title, country });
 
     if (existingCategory) throw httpErrors.Conflict("Category already exists");
 
@@ -40,14 +46,7 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
 };
 export let getAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const query = categoryModel
-      .find()
-      .populate("createBy", "name username profile")
-      .populate("collaborators", "name username profile")
-      .populate("genre", "title description")
-      .populate("country", "title description image")
-      .select("-__v")
-      .lean();
+    const query = categoryModel.find().lean();
 
     const data = await pagination(req, query, categoryModel);
 
@@ -74,7 +73,7 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("Category not found");
     }
 
-    if (String(category.createBy) !== user._id && !user.isSuperAdmin) {
+    if (String(category.createBy) !== String(user._id) && !user.isSuperAdmin) {
       throw httpErrors.Forbidden(
         "This category can only be edited by the person who created it"
       );
@@ -129,7 +128,7 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("Category not found");
     }
 
-    if (String(category.createBy) !== user._id && !user.isSuperAdmin) {
+    if (String(category.createBy) !== String(user._id) && !user.isSuperAdmin) {
       throw httpErrors.Forbidden(
         "This category can only be removed by the person who created it"
       );
@@ -150,14 +149,7 @@ export let getOne = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.BadRequest("This category id is not form mongodb");
     }
 
-    const category = await categoryModel
-      .findById(id)
-      .populate("createBy", "name username profile")
-      .populate("collaborators", "name username profile")
-      .populate("genre", "title description")
-      .populate("country", "title description image")
-      .select("-__v")
-      .lean();
+    const category = await categoryModel.findById(id).lean();
 
     if (!category) {
       throw httpErrors.NotFound("Category not found");
@@ -178,16 +170,91 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
       .find({
         title: { $regex: category },
       })
-      .populate("createBy", "name username profile")
-      .populate("collaborators", "name username profile")
-      .populate("genre", "title description")
-      .populate("country", "title description image")
-      .select("-__v")
       .lean();
 
     const data = await pagination(req, query, categoryModel);
 
     res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+export let addToCategory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { user } = req as any;
+    const { id } = req.params;
+    const { targetId, type } = req.body;
+
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("This category id is not from mongodb");
+    }
+
+    if (!isValidObjectId(targetId)) {
+      throw httpErrors.BadRequest("This targetId is not from mongodb");
+    }
+
+    const models: any = {
+      music: musicModel,
+      album: albumModel,
+      archive: archiveModel,
+      upcoming: upcomingModel,
+      playList: playListModel,
+      singer: singerModel,
+    };
+
+    if (!models[type]) {
+      throw httpErrors.BadRequest(`type ${type} is not valid`);
+    }
+
+    const existingTargetId = await models[type].findById(targetId);
+
+    if (!existingTargetId) {
+      throw httpErrors.NotFound(`${type} not found`);
+    }
+
+    const category = await categoryModel.findById(id);
+    if (!category) throw httpErrors.NotFound("Category not found");
+    const { accessLevel, createBy, collaborators } = category;
+
+    if (accessLevel == "private" && String(createBy) !== String(user._id)) {
+      throw httpErrors.Forbidden(
+        "You do not have permission to access this category"
+      );
+    } else if (
+      accessLevel == "selectedCollaborators" &&
+      String(createBy) !== String(user._id)
+    ) {
+      if (!collaborators.includes(user._id))
+        throw httpErrors.Forbidden("You are not listed among the colleagues");
+    }
+
+    if (category.target_ids.includes(targetId)) {
+      throw httpErrors.Conflict(`This ${type} already exists`);
+    }
+
+    if (String(category.country) !== String(existingTargetId.country)) {
+      throw httpErrors.BadRequest(
+        `${type} from other countries cannot be added to the category`
+      );
+    }
+
+    if (type !== category.type) {
+      throw httpErrors.BadRequest(
+        `${type} cannot be added to a category by type ${category.type}`
+      );
+    }
+
+    await categoryModel.findByIdAndUpdate(id, {
+      $push: {
+        target_ids: targetId,
+      },
+    });
+
+    res.json({ message: "Added to category successfully" });
   } catch (error) {
     next(error);
   }

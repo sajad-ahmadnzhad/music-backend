@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  addToCategory,
   create,
   getAll,
   getOne,
@@ -25,8 +26,13 @@ router
   )
   .get(getAll);
 
-router.get('/search' , search)
-
+router.get("/search", search);
+router.post(
+  "/add-to-category/:id",
+  authMiddlewares,
+  isAdminMiddlewares,
+  addToCategory
+);
 router
   .route("/:id")
   .put(

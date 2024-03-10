@@ -17,7 +17,6 @@ const schema = new Schema(
         type: Schema.ObjectId,
         refPath: "type",
         default: [],
-        addedBy: { type: Schema.ObjectId, ref: "users" },
       },
     ],
     collaborators: [{ type: Schema.ObjectId, ref: "users", default: [] }],
@@ -97,6 +96,23 @@ schema.pre("deleteOne", async function (next) {
 
     rimrafSync(path.join(process.cwd(), "public", deletedCategory.image));
 
+    next();
+  } catch (error: any) {
+    next(error);
+  }
+});
+
+schema.pre(["find", "findOne"], function (next) {
+  try {
+    this.populate("createBy", "name username profile")
+      .populate("collaborators", "name username profile")
+      .populate("genre", "title description")
+      .populate("country", "title description image")
+      .populate(
+        "target_ids",
+        "title description cover_image download_link duration"
+      )
+      .select("-__v");
     next();
   } catch (error: any) {
     next(error);

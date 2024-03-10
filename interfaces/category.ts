@@ -5,5 +5,6 @@ export interface CategoryBody {
   type: string;
   accessLevel: string;
   genre: ObjectId;
+  country: ObjectId;
   collaborators: string[];
 }

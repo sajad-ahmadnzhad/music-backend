@@ -1,6 +1,8 @@
 import joi from "joi";
 import categoryModel from "../models/category";
 import genreModel from "../models/genre";
+import countryModel from "../models/country";
+import usersModel from "../models/users";
 export default joi.object({
   title: joi
     .string()
@@ -19,8 +21,7 @@ export default joi.object({
     .required(),
   accessLevel: joi
     .string()
-    .valid("private", "allAdmins", "selectedCollaborators")
-    .required(),
+    .valid("private", "allAdmins", "selectedCollaborators"),
   genre: joi
     .string()
     .regex(/^[0-9a-fA-F]{24}$/)
@@ -31,6 +32,16 @@ export default joi.object({
         if (!genre) return helpers.error("Genre not found");
       }
     }),
+  country: joi
+    .string()
+    .regex(/^[0-9a-fA-F]{24}$/)
+    .message("Country id is not from mongodb")
+    .external(async (value, helpers) => {
+      if (value) {
+        const country = await countryModel.findById(value);
+        if (!country) return helpers.error("Country not found");
+      }
+    }),
   collaborators: joi.array().items(
     joi
       .string()
@@ -38,5 +49,12 @@ export default joi.object({
       .message("id is not from mongodb")
       .required()
       .label("This id is not from mongodb")
+      .external(async (value, helpers) => {
+        const existingAdmin = await usersModel.findOne({
+          _id: value,
+          isAdmin: true,
+        });
+        if (!existingAdmin) return helpers.error("Admin not found");
+      })
   ),
 });

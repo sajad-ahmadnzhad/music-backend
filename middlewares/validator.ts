@@ -21,8 +21,9 @@ export default (schema: Joi.Schema) => {
       }
       if (e.details[0].path.length >= 2) {
         return res.status(httpStatus.BAD_REQUEST).json({
-          [e.details[0]
-            .path[0]]: `index ${e.details[0].context.key} ${e.details[0].message}`,
+          [e.details[0].path[0]]: `index ${e.details[0].context.key} ${
+            errorMessage || "validation error"
+          }`,
         });
       }
 

@@ -136,3 +136,29 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+export let getOne = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("This category id is not form mongodb");
+    }
+
+    const category = await categoryModel
+      .findById(id)
+      .populate("createBy", "name username profile")
+      .populate("collaborators", "name username profile")
+      .populate("genre", "title description")
+      .populate("country", "title description image")
+      .select("-__v")
+      .lean();
+
+    if (!category) {
+      throw httpErrors.NotFound("Category not found");
+    }
+
+    res.json(category);
+  } catch (error) {
+    next(error);
+  }
+};

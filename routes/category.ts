@@ -1,5 +1,11 @@
 import express from "express";
-import { create, getAll, remove, update } from "../controllers/category";
+import {
+  create,
+  getAll,
+  getOne,
+  remove,
+  update,
+} from "../controllers/category";
 import categoryUploader from "../utils/uploader/profile";
 import validatorMiddleware from "../middlewares/validator";
 import categoryValidator from "../validators/category";
@@ -27,6 +33,7 @@ router
     validatorMiddleware(categoryValidator),
     update
   )
-  .delete(authMiddlewares, isAdminMiddlewares , remove);
+  .delete(authMiddlewares, isAdminMiddlewares, remove)
+  .get(getOne);
 
 export default router;

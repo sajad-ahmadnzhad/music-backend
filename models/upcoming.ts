@@ -11,6 +11,7 @@ const schema = new Schema(
     genre: { type: Schema.ObjectId, ref: "genre", required: true },
     description: { type: String, trim: true },
     cover_image: { type: String },
+    country: {type: Schema.ObjectId , ref: 'country' , required: true},
     createBy: { type: Schema.ObjectId, ref: "users", required: true },
   },
   { timestamps: true }

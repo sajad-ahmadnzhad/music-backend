@@ -5,6 +5,7 @@ import {
   getAll,
   getOne,
   remove,
+  removeFromCategory,
   search,
   update,
 } from "../controllers/category";
@@ -27,11 +28,17 @@ router
   .get(getAll);
 
 router.get("/search", search);
-router.post(
+router.put(
   "/add-to-category/:id",
   authMiddlewares,
   isAdminMiddlewares,
   addToCategory
+);
+router.delete(
+  "/remove-from-category/:id",
+  authMiddlewares,
+  isAdminMiddlewares,
+  removeFromCategory
 );
 router
   .route("/:id")

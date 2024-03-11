@@ -89,7 +89,7 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("upcoming not found");
     }
 
-    if (user._id !== upcoming.createBy && !user.isSuperAdmin) {
+    if (String(user._id) !== String(upcoming.createBy) && !user.isSuperAdmin) {
       throw httpErrors.Forbidden(
         "This upcoming can only be remove by the person who created it"
       );
@@ -122,7 +122,7 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("upcoming not found");
     }
 
-    if (user._id !== upcoming.createBy && !user.isSuperAdmin) {
+    if (String(user._id) !== String(upcoming.createBy) && !user.isSuperAdmin) {
       throw httpErrors.Forbidden(
         "This upcoming can only be modified by the person who created it"
       );

@@ -189,6 +189,8 @@ export let addToCategory = async (
     const { id } = req.params;
     const { targetId, type } = req.body;
 
+    if (!type) throw httpErrors.BadRequest("Type is required");
+
     if (!isValidObjectId(id)) {
       throw httpErrors.BadRequest("This category id is not from mongodb");
     }
@@ -220,23 +222,31 @@ export let addToCategory = async (
     if (!category) throw httpErrors.NotFound("Category not found");
     const { accessLevel, createBy, collaborators } = category;
 
-    if (accessLevel == "private" && String(createBy) !== String(user._id)) {
+    if (accessLevel == "private" && String(createBy._id) !== String(user._id)) {
       throw httpErrors.Forbidden(
         "You do not have permission to access this category"
       );
     } else if (
       accessLevel == "selectedCollaborators" &&
-      String(createBy) !== String(user._id)
+      String(createBy._id) !== String(user._id)
     ) {
-      if (!collaborators.includes(user._id))
+      const foundCollaborators = collaborators.some(
+        (item) => String(item._id) == String(user._id)
+      );
+
+      if (!foundCollaborators)
         throw httpErrors.Forbidden("You are not listed among the colleagues");
     }
 
-    if (category.target_ids.includes(targetId)) {
+    const foundTargetIds = category.target_ids.some(
+      (item) => String(item._id) == targetId
+    );
+
+    if (foundTargetIds) {
       throw httpErrors.Conflict(`This ${type} already exists`);
     }
 
-    if (String(category.country) !== String(existingTargetId.country)) {
+    if (String(category.country._id) !== String(existingTargetId.country)) {
       throw httpErrors.BadRequest(
         `${type} from other countries cannot be added to the category`
       );
@@ -255,6 +265,61 @@ export let addToCategory = async (
     });
 
     res.json({ message: "Added to category successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+export let removeFromCategory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { user } = req as any;
+    const { id } = req.params;
+    const { targetId } = req.body;
+
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("This category id is not from mongodb");
+    }
+
+    if (!isValidObjectId(targetId)) {
+      throw httpErrors.BadRequest("This targetId is not from mongodb");
+    }
+
+    const category = await categoryModel.findById(id);
+    if (!category) throw httpErrors.NotFound("Category not found");
+    const foundTargetIds = category.target_ids.some(
+      (item) => String(item._id) == targetId
+    );
+
+    if (!foundTargetIds) {
+      throw httpErrors.BadRequest(`${category.type} was not found in the category`);
+    }
+    const { accessLevel, collaborators, createBy, type } = category;
+
+    if (accessLevel == "private" && String(createBy) !== String(user._id)) {
+      throw httpErrors.Forbidden(
+        "You do not have permission to access this category"
+      );
+    } else if (
+      accessLevel == "selectedCollaborators" &&
+      String(createBy) !== String(user._id)
+    ) {
+      const foundCollaborators = collaborators.some(
+        (item) => String(item._id) == String(user._id)
+      );
+
+      if (!foundCollaborators)
+        throw httpErrors.Forbidden("You are not listed among the colleagues");
+    }
+
+    await category.updateOne({
+      $pull: {
+        target_ids: targetId,
+      },
+    });
+    res.json({ message: `Deleted ${type} from category successfully` });
   } catch (error) {
     next(error);
   }

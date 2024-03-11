@@ -8,6 +8,7 @@ import {
   getAll,
   getByGenreAndCounty,
   getOne,
+  related,
   remove,
   search,
   update,
@@ -29,7 +30,7 @@ router
   .get(getAll);
 
 router.get("/search", search);
-
+router.get('/related/:id' , related)
 router
   .route("/:id")
   .delete(authMiddlewares, isBanMiddlewares, isAdminMiddlewares, remove)

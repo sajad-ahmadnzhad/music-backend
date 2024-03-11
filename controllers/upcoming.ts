@@ -253,3 +253,37 @@ export let getByGenreAndCounty = async (
     next(error);
   }
 };
+export let related = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("This upcoming id is not from mongodb");
+    }
+
+    const existingUpcoming = await upcomingModel.findById(id);
+
+    if (!existingUpcoming) {
+      throw httpErrors.NotFound("Upcoming not found");
+    }
+
+    const relatedUpcoming = await upcomingModel
+      .find({ artist: existingUpcoming.artist, _id: { $ne: id } })
+      .populate("artist", "fullName photo")
+      .populate("genre", "title description")
+      .populate("country", "title description image")
+      .populate("createBy", "name username profile")
+      .sort({ createdAt: "desc" })
+      .select("-__v")
+      .lean()
+      .limit(10);
+
+    res.json(relatedUpcoming);
+  } catch (error) {
+    next(error);
+  }
+};

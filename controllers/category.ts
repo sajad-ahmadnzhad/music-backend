@@ -9,6 +9,7 @@ import archiveModel from "../models/archive";
 import playListModel from "../models/playList";
 import upcomingModel from "../models/upcoming";
 import singerModel from "../models/singer";
+import countryModel from "../models/country";
 import { rimrafSync } from "rimraf";
 import pagination from "../helpers/pagination";
 import path from "path";
@@ -424,10 +425,37 @@ export let related = async (
     }
 
     const relatedCategories = await categoryModel
-      .find({ country: category.country })
+      .find({ country: category.country, _id: { $ne: id } })
       .limit(10);
 
     res.json(relatedCategories);
+  } catch (error) {
+    next(error);
+  }
+};
+export let getByCountry = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { countryId } = req.params;
+
+    if (!isValidObjectId(countryId)) {
+      throw httpErrors.BadRequest("This country id is not form mongodb");
+    }
+
+    const country = await countryModel.findById(countryId);
+
+    if (!country) {
+      throw httpErrors.NotFound("Country not found");
+    }
+
+    const query = categoryModel.find({ country: country._id });
+
+    const data = await pagination(req, query, categoryModel);
+
+    res.json(data);
   } catch (error) {
     next(error);
   }

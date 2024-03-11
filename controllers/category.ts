@@ -384,6 +384,27 @@ export let unlike = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+export let popular = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const query = categoryModel.find();
+
+    const data = await pagination(req, query, categoryModel);
+
+    if (data.error) throw data.error;
+
+    const resultSort = data.data.sort(
+      (a: any, b: any) => b.likes.length - a.likes.length
+    );
+
+    res.json({ ...data, data: resultSort });
+  } catch (error) {
+    next(error);
+  }
+};
 export let related = async (
   req: Request,
   res: Response,

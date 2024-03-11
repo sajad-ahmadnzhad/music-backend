@@ -79,7 +79,7 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("Album not found");
     }
 
-    if (user._id !== album.createBy && !user.isSuperAdmin) {
+    if (String(user._id) !== String(album.createBy) && !user.isSuperAdmin) {
       throw httpErrors.BadRequest(
         "This album can only be removed by the person who created it"
       );
@@ -108,7 +108,7 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("Album not found");
     }
 
-    if (user._id !== album.createBy && !user.isSuperAdmin) {
+    if (String(user._id) !== String(album.createBy) && !user.isSuperAdmin) {
       throw httpErrors.NotFound(
         "This album can only be modified by the person who created it"
       );
@@ -225,7 +225,7 @@ export let addMusic = async (
       throw httpErrors.NotFound("Album not found");
     }
 
-    if (user._id !== album.createBy && !user.isSuperAdmin) {
+    if (String(user._id) !== String(album.createBy) && !user.isSuperAdmin) {
       throw httpErrors.BadRequest(
         "Only the person who created this album can add music to it"
       );
@@ -287,7 +287,7 @@ export let removeMusic = async (
       throw httpErrors.NotFound("Album not found");
     }
 
-    if (user._id !== album.createBy && !user.isSuperAdmin) {
+    if (String(user._id) !== String(album.createBy) && !user.isSuperAdmin) {
       throw httpErrors.BadRequest(
         "Only the person who created this album can remove music"
       );

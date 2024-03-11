@@ -122,7 +122,7 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("Comment not found");
     }
 
-    if (user._id !== comment.creator.toString() && !user.isAdmin) {
+    if (String(user._id) !== String(comment.creator) && !user.isAdmin) {
       throw httpErrors.BadRequest(
         "This comment can only be deleted by the person who created it"
       );
@@ -152,7 +152,7 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("Comment not found");
     }
 
-    if (user._id !== comment.creator.toString() && !user.isAdmin) {
+    if (String(user._id) !== String(comment.creator) && !user.isAdmin) {
       throw httpErrors.BadRequest(
         "This comment can only be changed by the person who created it"
       );

@@ -67,7 +67,7 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.Conflict("Genre with this name already exists");
     }
 
-    if (genre.createBy !== user._id && !user.isSuperAdmin) {
+    if (String(genre.createBy) !== String(user._id) && !user.isSuperAdmin) {
       throw httpErrors.BadRequest(
         "This genre can only be edited by the person who created it"
       );
@@ -94,7 +94,7 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("genre not found");
     }
 
-    if (genre.createBy !== user._id && !user.isSuperAdmin) {
+    if (String(genre.createBy) !== String(user._id) && !user.isSuperAdmin) {
       throw httpErrors.BadRequest(
         "This genre can only be deleted by the person who created it"
       );

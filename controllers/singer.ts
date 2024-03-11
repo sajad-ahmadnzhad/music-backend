@@ -116,7 +116,7 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("Artist not found");
     }
 
-    if (singer.createBy !== user._id && !user.isSuperAdmin) {
+    if (String(singer.createBy) !== String(user._id) && !user.isSuperAdmin) {
       throw httpErrors.BadRequest(
         "This reader can only be modified by the person who created it"
       );
@@ -161,7 +161,7 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("Artist not found");
     }
 
-    if (singer.createBy !== user._id && !user.isSuperAdmin) {
+    if (String(singer.createBy) !== String(user._id) && !user.isSuperAdmin) {
       throw httpErrors.BadRequest(
         "This reader can only be removed by the person who created it"
       );

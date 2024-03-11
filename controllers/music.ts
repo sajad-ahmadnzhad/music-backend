@@ -104,7 +104,7 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("Music not found");
     }
 
-    if (user._id !== music.createBy && !user.isSuperAdmin) {
+    if (String(user._id) !== String(music.createBy) && !user.isSuperAdmin) {
       throw httpErrors.BadRequest(
         "Only the person who created this music can delete it"
       );
@@ -133,7 +133,7 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("Music not found");
     }
 
-    if (user._id !== music.createBy && !user.isSuperAdmin) {
+    if (String(user._id) !== String(music.createBy) && !user.isSuperAdmin) {
       throw httpErrors.BadRequest(
         "Only the person who created this music can edit it"
       );

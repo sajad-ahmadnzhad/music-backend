@@ -59,7 +59,7 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("Country not found");
     }
 
-    if (country.createBy !== user._id && !user.isSuperAdmin) {
+    if (String(country.createBy) !== String(user._id) && !user.isSuperAdmin) {
       throw httpErrors.Forbidden(
         "This country can only be edited by the person who created it"
       );
@@ -99,7 +99,7 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("Country not found");
     }
 
-    if (country.createBy !== user._id && !user.isSuperAdmin) {
+    if (String(country.createBy) !== String(user._id) && !user.isSuperAdmin) {
       throw httpErrors.Forbidden(
         "This country can only be deleted by the person who created it"
       );

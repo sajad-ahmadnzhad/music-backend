@@ -81,7 +81,7 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("Play list not found");
     }
 
-    if (user._id !== playList.createBy && !user.isSuperAdmin) {
+    if (String(user._id) !== String(playList.createBy) && !user.isSuperAdmin) {
       throw httpErrors.BadRequest(
         "This paly list can only be modified by the person who created it"
       );
@@ -123,7 +123,7 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("Play list not found");
     }
 
-    if (user._id !== playList.createBy && !user.isSuperAdmin) {
+    if (String(user._id) !== String(playList.createBy) && !user.isSuperAdmin) {
       throw httpErrors.BadRequest(
         "This paly list can only be remove by the person who created it"
       );
@@ -306,7 +306,7 @@ export let addMusic = async (
       throw httpErrors.NotFound("Play list not found");
     }
 
-    if (user._id !== playList.createBy && !user.isSuperAdmin) {
+    if (String(user._id) !== String(playList.createBy) && !user.isSuperAdmin) {
       throw httpErrors.BadRequest(
         "Only the person who created this paly list can add music to it"
       );
@@ -363,7 +363,7 @@ export let removeMusic = async (
       throw httpErrors.NotFound("Play list not found");
     }
 
-    if (user._id !== playList.createBy && !user.isSuperAdmin) {
+    if (String(user._id) !== String(playList.createBy) && !user.isSuperAdmin) {
       throw httpErrors.BadRequest(
         "Only the person who created this paly list can remove music to it"
       );
@@ -378,7 +378,7 @@ export let removeMusic = async (
     });
 
     res.json({ message: "Deleted music from play list successfully" });
-  } catch (error: any) {
+  } catch (error) {
     next(error);
   }
 };

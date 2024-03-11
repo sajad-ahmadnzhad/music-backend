@@ -9,7 +9,7 @@ const schema = new Schema(
     description: { type: String, trim: true },
     type: {
       type: String,
-      enum: ["music", "album", "playList", "archive", "upcoming", "signer"],
+      enum: ["music", "album", "playList", "archive", "upcoming", "singer"],
       required: true,
     },
     target_ids: [
@@ -109,10 +109,31 @@ schema.pre(["find", "findOne"], function (next) {
       .populate("collaborators", "name username profile")
       .populate("genre", "title description")
       .populate("country", "title description image")
-      .populate(
-        "target_ids",
-        "title description cover_image download_link duration"
-      )
+      .populate({
+        path: "target_ids",
+        select:
+          "title description artist genre cover_image fullName englishName nickname photo musicStyle download_link",
+        populate: [
+          {
+            path: "artist",
+            select: "fullName englishName photo musicStyle",
+            strictPopulate: false,
+            populate: [
+              {
+                path: "musicStyle",
+                select: "title description",
+                strictPopulate: false,
+              },
+            ],
+          },
+          {
+            path: "musicStyle",
+            select: "title description",
+            strictPopulate: false,
+          },
+          { path: "genre", select: "title description", strictPopulate: false },
+        ],
+      })
       .populate("likes", "name username profile")
       .sort({ createdAt: -1 })
       .select("-__v");

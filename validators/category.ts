@@ -7,7 +7,7 @@ export default joi.object({
   description: joi.string().min(5).max(100),
   type: joi
     .string()
-    .valid("music", "album", "playList", "archive", "upcoming", "signer")
+    .valid("music", "album", "playList", "archive", "upcoming", "singer")
     .required(),
   accessLevel: joi
     .string()

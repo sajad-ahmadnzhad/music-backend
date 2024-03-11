@@ -213,14 +213,26 @@ export let addToCategory = async (
       throw httpErrors.BadRequest(`type ${type} is not valid`);
     }
 
-    const existingTargetId = await models[type].findById(targetId);
-
+    const existingTargetId = await models[type].findById(targetId).populate({
+      path: "artist",
+      select: "country",
+      strictPopulate: false,
+    });
+    
     if (!existingTargetId) {
       throw httpErrors.NotFound(`${type} not found`);
     }
 
     const category = await categoryModel.findById(id);
+
     if (!category) throw httpErrors.NotFound("Category not found");
+
+    if (type !== category.type) {
+      throw httpErrors.BadRequest(
+        `${type} cannot be added to a category by type ${category.type}`
+      );
+    }
+
     const { accessLevel, createBy, collaborators } = category;
 
     if (accessLevel == "private" && String(createBy._id) !== String(user._id)) {
@@ -246,16 +258,12 @@ export let addToCategory = async (
     if (foundTargetIds) {
       throw httpErrors.Conflict(`This ${type} already exists`);
     }
+    const targetIdCountry =
+      existingTargetId.country ?? existingTargetId?.artist?.country;
 
-    if (String(category.country._id) !== String(existingTargetId.country)) {
+    if (String(category.country._id) !== String(targetIdCountry)) {
       throw httpErrors.BadRequest(
         `${type} from other countries cannot be added to the category`
-      );
-    }
-
-    if (type !== category.type) {
-      throw httpErrors.BadRequest(
-        `${type} cannot be added to a category by type ${category.type}`
       );
     }
 

@@ -5,6 +5,7 @@ import {
   getAll,
   getOne,
   like,
+  related,
   remove,
   removeFromCategory,
   search,
@@ -48,6 +49,7 @@ router.delete(
 );
 router.put("/like/:id", authMiddlewares, isBanMiddlewares, like);
 router.put("/unlike/:id", authMiddlewares, isBanMiddlewares, unlike);
+router.get('/related/:id' , related)
 router
   .route("/:id")
   .put(

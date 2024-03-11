@@ -384,3 +384,30 @@ export let unlike = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+export let related = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("This category id is not from mongodb");
+    }
+
+    const category = await categoryModel.findById(id);
+
+    if (!category) {
+      throw httpErrors.NotFound("Category not found");
+    }
+
+    const relatedCategories = await categoryModel
+      .find({ country: category.country })
+      .limit(10);
+
+    res.json(relatedCategories);
+  } catch (error) {
+    next(error);
+  }
+};

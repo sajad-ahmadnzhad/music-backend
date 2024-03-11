@@ -294,7 +294,9 @@ export let removeFromCategory = async (
     );
 
     if (!foundTargetIds) {
-      throw httpErrors.BadRequest(`${category.type} was not found in the category`);
+      throw httpErrors.BadRequest(
+        `${category.type} was not found in the category`
+      );
     }
     const { accessLevel, collaborators, createBy, type } = category;
 
@@ -320,6 +322,64 @@ export let removeFromCategory = async (
       },
     });
     res.json({ message: `Deleted ${type} from category successfully` });
+  } catch (error) {
+    next(error);
+  }
+};
+export let like = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { user } = req as any;
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("Category id is not from mongodb");
+    }
+
+    const category = await categoryModel.findById(id);
+
+    if (!category) {
+      throw httpErrors.NotFound("Category not found");
+    }
+
+    const likes = category.likes.map((like) => String(like._id));
+
+    if (likes.includes(String(user._id))) {
+      throw httpErrors.Conflict("You have already liked");
+    }
+
+    await categoryModel.findByIdAndUpdate(id, {
+      $addToSet: { likes: user._id },
+    });
+
+    res.json({ message: "Liked category successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+export let unlike = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { user } = req as any;
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("category id is not from mongodb");
+    }
+
+    const category = await categoryModel.findById(id);
+
+    if (!category) {
+      throw httpErrors.NotFound("category not found");
+    }
+
+    const likes = category.likes.map((like) => String(like._id));
+
+    if (!likes.includes(String(user._id))) {
+      throw httpErrors.Conflict("You have not liked the category");
+    }
+
+    await categoryModel.findByIdAndUpdate(id, {
+      $pull: { likes: user._id },
+    });
+
+    res.json({ message: "The category was successfully unliked" });
   } catch (error) {
     next(error);
   }

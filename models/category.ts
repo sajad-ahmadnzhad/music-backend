@@ -26,6 +26,7 @@ const schema = new Schema(
       default: "private",
     },
     genre: { type: Schema.ObjectId, ref: "genre" },
+    likes: [{ type: Schema.ObjectId, ref: "users", required: true }],
     country: { type: Schema.ObjectId, ref: "country", required: true },
     createBy: { type: Schema.ObjectId, ref: "users", required: true },
   },
@@ -112,6 +113,8 @@ schema.pre(["find", "findOne"], function (next) {
         "target_ids",
         "title description cover_image download_link duration"
       )
+      .populate("likes", "name username profile")
+      .sort({ createdAt: -1 })
       .select("-__v");
     next();
   } catch (error: any) {

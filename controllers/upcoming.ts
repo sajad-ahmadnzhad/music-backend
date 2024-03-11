@@ -209,27 +209,18 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
-export let getByGenreAndCounty = async (
+export let getByCounty = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const { genreId, countryId } = req.params;
-
-    if (!isValidObjectId(genreId)) {
-      throw httpErrors.BadRequest("Genre id is not from mongodb");
-    }
+    const { countryId } = req.params;
 
     if (!isValidObjectId(countryId)) {
       throw httpErrors.BadRequest("Country id is not from mongodb");
     }
     const country = await countryModel.findById(countryId);
-    const genre = await genreModel.findById(genreId);
-
-    if (!genre) {
-      throw httpErrors.NotFound("Genre not found");
-    }
 
     if (!country) {
       throw httpErrors.NotFound("Country not found");
@@ -238,7 +229,6 @@ export let getByGenreAndCounty = async (
     const upcoming = await upcomingModel
       .find({
         country: countryId,
-        genre: genreId,
       })
       .populate("artist", "fullName photo")
       .populate("genre", "title description")
@@ -283,6 +273,41 @@ export let related = async (
       .limit(10);
 
     res.json(relatedUpcoming);
+  } catch (error) {
+    next(error);
+  }
+};
+export let getByGenre = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { genreId } = req.params;
+
+    if (!isValidObjectId(genreId)) {
+      throw httpErrors.BadRequest("Genre id is not from mongodb");
+    }
+
+    const genre = await genreModel.findById(genreId);
+
+    if (!genre) {
+      throw httpErrors.NotFound("Genre not found");
+    }
+
+    const upcoming = await upcomingModel
+      .find({
+        genre: genreId,
+      })
+      .populate("artist", "fullName photo")
+      .populate("genre", "title description")
+      .populate("country", "title description image")
+      .populate("createBy", "name username profile")
+      .sort({ createdAt: "desc" })
+      .select("-__v")
+      .lean();
+
+    res.json(upcoming);
   } catch (error) {
     next(error);
   }

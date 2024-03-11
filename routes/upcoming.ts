@@ -6,7 +6,8 @@ import validatorMiddlewares from "../middlewares/validator";
 import {
   create,
   getAll,
-  getByGenreAndCounty,
+  getByCounty,
+  getByGenre,
   getOne,
   related,
   remove,
@@ -30,7 +31,7 @@ router
   .get(getAll);
 
 router.get("/search", search);
-router.get('/related/:id' , related)
+router.get("/related/:id", related);
 router
   .route("/:id")
   .delete(authMiddlewares, isBanMiddlewares, isAdminMiddlewares, remove)
@@ -44,6 +45,7 @@ router
   )
   .get(getOne);
 
-router.get("/by-country-genre/:genreId/:countryId", getByGenreAndCounty);
+router.get("/by-country/:countryId", getByCounty);
+router.get("/by-genre/:genreId", getByGenre);
 
 export default router;

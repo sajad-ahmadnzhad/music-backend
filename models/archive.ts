@@ -1,6 +1,7 @@
 import { Schema, model } from "mongoose";
 import path from "path";
 import { rimrafSync } from "rimraf";
+import categoryModel from "./category";
 const schema = new Schema(
   {
     title: { type: String, trim: true, required: true },
@@ -22,6 +23,9 @@ schema.pre("deleteOne", async function (next) {
     if (!deletedArchive) return next();
     const publicFolder = path.join(process.cwd(), "public");
     rimrafSync(`${publicFolder}${deletedArchive.cover_image}`);
+    await categoryModel.updateMany({
+      $pull: { target_ids: deletedArchive._id },
+    });
     next();
   } catch (error: any) {
     next(error);
@@ -35,6 +39,11 @@ schema.pre("deleteMany", async function (next) {
     const ArchiveFile = deletedArchive.map(
       (archive) => `${publicFolder}${archive.image}`
     );
+    const archiveIds = deletedArchive.map((archive) => archive._id);
+    
+    await categoryModel.updateMany({
+      $pull: { target_ids: { $inc: archiveIds } },
+    });
     rimrafSync(ArchiveFile);
     next();
   } catch (error: any) {

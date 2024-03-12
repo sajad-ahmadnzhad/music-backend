@@ -7,8 +7,9 @@ import userFavoriteModel from "./userFavorite";
 import userPlaylistModel from "./userPlaylist";
 import upcomingModel from "./upcoming";
 import albumModel from "./album";
-import autoArchiveModel from './autoArchive'
+import autoArchiveModel from "./autoArchive";
 import singerArchiveModel from "./singerArchive";
+import categoryModel from "./category";
 
 const schema = new Schema(
   {
@@ -47,6 +48,9 @@ schema.pre("deleteMany", async function (next) {
     await playListModel.updateMany({ $pull: { musics: { $in: musicIds } } });
     await albumModel.updateMany({ $pull: { musics: { $in: musicIds } } });
     await userFavoriteModel.deleteMany({ target_id: { $in: musicIds } });
+    await categoryModel.updateMany({
+      $pull: { target_ids: { $in: musicIds } },
+    });
     await userPlaylistModel.updateMany({
       $pull: { musics: { $in: musicIds } },
     });
@@ -74,6 +78,7 @@ schema.pre("deleteOne", async function (next) {
     await playListModel.updateMany({ $pull: { musics: deletedMusic._id } });
     await userFavoriteModel.deleteMany({ target_id: deletedMusic._id });
     await albumModel.updateMany({ $pull: { musics: deletedMusic._id } });
+    await categoryModel.updateMany({ $pull: { target_ids: deletedMusic._id } });
     await userPlaylistModel.updateMany({ $pull: { musics: deletedMusic._id } });
 
     await commentModel.deleteMany({ target_id: deletedMusic._id });
@@ -100,9 +105,9 @@ schema.pre("save", async function (next) {
     });
 
     if (existingAutoArchive) {
-     await autoArchiveModel.findOneAndUpdate(existingAutoArchive._id, {
-       $push: { target_ids: this._id },
-     });
+      await autoArchiveModel.findOneAndUpdate(existingAutoArchive._id, {
+        $push: { target_ids: this._id },
+      });
     } else {
       await autoArchiveModel.create({
         type: "music",

@@ -8,6 +8,7 @@ import autoArchiveModel from "./autoArchive";
 import musicModel from "./music";
 import singerArchiveModel from "./singerArchive";
 import path from "path";
+import categoryModel from "./category";
 const schema = new Schema(
   {
     title: { type: String, trim: true, required: true },
@@ -31,7 +32,9 @@ schema.pre("deleteMany", async function (next) {
     rimrafSync(albumPhotos);
     await commentModel.deleteMany({ target_id: { $in: albumIds } });
     await userFavoriteModel.deleteMany({ target_id: { $in: albumIds } });
-
+    await categoryModel.updateMany({
+      $pull: { target_ids: { $in: albumIds } },
+    });
     next();
   } catch (error: any) {
     next(error);
@@ -46,6 +49,7 @@ schema.pre("deleteOne", async function (next) {
     rimrafSync(`${publicFolder}${deletedAlbum.photo}`);
     await commentModel.deleteMany({ target_id: deletedAlbum._id });
     await userFavoriteModel.deleteMany({ target_id: deletedAlbum._id });
+    await categoryModel.updateMany({ $pull: { target_ids: deletedAlbum._id } });
     await singerModel.findByIdAndUpdate(deletedAlbum.artist, {
       $pull: { album: deletedAlbum._id },
     });
@@ -70,7 +74,7 @@ schema.pre("save", async function (next) {
     });
 
     if (existingAutoArchive) {
-      await autoArchiveModel.findByIdAndUpdate( existingAutoArchive._id, {
+      await autoArchiveModel.findByIdAndUpdate(existingAutoArchive._id, {
         $push: { target_ids: this._id },
       });
     } else {

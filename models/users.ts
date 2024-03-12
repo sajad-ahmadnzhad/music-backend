@@ -11,6 +11,7 @@ import countryModel from "./country";
 import archiveModel from "./archive";
 import playListModel from "./playList";
 import { rimrafSync } from "rimraf";
+import categoryModel from "./category";
 import path from "path";
 const schema = new Schema(
   {
@@ -44,6 +45,7 @@ schema.pre("deleteOne", async function (next) {
       await countryModel.deleteMany({ createBy: deletedUser._id });
       await genreModel.deleteMany({ createBy: deletedUser._id });
       await musicModel.deleteMany({ createBy: deletedUser._id });
+      await categoryModel.deleteMany({ createBy: deletedUser._id });
     }
 
     await userFavoriteModel.deleteMany({ user: deletedUser._id });

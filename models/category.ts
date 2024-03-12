@@ -103,6 +103,22 @@ schema.pre("deleteOne", async function (next) {
   }
 });
 
+schema.pre("deleteMany", async function (next) {
+  try {
+    const deletedCategories = await this.model.find(this.getFilter());
+    const publicFolder = path.join(process.cwd(), "public");
+    const imageCategories = deletedCategories.map(
+      (category) => `${publicFolder}${category.image}`
+    );
+
+    rimrafSync(imageCategories);
+
+    next();
+  } catch (error: any) {
+    next(error);
+  }
+});
+
 schema.pre(["find", "findOne"], function (next) {
   try {
     this.populate("createBy", "name username profile")

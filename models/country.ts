@@ -4,6 +4,7 @@ import { rimrafSync } from "rimraf";
 import singerModel from "./singer";
 import playListModel from "./playList";
 import archiveModel from "./archive";
+import categoryModel from "./category";
 import autoArchiveModel from "./autoArchive";
 const schema = new Schema(
   {
@@ -25,6 +26,7 @@ schema.pre("deleteOne", async function (next) {
     await playListModel.deleteMany({ country: deletedCountry._id });
     await archiveModel.deleteMany({ country: deletedCountry._id });
     await autoArchiveModel.deleteMany({ country: deletedCountry._id });
+    await categoryModel.deleteMany({country: deletedCountry._id})
     next();
   } catch (error: any) {
     next(error);
@@ -44,6 +46,7 @@ schema.pre("deleteMany", async function (next) {
     await playListModel.deleteMany({ country: { $in: countryIds } });
     await archiveModel.deleteMany({ country: { $in: countryIds } });
     await autoArchiveModel.deleteMany({ country: { $in: countryIds } });
+    await categoryModel.deleteMany({ country: { $in: countryIds } });
     next();
   } catch (error: any) {
     next(error);

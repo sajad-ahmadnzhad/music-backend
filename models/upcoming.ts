@@ -3,6 +3,7 @@ import path from "path";
 import { rimrafSync } from "rimraf";
 import autoArchiveModel from "./autoArchive";
 import commentModel from "./comment";
+import categoryModel from "./category";
 const schema = new Schema(
   {
     title: { type: String, trim: true, required: true },
@@ -11,7 +12,7 @@ const schema = new Schema(
     genre: { type: Schema.ObjectId, ref: "genre", required: true },
     description: { type: String, trim: true },
     cover_image: { type: String },
-    country: {type: Schema.ObjectId , ref: 'country' , required: true},
+    country: { type: Schema.ObjectId, ref: "country", required: true },
     createBy: { type: Schema.ObjectId, ref: "users", required: true },
   },
   { timestamps: true }
@@ -29,6 +30,9 @@ schema.pre("deleteMany", async function (next) {
     rimrafSync(upcomingFiles);
 
     await commentModel.deleteMany({ target_id: { $in: upcomingIds } });
+    await categoryModel.updateMany({
+      $pull: { target_ids: { $in: upcomingIds } },
+    });
 
     next();
   } catch (error: any) {
@@ -44,6 +48,9 @@ schema.pre("deleteOne", async function (next) {
     rimrafSync(`${publicFolder}${deletedUpcoming.cover_image}`);
 
     await commentModel.deleteMany({ target_id: deletedUpcoming._id });
+    await categoryModel.updateMany({
+      $pull: { target_ids: deletedUpcoming._id },
+    });
 
     next();
   } catch (error: any) {
@@ -53,16 +60,16 @@ schema.pre("deleteOne", async function (next) {
 schema.pre("save", async function (next) {
   try {
     const upcoming = (await this.populate("artist", "country")) as any;
-    
+
     const existingAutoArchive = await autoArchiveModel.findOne({
       type: "upcoming",
       country: upcoming.artist.country,
     });
 
     if (existingAutoArchive) {
-     await autoArchiveModel.findOneAndUpdate(existingAutoArchive._id, {
-       $push: { target_ids: this._id },
-     });
+      await autoArchiveModel.findOneAndUpdate(existingAutoArchive._id, {
+        $push: { target_ids: this._id },
+      });
     } else {
       await autoArchiveModel.create({
         type: "upcoming",

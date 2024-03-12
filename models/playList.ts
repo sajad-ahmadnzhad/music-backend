@@ -3,6 +3,7 @@ import autoArchiveModel from "../models/autoArchive";
 import commentModel from "./comment";
 import path from "path";
 import { rimrafSync } from "rimraf";
+import categoryModel from "./category";
 const schema = new Schema(
   {
     title: { type: String, trim: true, required: true },
@@ -17,7 +18,7 @@ const schema = new Schema(
   { timestamps: true }
 );
 
-schema.pre("deleteMany", async function (next) {
+schema.pre(["deleteMany", "deleteOne"], async function (next) {
   try {
     const deletedPlaylist = await this.model.find(this.getFilter());
     const publicFolder = path.join(process.cwd(), "public");
@@ -29,6 +30,9 @@ schema.pre("deleteMany", async function (next) {
     rimrafSync(playListFiles);
 
     await commentModel.deleteMany({ target_id: { $in: playListIds } });
+    await categoryModel.updateMany({
+      $pull: { target_ids: { $in: playListIds } },
+    });
 
     next();
   } catch (error: any) {
@@ -44,9 +48,9 @@ schema.pre("save", async function (next) {
     });
 
     if (existingAutoArchive) {
-     await autoArchiveModel.findOneAndUpdate(existingAutoArchive._id, {
-       $push: { target_ids: this._id },
-     });
+      await autoArchiveModel.findOneAndUpdate(existingAutoArchive._id, {
+        $push: { target_ids: this._id },
+      });
     } else {
       await autoArchiveModel.create({
         type: "playList",

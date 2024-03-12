@@ -2,7 +2,8 @@ import { Schema, model } from "mongoose";
 import singerModel from "./singer";
 import playListModel from "./playList";
 import userPlaylistModel from "./userPlaylist";
-import archiveModel from "../models/archive";
+import archiveModel from "./archive";
+import categoryModel from './category'
 const schema = new Schema(
   {
     title: { type: String, trim: true, required: true },
@@ -20,6 +21,7 @@ schema.pre("deleteOne", async function (next) {
     await playListModel.deleteMany({ genre: deletedGenre._id });
     await userPlaylistModel.deleteMany({ genre: deletedGenre._id });
     await archiveModel.deleteMany({ genre: deletedGenre._id });
+    await categoryModel.deleteMany({ genre: deletedGenre._id });
     next();
   } catch (error:any) {
     next(error);
@@ -34,6 +36,7 @@ schema.pre("deleteMany", async function (next) {
     await playListModel.deleteMany({ genre: {$in: genreIds} });
     await userPlaylistModel.deleteMany({ genre: {$in: genreIds} });
     await archiveModel.deleteMany({ genre: {$in: genreIds} });
+    await categoryModel.deleteMany({ genre: {$in: genreIds} });
     next();
   } catch (error: any) {
     next(error);

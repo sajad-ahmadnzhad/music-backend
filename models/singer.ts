@@ -7,6 +7,7 @@ import archiveModel from "../models/archive";
 import autoArchiveModel from "../models/autoArchive";
 import singerArchiveModel from "../models/singerArchive";
 import upcomingModel from "../models/upcoming";
+import categoryModel from "./category";
 const schema = new Schema(
   {
     fullName: { type: String, trim: true, required: true },
@@ -36,6 +37,9 @@ schema.pre("deleteOne", async function (next) {
     await archiveModel.deleteMany({ artist: deletedSinger._id });
     await singerArchiveModel.deleteOne({ artist: deletedSinger._id });
     await upcomingModel.deleteMany({ artist: deletedSinger._id });
+    await categoryModel.updateMany({
+      $pull: { target_ids: deletedSinger._id },
+    });
     next();
   } catch (error: any) {
     next(error);
@@ -57,6 +61,9 @@ schema.pre("deleteMany", async function (next) {
     await archiveModel.deleteMany({ artist: { $in: singerIds } });
     await singerArchiveModel.deleteMany({ artist: { $in: singerIds } });
     await upcomingModel.deleteMany({ artist: { $in: singerIds } });
+    await categoryModel.updateMany({
+      $pull: { target_ids: { $in: singerIds } },
+    });
     next();
   } catch (error: any) {
     next(error);

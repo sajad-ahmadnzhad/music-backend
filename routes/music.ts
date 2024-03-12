@@ -11,7 +11,8 @@ import {
   download,
   getOne,
   unlike,
-  getByGenreAndCountry,
+  getByGenre,
+  getByCountry,
   getAllSingle,
   related,
 } from "../controllers/music";
@@ -47,13 +48,13 @@ router
 router.get("/:id/related", related);
 router.get("/search", search);
 router.get("/single", getAllSingle);
-router.get("/:countryId/:genreId/by-genre-country", getByGenreAndCountry);
+router.get("/by-country/:countryId", getByCountry);
 router.get("/popular", popular);
 router.put("/:id/like", authMiddlewares, isBanMiddlewares, like);
 router.put("/:id/unlike", authMiddlewares, isBanMiddlewares, unlike);
 router.put("/:id/view", view);
 router.put("/:id/download", download);
-
+router.get("/by-genre/:genreId", getByGenre);
 router
   .route("/:id")
   .delete(authMiddlewares, isBanMiddlewares, isAdminMiddlewares, remove)

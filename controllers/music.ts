@@ -55,7 +55,7 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
       createBy: user._id,
       isSingle: !body.album,
       country: singer!.country,
-      genre: body.genre || singer!.musicStyle
+      genre: body.genre || singer!.musicStyle,
     });
 
     res
@@ -374,13 +374,13 @@ export let getOne = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
-export let getByGenreAndCountry = async (
+export let getByCountry = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const { countryId, genreId } = req.params;
+    const { countryId } = req.params;
 
     if (!isValidObjectId(countryId)) {
       throw httpErrors.BadRequest("This country id is not from mongodb");
@@ -389,17 +389,11 @@ export let getByGenreAndCountry = async (
     const country = await countryModel.findById(countryId);
 
     if (!country) {
-      throw httpErrors.NotFound("country not found");
-    }
-
-    const genre = await genreModel.findById(genreId);
-
-    if (!genre) {
-      throw httpErrors.NotFound("genre not found");
+      throw httpErrors.NotFound("Country not found");
     }
 
     const query = musicModel
-      .find({ country: countryId, genre: genreId })
+      .find({ country: countryId })
       .populate("artist", "photo fullName")
       .populate("country", "title description image")
       .populate("genre", "title description")
@@ -411,9 +405,7 @@ export let getByGenreAndCountry = async (
 
     const data = await pagination(req, query, musicModel);
 
-    if (data.error) {
-      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
-    }
+    if (data.error) throw data.error;
 
     res.json(data);
   } catch (error) {
@@ -468,7 +460,7 @@ export let related = async (
     }
 
     const relatedMusic = await musicModel
-      .find({ artist: music.artist , _id: {$ne: id} })
+      .find({ artist: music.artist, _id: { $ne: id } })
       .populate("artist", "photo fullName")
       .populate("country", "title description image")
       .populate("genre", "title description")
@@ -481,6 +473,44 @@ export let related = async (
       .lean();
 
     res.json(relatedMusic);
+  } catch (error) {
+    next(error);
+  }
+};
+export let getByGenre = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { genreId } = req.params;
+
+    if (!isValidObjectId(genreId)) {
+      throw httpErrors.BadRequest("This genre id is not from mongodb");
+    }
+
+    const genre = await genreModel.findById(genreId);
+
+    if (!genre) {
+      throw httpErrors.NotFound("genre not found");
+    }
+
+    const query = musicModel
+      .find({ genre: genreId })
+      .populate("artist", "photo fullName")
+      .populate("country", "title description image")
+      .populate("genre", "title description")
+      .populate("createBy", "name username profile")
+      .populate("album", "title photo description")
+      .populate("likes", "name username profile")
+      .select("-__v")
+      .lean();
+
+    const data = await pagination(req, query, musicModel);
+
+    if (data.error) throw data.error;
+
+    res.json(data);
   } catch (error) {
     next(error);
   }

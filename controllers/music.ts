@@ -307,14 +307,38 @@ export let view = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.BadRequest("This music id is not from mongodb");
     }
 
-    const music = await musicModel.findOneAndUpdate(
-      { _id: id },
-      { $inc: { count_views: 1 } }
-    );
+    const music = await musicModel.findById(id);
 
     if (!music) {
       throw httpErrors.NotFound("Music not found");
     }
+
+    let viewedMusic = req.cookies["viewed music"];
+
+    if (!viewedMusic) {
+      res.cookie("viewed music", JSON.stringify([id]), {
+        httpOnly: true,
+        secure: true,
+      });
+    }
+
+    const parseCookie = viewedMusic && JSON.parse(viewedMusic);
+
+    if (parseCookie?.includes(id)) {
+      throw httpErrors.Conflict("This music already viewed");
+    }
+
+    if (viewedMusic) {
+      parseCookie.push(id);
+      res.cookie("viewed music", JSON.stringify(parseCookie), {
+        httpOnly: true,
+        secure: true,
+      });
+    }
+
+    await music.updateOne({
+      $inc: { count_downloads: 1 },
+    });
 
     res.json({ message: "music viewed successfully" });
   } catch (error) {

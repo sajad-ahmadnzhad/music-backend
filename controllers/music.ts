@@ -326,26 +326,50 @@ export let download = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-  if (!isValidObjectId(id)) {
-    res
-      .status(httpStatus.BAD_REQUEST)
-      .json({ message: "This music id is not from mongodb" });
-    return;
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("This music id is not from mongodb");
+    }
+
+    const music = await musicModel.findById(id);
+
+    if (!music) {
+      throw httpErrors.NotFound("Music not found");
+    }
+
+    let downloadedMusic = req.cookies["downloaded music"];
+
+    if (!downloadedMusic) {
+      res.cookie("downloaded music", JSON.stringify([id]), {
+        httpOnly: true,
+        secure: true,
+      });
+    }
+
+    const parseCookie = downloadedMusic && JSON.parse(downloadedMusic);
+
+    if (parseCookie?.includes(id)) {
+      throw httpErrors.Conflict("This music already downloaded");
+    }
+
+    if (downloadedMusic) {
+      parseCookie.push(id);
+      res.cookie("downloaded music", JSON.stringify(parseCookie), {
+        httpOnly: true,
+        secure: true,
+      });
+    }
+
+    await music.updateOne({
+      $inc: { count_downloads: 1 },
+    });
+
+    res.json({ message: "music downloaded successfully" });
+  } catch (error) {
+    next(error);
   }
-
-  const music = await musicModel.findOneAndUpdate(
-    { _id: id },
-    { $inc: { count_downloads: 1 } }
-  );
-
-  if (!music) {
-    res.status(httpStatus.NOT_FOUND).json({ message: "Music not found" });
-    return;
-  }
-
-  res.json({ message: "music downloaded successfully" });
 };
 export let getOne = async (req: Request, res: Response, next: NextFunction) => {
   try {

@@ -97,6 +97,12 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.Conflict("Category with this name already exists");
     }
 
+    if (body.type !== category.type) {
+      throw httpErrors.BadRequest(
+        "The type field cannot be updated. Submit the previous type"
+      );
+    }
+
     if (req.file && category.image) {
       rimrafSync(path.join(process.cwd(), "public", category.image));
     }
@@ -218,7 +224,7 @@ export let addToCategory = async (
       select: "country",
       strictPopulate: false,
     });
-    
+
     if (!existingTargetId) {
       throw httpErrors.NotFound(`${type} not found`);
     }

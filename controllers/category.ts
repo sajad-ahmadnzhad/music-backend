@@ -240,22 +240,25 @@ export let addToCategory = async (
     }
 
     const { accessLevel, createBy, collaborators } = category;
+    if (!user.isSuperAdmin)
+      if (
+        accessLevel == "private" &&
+        String(createBy._id) !== String(user._id)
+      ) {
+        throw httpErrors.Forbidden(
+          "You do not have permission to access this category"
+        );
+      } else if (
+        accessLevel == "selectedCollaborators" &&
+        String(createBy._id) !== String(user._id)
+      ) {
+        const foundCollaborators = collaborators.some(
+          (item) => String(item._id) == String(user._id)
+        );
 
-    if (accessLevel == "private" && String(createBy._id) !== String(user._id)) {
-      throw httpErrors.Forbidden(
-        "You do not have permission to access this category"
-      );
-    } else if (
-      accessLevel == "selectedCollaborators" &&
-      String(createBy._id) !== String(user._id)
-    ) {
-      const foundCollaborators = collaborators.some(
-        (item) => String(item._id) == String(user._id)
-      );
-
-      if (!foundCollaborators)
-        throw httpErrors.Forbidden("You are not listed among the colleagues");
-    }
+        if (!foundCollaborators)
+          throw httpErrors.Forbidden("You are not listed among the colleagues");
+      }
 
     const foundTargetIds = category.target_ids.some(
       (item) => String(item._id) == targetId
@@ -314,22 +317,22 @@ export let removeFromCategory = async (
       );
     }
     const { accessLevel, collaborators, createBy, type } = category;
+    if (!user.isSuperAdmin)
+      if (accessLevel == "private" && String(createBy) !== String(user._id)) {
+        throw httpErrors.Forbidden(
+          "You do not have permission to access this category"
+        );
+      } else if (
+        accessLevel == "selectedCollaborators" &&
+        String(createBy) !== String(user._id)
+      ) {
+        const foundCollaborators = collaborators.some(
+          (item) => String(item._id) == String(user._id)
+        );
 
-    if (accessLevel == "private" && String(createBy) !== String(user._id)) {
-      throw httpErrors.Forbidden(
-        "You do not have permission to access this category"
-      );
-    } else if (
-      accessLevel == "selectedCollaborators" &&
-      String(createBy) !== String(user._id)
-    ) {
-      const foundCollaborators = collaborators.some(
-        (item) => String(item._id) == String(user._id)
-      );
-
-      if (!foundCollaborators)
-        throw httpErrors.Forbidden("You are not listed among the colleagues");
-    }
+        if (!foundCollaborators)
+          throw httpErrors.Forbidden("You are not listed among the colleagues");
+      }
 
     await category.updateOne({
       $pull: {

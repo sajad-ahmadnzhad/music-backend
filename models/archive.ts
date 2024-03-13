@@ -42,7 +42,7 @@ schema.pre("deleteMany", async function (next) {
     const archiveIds = deletedArchive.map((archive) => archive._id);
     
     await categoryModel.updateMany({
-      $pull: { target_ids: { $inc: archiveIds } },
+      $pull: { target_ids: { $in: archiveIds } },
     });
     rimrafSync(ArchiveFile);
     next();

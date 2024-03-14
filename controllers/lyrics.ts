@@ -7,6 +7,17 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
     const body = req.body;
     const { user } = req as any;
 
+    const lyrics = await lyricsModel.findOne({
+      creator: user._id,
+      text: body.text,
+    });
+
+    if (lyrics) {
+      throw httpErrors.Conflict(
+        "You have already registered the lyrics for this music"
+      );
+    }
+
     await lyricsModel.create({
       ...body,
       creator: user._id,
@@ -53,6 +64,32 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
     await existingLyrics.deleteOne();
 
     res.json({ message: "Deleted lyrics successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+export let update = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const body = req.body;
+    const { user } = req as any;
+
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("This lyrics id is not from mongodb");
+    }
+
+    const existingLyrics = await lyricsModel.findOne({
+      _id: id,
+      creator: user._id,
+    });
+
+    if (!existingLyrics) {
+      throw httpErrors.NotFound("Lyrics not found");
+    }
+
+    await existingLyrics.updateOne(body);
+
+    res.json({ message: "Updated lyrics successfully" });
   } catch (error) {
     next(error);
   }

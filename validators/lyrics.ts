@@ -10,5 +10,7 @@ export default joi.object({
     .external(async (value, helpers) => {
       const music = await musicModel.findById(value);
       if (!music) return helpers.error("Music not found");
+      if (music.lyrics)
+        return helpers.error("Music has lyrics included already");
     }),
 });

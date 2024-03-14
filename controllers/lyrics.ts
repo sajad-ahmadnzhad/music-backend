@@ -1,5 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import lyricsModel from "../models/lyrics";
+import { isValidObjectId } from "mongoose";
+import httpErrors from "http-errors";
 export let create = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body = req.body;
@@ -27,6 +29,30 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
       .lean();
 
     res.json(lyrics);
+  } catch (error) {
+    next(error);
+  }
+};
+export let remove = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { user } = req as any;
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("This lyrics id is not from mongodb");
+    }
+
+    const existingLyrics = await lyricsModel.findOne({
+      _id: id,
+      creator: user._id,
+    });
+
+    if (!existingLyrics) {
+      throw httpErrors.NotFound("Lyrics not found");
+    }
+
+    await existingLyrics.deleteOne();
+
+    res.json({ message: "Deleted lyrics successfully" });
   } catch (error) {
     next(error);
   }

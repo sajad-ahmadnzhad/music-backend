@@ -15,3 +15,19 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+export let getAll = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { user } = req as any;
+
+    const lyrics = await lyricsModel
+      .find({ creator: user._id })
+      .populate("musicId", "title description createBy cover_image")
+      .populate("creator", "name username profile")
+      .select("-__v")
+      .lean();
+
+    res.json(lyrics);
+  } catch (error) {
+    next(error);
+  }
+};

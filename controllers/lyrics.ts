@@ -1,5 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import lyricsModel from "../models/lyrics";
+import musicModel from "../models/music";
+import notificationModel from "../models/notification";
 import { isValidObjectId } from "mongoose";
 import httpErrors from "http-errors";
 export let create = async (req: Request, res: Response, next: NextFunction) => {
@@ -90,6 +92,55 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
     await existingLyrics.updateOne(body);
 
     res.json({ message: "Updated lyrics successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+export let accept = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { user } = req as any;
+    const { message } = req.body;
+
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("This lyrics id is not from mongodb");
+    }
+
+    if (!message) {
+      throw httpErrors.BadRequest("Message is required");
+    }
+
+    const existingLyrics = await lyricsModel.findById(id);
+
+    if (!existingLyrics) throw httpErrors.NotFound("Lyrics not found");
+
+    if (existingLyrics.isAccept) {
+      throw httpErrors.Conflict("This lyrics already accepted");
+    }
+
+    const music = await musicModel.findById(existingLyrics.musicId);
+
+    if (String(music?.createBy) !== String(user._id)) {
+      throw httpErrors.BadRequest(); //check message
+    }
+
+    await musicModel.findByIdAndUpdate(music?._id, {
+      lyrics: existingLyrics.text,
+    });
+
+    await existingLyrics.updateOne({
+      isAccept: true,
+    });
+
+    await notificationModel.create({
+      type: "music",
+      title: "Accepted lyrics",
+      message,
+      creator: user._id,
+      receiver: existingLyrics.creator,
+    });
+
+    res.json({ message: "Accepted lyrics successfully" });
   } catch (error) {
     next(error);
   }

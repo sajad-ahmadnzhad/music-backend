@@ -120,8 +120,10 @@ export let accept = async (req: Request, res: Response, next: NextFunction) => {
 
     const music = await musicModel.findById(existingLyrics.musicId);
 
-    if (String(music?.createBy) !== String(user._id)) {
-      throw httpErrors.BadRequest(); //check message
+    if (String(music?.createBy) !== String(user._id) && !user.isSuperAdmin) {
+      throw httpErrors.BadRequest(
+        "Only the admin who created the music can accept it"
+      );
     }
 
     await musicModel.findByIdAndUpdate(music?._id, {
@@ -130,6 +132,7 @@ export let accept = async (req: Request, res: Response, next: NextFunction) => {
 
     await existingLyrics.updateOne({
       isAccept: true,
+      isReject: false,
     });
 
     await notificationModel.create({
@@ -141,6 +144,58 @@ export let accept = async (req: Request, res: Response, next: NextFunction) => {
     });
 
     res.json({ message: "Accepted lyrics successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+export let reject = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { user } = req as any;
+    const { id } = req.params;
+    const { message } = req.body;
+
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("This lyrics id is not from mongodb");
+    }
+
+    if (!message) {
+      throw httpErrors.BadRequest("Message is required");
+    }
+
+    const existingLyrics = await lyricsModel.findById(id);
+
+    if (!existingLyrics) throw httpErrors.NotFound("Lyrics not found");
+
+    if (existingLyrics.isReject) {
+      throw httpErrors.Conflict("This lyrics already rejected");
+    }
+
+    const music = await musicModel.findById(existingLyrics.musicId);
+
+    if (String(music?.createBy) !== String(user._id) && !user.isSuperAdmin) {
+      throw httpErrors.BadRequest(
+        "Only the admin who created the music can reject it"
+      );
+    }
+
+    await existingLyrics.updateOne({
+      isReject: true,
+      isAccept: false,
+    });
+
+    await musicModel.findByIdAndUpdate(existingLyrics.musicId, {
+      $unset: { lyrics: 1 },
+    });
+
+    await notificationModel.create({
+      type: "music",
+      title: "Rejected lyrics",
+      message,
+      creator: user._id,
+      receiver: existingLyrics.creator,
+    });
+
+    res.json({ message: "Rejected lyrics successfully" });
   } catch (error) {
     next(error);
   }

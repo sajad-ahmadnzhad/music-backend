@@ -6,6 +6,7 @@ const schema = new Schema(
     text: { type: String, trim: true, required: true },
     musicId: { type: Schema.ObjectId, ref: "music", required: true },
     isAccept: { type: Boolean, default: false },
+    isReject: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

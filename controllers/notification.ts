@@ -96,3 +96,33 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+export let update = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const body = req.body as NotificationBody;
+    const { id } = req.params;
+    const { user } = req as any;
+
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("This notification id is not from mongodb");
+    }
+
+    if (body.receiver == String(user._id)) {
+      throw httpErrors.BadRequest("You cannot send notifications to yourself.");
+    }
+
+    const existingNotification = await notificationModel.findOne({
+      _id: id,
+      creator: user._id,
+    });
+
+    if (!existingNotification) {
+      throw httpErrors.NotFound("Notification not found");
+    }
+
+   await existingNotification.updateOne(body);
+
+    res.json({ message: "Updated notification successfully" });
+  } catch (error) {
+    next(error);
+  }
+};

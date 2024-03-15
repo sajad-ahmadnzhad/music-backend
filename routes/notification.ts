@@ -5,6 +5,7 @@ import {
   getRead,
   getUnread,
   remove,
+  update,
 } from "../controllers/notification";
 import authMiddlewares from "../middlewares/auth";
 import isAdminMiddlewares from "../middlewares/isAdmin";
@@ -20,6 +21,9 @@ router
 
 router.get("/unread", getUnread);
 router.get("/read", getRead);
-router.route("/:id").delete(isAdminMiddlewares, remove);
+router
+  .route("/:id")
+  .delete(isAdminMiddlewares, remove)
+  .put(isAdminMiddlewares,validatorMiddlewares(notificationValidator), update);
 
 export default router;

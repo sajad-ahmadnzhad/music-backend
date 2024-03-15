@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import notificationModel from "../models/notification";
 import { NotificationBody } from "../interfaces/notification";
 import httpErrors from "http-errors";
+import { isValidObjectId } from "mongoose";
 export let create = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body = req.body as NotificationBody;
@@ -35,16 +36,62 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
-export let unread = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const {user} = req as any
+export let getUnread = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { user } = req as any;
     const notifications = await notificationModel
-      .find({ isRead: false , receiver: user._id })
+      .find({ isRead: false, receiver: user._id })
       .populate("creator", "name username profile")
       .select("-__v -receiver")
       .sort({ createdAt: -1 });
 
     res.json(notifications);
+  } catch (error) {
+    next(error);
+  }
+};
+export let getRead = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { user } = req as any;
+    const notifications = await notificationModel
+      .find({ isRead: true, receiver: user._id })
+      .populate("creator", "name username profile")
+      .select("-__v -receiver")
+      .sort({ createdAt: -1 });
+
+    res.json(notifications);
+  } catch (error) {
+    next(error);
+  }
+};
+export let remove = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { user } = req as any;
+
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("This notification id is not from mongodb");
+    }
+
+    const existingNotification = await notificationModel.findOne({
+      _id: id,
+      creator: user._id,
+    });
+
+    if (!existingNotification) {
+      throw httpErrors.NotFound("Notification not found");
+    }
+
+    await existingNotification.deleteOne();
+    res.json({ message: "Deleted notification successfully" });
   } catch (error) {
     next(error);
   }

@@ -11,4 +11,20 @@ const schema = new Schema(
   { timestamps: true }
 );
 
+schema.pre("find", function (next) {
+  try {
+    this.populate({
+      path: "musicId",
+      select: "title cover_image artist",
+      populate: [{ path: "artist", select: "fullName photo" }],
+    })
+      .populate("creator", "name username profile")
+      .select("-__v");
+
+    next();
+  } catch (error: any) {
+    next(error);
+  }
+});
+
 export default model("lyrics", schema);

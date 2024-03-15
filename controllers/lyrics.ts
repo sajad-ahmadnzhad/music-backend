@@ -35,15 +35,16 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { user } = req as any;
 
-    const lyrics = await lyricsModel
+    const query = lyricsModel
       .find({ creator: user._id })
-      .populate("musicId", "title description createBy cover_image")
-      .populate("creator", "name username profile")
-      .select("-__v")
       .sort({ createdAt: -1 })
       .lean();
 
-    res.json(lyrics);
+    const data = await pagination(req, query, lyricsModel);
+
+    if (data.error) throw data.error;
+
+    res.json(data);
   } catch (error) {
     next(error);
   }
@@ -213,14 +214,18 @@ export let unaccepted = async (
       await musicModel.find({ createBy: user._id }).select("_id")
     ).map((item) => item._id);
 
-    const lyrics = await lyricsModel
-      .find({ isAccept: false, musicId: { $in: musicIds } })
-      .populate("musicId", "title description cover_image")
-      .populate("creator", "name username profile")
-      .select("-__v")
+    const query = lyricsModel
+      .find({
+        isAccept: false,
+        musicId: { $in: musicIds },
+      })
       .lean();
 
-    res.json(lyrics);
+    const data = await pagination(req, query, lyricsModel);
+
+    if (data.error) throw data.error;
+
+    res.json(data);
   } catch (error) {
     next(error);
   }

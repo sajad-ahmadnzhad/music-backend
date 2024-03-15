@@ -4,6 +4,7 @@ const schema = new Schema(
   {
     title: {
       type: String,
+      trim: true,
       required: true,
     },
     isRead: {
@@ -17,6 +18,7 @@ const schema = new Schema(
     },
     message: {
       type: String,
+      trim: true,
       required: true,
     },
     type: {

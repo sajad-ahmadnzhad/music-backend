@@ -35,3 +35,17 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+export let unread = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const {user} = req as any
+    const notifications = await notificationModel
+      .find({ isRead: false , receiver: user._id })
+      .populate("creator", "name username profile")
+      .select("-__v -receiver")
+      .sort({ createdAt: -1 });
+
+    res.json(notifications);
+  } catch (error) {
+    next(error);
+  }
+};

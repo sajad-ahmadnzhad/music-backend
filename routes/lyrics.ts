@@ -2,22 +2,31 @@ import express from "express";
 import isAdminMiddlewares from "../middlewares/isAdmin";
 import authMiddlewares from "../middlewares/auth";
 import validatorMiddlewares from "../middlewares/validator";
+import isBanMiddlewares from "../middlewares/isBan";
 import lyricsValidator from "../validators/lyrics";
-import { accept, create, getAll, reject, remove, unaccepted, update } from "../controllers/lyrics";
+import {
+  accept,
+  create,
+  getAll,
+  reject,
+  remove,
+  unaccepted,
+  update,
+} from "../controllers/lyrics";
 const router = express.Router();
-
+router.use(authMiddlewares, isBanMiddlewares);
 router
   .route("/")
-  .post(authMiddlewares, validatorMiddlewares(lyricsValidator), create)
-  .get(authMiddlewares, getAll);
+  .post(validatorMiddlewares(lyricsValidator), create)
+  .get(getAll);
 
-router.get('/unaccepted' , authMiddlewares , isAdminMiddlewares , unaccepted)
+router.get("/unaccepted", isAdminMiddlewares, unaccepted);
 router
   .route("/:id")
-  .delete(authMiddlewares, remove)
-  .put(authMiddlewares, validatorMiddlewares(lyricsValidator), update);
+  .delete(remove)
+  .put(validatorMiddlewares(lyricsValidator), update);
 
-router.put("/:id/accept", authMiddlewares, isAdminMiddlewares, accept);
-router.put("/:id/reject", authMiddlewares, isAdminMiddlewares, reject);
+router.put("/:id/accept", isAdminMiddlewares, accept);
+router.put("/:id/reject", isAdminMiddlewares, reject);
 
 export default router;

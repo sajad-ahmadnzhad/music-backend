@@ -5,15 +5,12 @@ import isBanMiddlewares from "../middlewares/isBan";
 import validatorMiddlewares from "../middlewares/validator";
 import userFavoriteValidator from "../validators/userFavorite";
 const router = express.Router();
-
+router.use(authMiddlewares, isBanMiddlewares);
 router
   .route("/")
-  .post(authMiddlewares,isBanMiddlewares, validatorMiddlewares(userFavoriteValidator), create)
-  .get(authMiddlewares,isBanMiddlewares, getAll);
+  .post(validatorMiddlewares(userFavoriteValidator), create)
+  .get(getAll);
 
-router
-  .route("/:id")
-  .delete(authMiddlewares,isBanMiddlewares, remove)
-  .get(authMiddlewares,isBanMiddlewares, getOne);
+router.route("/:id").delete(remove).get(getOne);
 
 export default router;

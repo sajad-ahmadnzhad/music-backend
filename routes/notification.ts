@@ -4,6 +4,7 @@ import {
   getAll,
   getRead,
   getUnread,
+  read,
   remove,
   update,
 } from "../controllers/notification";
@@ -21,6 +22,7 @@ router
 
 router.get("/unread", getUnread);
 router.get("/read", getRead);
+router.put('/:id/read' , read)
 router
   .route("/:id")
   .delete(isAdminMiddlewares, remove)

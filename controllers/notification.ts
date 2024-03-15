@@ -29,7 +29,8 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
       .find({ receiver: user._id })
       .populate("creator", "name username profile")
       .select("-__v -receiver")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     res.json(notifications);
   } catch (error) {
@@ -119,9 +120,40 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("Notification not found");
     }
 
-   await existingNotification.updateOne(body);
+    await existingNotification.updateOne(body);
 
     res.json({ message: "Updated notification successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+export let read = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { user } = req as any;
+
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("This notification id is not from mongodb");
+    }
+
+    const existingNotification = await notificationModel.findOne({
+      _id: id,
+      receiver: user._id,
+    });
+
+    if (!existingNotification) {
+      throw httpErrors.NotFound("Notification not found");
+    }
+
+    if (existingNotification.isRead) {
+      throw httpErrors.Conflict("Notification has been read previously");
+    }
+
+    await existingNotification.updateOne({
+      isRead: true,
+    });
+
+    res.json({ message: "Read notification successfully" });
   } catch (error) {
     next(error);
   }

@@ -3,11 +3,12 @@ import lyricsModel from "../models/lyrics";
 import musicModel from "../models/music";
 import notificationModel from "../models/notification";
 import pagination from "../helpers/pagination";
+import {LyricsBody} from '../interfaces/lyrics'
 import { isValidObjectId } from "mongoose";
 import httpErrors from "http-errors";
 export let create = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const body = req.body;
+    const body = req.body as LyricsBody;
     const { user } = req as any;
 
     const lyrics = await lyricsModel.findOne({
@@ -76,7 +77,7 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
 export let update = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const body = req.body;
+    const body = req.body as LyricsBody;
     const { user } = req as any;
 
     if (!isValidObjectId(id)) {

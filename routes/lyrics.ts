@@ -3,7 +3,7 @@ import isAdminMiddlewares from "../middlewares/isAdmin";
 import authMiddlewares from "../middlewares/auth";
 import validatorMiddlewares from "../middlewares/validator";
 import lyricsValidator from "../validators/lyrics";
-import { accept, create, getAll, reject, remove, update } from "../controllers/lyrics";
+import { accept, create, getAll, reject, remove, unaccepted, update } from "../controllers/lyrics";
 const router = express.Router();
 
 router
@@ -11,6 +11,7 @@ router
   .post(authMiddlewares, validatorMiddlewares(lyricsValidator), create)
   .get(authMiddlewares, getAll);
 
+router.get('/unaccepted' , authMiddlewares , isAdminMiddlewares , unaccepted)
 router
   .route("/:id")
   .delete(authMiddlewares, remove)

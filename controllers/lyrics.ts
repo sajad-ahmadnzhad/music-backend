@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import lyricsModel from "../models/lyrics";
 import musicModel from "../models/music";
 import notificationModel from "../models/notification";
+import pagination from "../helpers/pagination";
 import { isValidObjectId } from "mongoose";
 import httpErrors from "http-errors";
 export let create = async (req: Request, res: Response, next: NextFunction) => {
@@ -39,6 +40,7 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
       .populate("musicId", "title description createBy cover_image")
       .populate("creator", "name username profile")
       .select("-__v")
+      .sort({ createdAt: -1 })
       .lean();
 
     res.json(lyrics);
@@ -196,6 +198,29 @@ export let reject = async (req: Request, res: Response, next: NextFunction) => {
     });
 
     res.json({ message: "Rejected lyrics successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+export let unaccepted = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { user } = req as any;
+    const musicIds = (
+      await musicModel.find({ createBy: user._id }).select("_id")
+    ).map((item) => item._id);
+
+    const lyrics = await lyricsModel
+      .find({ isAccept: false, musicId: { $in: musicIds } })
+      .populate("musicId", "title description cover_image")
+      .populate("creator", "name username profile")
+      .select("-__v")
+      .lean();
+
+    res.json(lyrics);
   } catch (error) {
     next(error);
   }

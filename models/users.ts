@@ -12,6 +12,7 @@ import archiveModel from "./archive";
 import playListModel from "./playList";
 import { rimrafSync } from "rimraf";
 import categoryModel from "./category";
+import notificationModel from "./notification";
 import path from "path";
 const schema = new Schema(
   {
@@ -50,6 +51,9 @@ schema.pre("deleteOne", async function (next) {
 
     await userFavoriteModel.deleteMany({ user: deletedUser._id });
     await userPlaylistModel.deleteMany({ createBy: deletedUser._id });
+    await notificationModel.deleteMany({
+      $or: [{ creator: deletedUser._id }, { receiver: deletedUser._id }],
+    });
     const userCommentsId = (
       await commentModel.find({ creator: deletedUser._id })
     ).map((comment) => comment._id);

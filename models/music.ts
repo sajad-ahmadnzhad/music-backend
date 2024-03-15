@@ -10,6 +10,7 @@ import albumModel from "./album";
 import autoArchiveModel from "./autoArchive";
 import singerArchiveModel from "./singerArchive";
 import categoryModel from "./category";
+import lyricsModel from "./lyrics";
 
 const schema = new Schema(
   {
@@ -48,6 +49,7 @@ schema.pre("deleteMany", async function (next) {
     await playListModel.updateMany({ $pull: { musics: { $in: musicIds } } });
     await albumModel.updateMany({ $pull: { musics: { $in: musicIds } } });
     await userFavoriteModel.deleteMany({ target_id: { $in: musicIds } });
+    await lyricsModel.deleteMany({ musicId: { $in: musicIds } });
     await categoryModel.updateMany({
       $pull: { target_ids: { $in: musicIds } },
     });
@@ -80,7 +82,7 @@ schema.pre("deleteOne", async function (next) {
     await albumModel.updateMany({ $pull: { musics: deletedMusic._id } });
     await categoryModel.updateMany({ $pull: { target_ids: deletedMusic._id } });
     await userPlaylistModel.updateMany({ $pull: { musics: deletedMusic._id } });
-
+    await lyricsModel.deleteMany({ musicId: deletedMusic._id });
     await commentModel.deleteMany({ target_id: deletedMusic._id });
 
     await singerArchiveModel.findOneAndUpdate(

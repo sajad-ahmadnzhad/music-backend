@@ -6,7 +6,7 @@ const mongodbUri = process.env.MONGODB_URI as string;
 export default (async () => {
   try {
     await mongoose.connect(mongodbUri);
-    console.log("Connect to db movie successfully");
+    console.log("Connect to db music successfully");
   } catch (e) {
     console.log(`connection to db error => ${e}`);
   }

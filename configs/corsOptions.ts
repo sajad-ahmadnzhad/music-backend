@@ -1,6 +1,5 @@
 import { CorsOptions } from "cors";
-import allowedOrigins from "./allowedOrigins";
-
+const allowedOrigins = JSON.parse(process.env.ALLOWED_ORIGINS as string) || [];
 const corsOptions: CorsOptions = {
   origin: (origin = "", cb) => {
     if (allowedOrigins.indexOf(origin) !== -1 || !origin) {

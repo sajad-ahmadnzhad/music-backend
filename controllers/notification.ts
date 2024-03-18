@@ -158,3 +158,31 @@ export let read = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+export let readAll = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { user } = req as any;
+    const existingNotificationUnRead = await notificationModel.findOne({
+      receiver: user._id,
+      isRead: false,
+    });
+
+    if (!existingNotificationUnRead) {
+      throw httpErrors.NotFound("No unread notification found");
+    }
+
+    await notificationModel.updateMany(
+      { receiver: user._id },
+      {
+        isRead: true,
+      }
+    );
+
+    res.json({ message: "All notifications have been successfully read" });
+  } catch (error) {
+    next(error);
+  }
+};

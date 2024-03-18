@@ -5,6 +5,7 @@ import {
   getRead,
   getUnread,
   read,
+  readAll,
   remove,
   update,
 } from "../controllers/notification";
@@ -22,6 +23,7 @@ router
 
 router.get("/unread", getUnread);
 router.get("/read", getRead);
+router.put('/read-all' , readAll)
 router.put('/:id/read' , read)
 router
   .route("/:id")

@@ -6,6 +6,10 @@ const schema = new Schema(
       type: String,
       required: true,
     },
+    isRead: {
+      type: Boolean,
+      default: false,
+    },
     type: {
       type: String,
       enum: [

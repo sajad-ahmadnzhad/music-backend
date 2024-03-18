@@ -10,6 +10,7 @@ import playListModel from "../models/playList";
 import upcomingModel from "../models/upcoming";
 import singerModel from "../models/singer";
 import countryModel from "../models/country";
+import serverNotificationModel from "../models/serverNotification";
 import { rimrafSync } from "rimraf";
 import pagination from "../helpers/pagination";
 import path from "path";
@@ -473,6 +474,54 @@ export let getByCountry = async (
     const data = await pagination(req, query, categoryModel);
 
     res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+export let leaveCategory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const { user } = req as any;
+
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("This category id is not from mongodb");
+    }
+
+    const existingCategory = await categoryModel.findById(id);
+
+    if (!existingCategory) {
+      throw httpErrors.NotFound("Category not found");
+    }
+
+    if (existingCategory.accessLevel !== "selectedCollaborators") {
+      throw httpErrors.BadRequest(
+        "This category access level is not Selected Collaborators"
+      );
+    }
+
+    const collaboratorsIds = existingCategory.collaborators.map((c) =>
+      String(c._id)
+    );
+
+    if (!collaboratorsIds.includes(String(user._id))) {
+      throw httpErrors.BadRequest("You are not in the list of collaborators");
+    }
+
+    await existingCategory.updateOne({
+      $pull: { collaborators: user._id },
+    });
+
+    await serverNotificationModel.create({
+      message: `Admin ${user.username} left the list of colleagues in the ${existingCategory.title} category.`,
+      type: "category",
+      receiver: existingCategory.createBy,
+    });
+
+    res.json({ message: "You have successfully left the category" });
   } catch (error) {
     next(error);
   }

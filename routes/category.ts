@@ -5,6 +5,7 @@ import {
   getAll,
   getByCountry,
   getOne,
+  leaveCategory,
   like,
   popular,
   related,
@@ -35,6 +36,7 @@ router
   .get(getAll);
 
 router.get("/search", search);
+router.put("/leave-category/:id" , authMiddlewares , isAdminMiddlewares , leaveCategory)
 router.put(
   "/add-to-category/:id",
   authMiddlewares,

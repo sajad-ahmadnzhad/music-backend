@@ -3,6 +3,11 @@ import httpErrors from "http-errors";
 import { rimrafSync } from "rimraf";
 import path from "path";
 import serverNotificationModel from "./serverNotification";
+import {
+  validateCollaborators,
+  handleCollaboratorsUpdate,
+  handleAccessLevelChange,
+} from "../helpers/collaboratorManagement";
 const schema = new Schema(
   {
     title: { type: String, trim: true, required: true },
@@ -37,36 +42,21 @@ const schema = new Schema(
 schema.pre("save", async function (next) {
   try {
     const { accessLevel, collaborators } = this;
-    if (accessLevel == "selectedCollaborators" && !collaborators?.length) {
-      throw httpErrors.BadRequest("No admin has been selected");
-    } else if (
-      accessLevel !== "selectedCollaborators" &&
-      collaborators?.length
-    ) {
-      throw httpErrors.BadRequest("The collaborators field is not allowed");
-    }
 
-    if (collaborators?.length) {
-      const findDuplicates = (collaborators as []).filter((item, index) => {
-        return collaborators.indexOf(item) !== index;
+    const result = validateCollaborators(accessLevel, collaborators);
+
+    if (result?.error) throw result.error.message;
+
+    const createMessagePromise = collaborators.map((item) => {
+      return serverNotificationModel.create({
+        type: "category",
+        message: "You have been invited to the category",
+        receiver: item,
+        target_id: this._id,
       });
-      if (findDuplicates.length) {
-        throw httpErrors.BadRequest(
-          `Duplicate ids found in the array: ${findDuplicates}`
-        );
-      }
+    });
 
-      const createMessagePromise = collaborators.map((item) => {
-        return serverNotificationModel.create({
-          type: "category",
-          message: 'You have been invited to the category',
-          receiver: item,
-          target_id: this._id,
-        });
-      });
-
-      await Promise.all(createMessagePromise);
-    }
+    await Promise.all(createMessagePromise);
 
     next();
   } catch (error: any) {
@@ -76,25 +66,28 @@ schema.pre("save", async function (next) {
 
 schema.pre("findOneAndUpdate", async function (next) {
   try {
-    const { accessLevel, collaborators }: any = this.getUpdate();
-    if (accessLevel == "selectedCollaborators" && !collaborators?.length) {
-      throw httpErrors.BadRequest("No admin has been selected");
-    } else if (
-      accessLevel !== "selectedCollaborators" &&
-      collaborators?.length
-    ) {
-      throw httpErrors.BadRequest("The collaborators field is not allowed");
+    let { accessLevel, collaborators }: any = this.getUpdate();
+
+    const resultValidate = validateCollaborators(accessLevel, collaborators);
+
+    if (resultValidate?.error) throw resultValidate.error;
+
+    const category = (await this.model.findOne(this.getFilter())) as any;
+
+    if (collaborators) {
+      const resultCollaboratorsUpdate = await handleCollaboratorsUpdate(
+        category,
+        collaborators
+      );
+
+      if (resultCollaboratorsUpdate?.error)
+        throw resultCollaboratorsUpdate.error.message;
     }
 
-    if (collaborators?.length) {
-      const findDuplicates = (collaborators as []).filter((item, index) => {
-        return collaborators.indexOf(item) !== index;
-      });
-      if (findDuplicates.length) {
-        throw httpErrors.BadRequest(
-          `Duplicate ids found in the array: ${findDuplicates}`
-        );
-      }
+    if (accessLevel !== "selectedCollaborators") {
+      (this as any).getUpdate().$set.collaborators = [];
+      const resultAccessLevel = await handleAccessLevelChange(category);
+      if (resultAccessLevel?.error) throw resultAccessLevel.error.message;
     }
 
     next();

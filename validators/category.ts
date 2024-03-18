@@ -11,7 +11,7 @@ export default joi.object({
     .required(),
   accessLevel: joi
     .string()
-    .valid("private", "allAdmins", "selectedCollaborators"),
+    .valid("private", "allAdmins", "selectedCollaborators").default('private'),
   genre: joi
     .string()
     .regex(/^[0-9a-fA-F]{24}$/)

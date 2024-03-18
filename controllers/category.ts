@@ -113,6 +113,7 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
       {
         ...body,
         image: req.file && `/categoryImages/${req.file.filename}`,
+        accessLevel: body.accessLevel ?? "private",
       }
     );
 

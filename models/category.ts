@@ -1,5 +1,4 @@
 import { Schema, model } from "mongoose";
-import httpErrors from "http-errors";
 import { rimrafSync } from "rimraf";
 import path from "path";
 import serverNotificationModel from "./serverNotification";
@@ -45,7 +44,7 @@ schema.pre("save", async function (next) {
 
     const result = validateCollaborators(accessLevel, collaborators);
 
-    if (result?.error) throw result.error.message;
+    if (result?.error) throw result.error;
 
     const createMessagePromise = collaborators.map((item) => {
       return serverNotificationModel.create({
@@ -81,13 +80,13 @@ schema.pre("findOneAndUpdate", async function (next) {
       );
 
       if (resultCollaboratorsUpdate?.error)
-        throw resultCollaboratorsUpdate.error.message;
+        throw resultCollaboratorsUpdate.error;
     }
 
     if (accessLevel !== "selectedCollaborators") {
       (this as any).getUpdate().$set.collaborators = [];
       const resultAccessLevel = await handleAccessLevelChange(category);
-      if (resultAccessLevel?.error) throw resultAccessLevel.error.message;
+      if (resultAccessLevel?.error) throw resultAccessLevel.error;
     }
 
     next();

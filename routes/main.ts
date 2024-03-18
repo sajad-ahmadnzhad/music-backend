@@ -16,6 +16,7 @@ import categoryRouter from './category'
 import genreRouter from "./genre";
 import lyricsRouter from "./lyrics";
 import notificationRouter from "./notification";
+import serverNotificationRouter from "./serverNotification";
 import express from "express";
 const mainRouter = express.Router();
 
@@ -37,5 +38,6 @@ mainRouter.use("/v1/auto-archive", autoArchiveRouter);
 mainRouter.use("/v1/category", categoryRouter);
 mainRouter.use("/v1/lyrics", lyricsRouter);
 mainRouter.use("/v1/notification", notificationRouter);
+mainRouter.use("/v1/server-notification", serverNotificationRouter);
 
 export default mainRouter;

@@ -29,4 +29,6 @@ const schema = new Schema(
   { timestamps: true }
 );
 
+
+
 export default model("severNotification", schema);

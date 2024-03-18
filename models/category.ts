@@ -2,6 +2,7 @@ import { Schema, model } from "mongoose";
 import httpErrors from "http-errors";
 import { rimrafSync } from "rimraf";
 import path from "path";
+import serverNotificationModel from "./serverNotification";
 const schema = new Schema(
   {
     title: { type: String, trim: true, required: true },
@@ -33,7 +34,7 @@ const schema = new Schema(
   { timestamps: true }
 );
 
-schema.pre("save", function (next) {
+schema.pre("save", async function (next) {
   try {
     const { accessLevel, collaborators } = this;
     if (accessLevel == "selectedCollaborators" && !collaborators?.length) {
@@ -54,6 +55,17 @@ schema.pre("save", function (next) {
           `Duplicate ids found in the array: ${findDuplicates}`
         );
       }
+
+      const createMessagePromise = collaborators.map((item) => {
+        return serverNotificationModel.create({
+          type: "category",
+          message: 'You have been invited to the category',
+          receiver: item,
+          target_id: this._id,
+        });
+      });
+
+      await Promise.all(createMessagePromise);
     }
 
     next();

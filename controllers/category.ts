@@ -516,8 +516,9 @@ export let leaveCategory = async (
     });
 
     await serverNotificationModel.create({
-      message: `Admin ${user.username} left the list of colleagues in the ${existingCategory.title} category.`,
+      message: `Admin ${user.username} has left the category.`,
       type: "category",
+      target_id: existingCategory._id,
       receiver: existingCategory.createBy,
     });
 

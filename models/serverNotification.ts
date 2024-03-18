@@ -12,20 +12,17 @@ const schema = new Schema(
     },
     type: {
       type: String,
-      enum: [
-        "category",
-        "music",
-        "playList",
-        "album",
-        "users",
-        "upcoming",
-        "other",
-      ],
-      default: "other",
+      enum: ["category", "music", "playList", "album", "users", "upcoming"],
+      required: true,
     },
     receiver: {
       type: Schema.ObjectId,
       ref: "users",
+      required: true,
+    },
+    target_id: {
+      type: Schema.ObjectId,
+      refPath: "type",
       required: true,
     },
   },

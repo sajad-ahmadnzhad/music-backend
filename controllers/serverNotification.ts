@@ -6,14 +6,9 @@ import httpErrors from "http-errors";
 export let getAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { user } = req as any;
-    const severNotifications = await serverNotificationModel
-      .find({
-        receiver: user._id,
-      })
-      .populate("target_id", "title description image")
-      .select("-__v -receiver")
-      .sort({ createdAt: -1 })
-      .lean();
+    const severNotifications = await serverNotificationModel.find({
+      receiver: user._id,
+    });
 
     res.json(severNotifications);
   } catch (error) {
@@ -107,12 +102,10 @@ export let getRead = async (
 ) => {
   try {
     const { user } = req as any;
-    const notifications = await serverNotificationModel
-      .find({ isRead: true, receiver: user._id })
-      .populate("target_id", "title description image")
-      .select("-__v -receiver")
-      .sort({ createdAt: -1 })
-      .lean();
+    const notifications = await serverNotificationModel.find({
+      isRead: true,
+      receiver: user._id,
+    });
 
     res.json(notifications);
   } catch (error) {

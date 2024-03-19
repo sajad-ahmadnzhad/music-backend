@@ -29,6 +29,26 @@ const schema = new Schema(
   { timestamps: true }
 );
 
-
+schema.pre("find", function (next) {
+  try {
+    this.populate({
+      path: "target_id",
+      select: "title description image artist cover_image",
+      populate: [
+        {
+          path: "artist",
+          select: "fullName englishName photo",
+          strictPopulate: false,
+        },
+      ],
+    })
+      .sort({ createdAt: -1 })
+      .select("-__v -receiver")
+      .lean();
+    next();
+  } catch (error: any) {
+    next(error);
+  }
+});
 
 export default model("severNotification", schema);

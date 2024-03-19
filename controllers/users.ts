@@ -178,10 +178,6 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
     let body = req.body as RegisterBody;
     const { user } = req as any;
 
-    if (req.file && !user.profile?.includes("customProfile")) {
-      rimrafSync(path.join(process.cwd(), "public", user.profile));
-    }
-
     const foundUser = await usersModel.findOne({
       $or: [
         { email: body.email, _id: { $ne: user._id } },
@@ -197,6 +193,11 @@ export let update = async (req: Request, res: Response, next: NextFunction) => {
       await usersModel.findByIdAndUpdate(user._id, { isVerified: false });
       res.clearCookie("token");
     }
+
+    if (req.file && !user.profile?.includes("customProfile")) {
+      rimrafSync(path.join(process.cwd(), "public", user.profile));
+    }
+
     const hashedPassword = bcrypt.hashSync(body.password, 10);
 
     await usersModel.updateOne(
@@ -260,9 +261,7 @@ export let getUnverified = async (
 
     const data = await pagination(req, query, usersModel);
 
-    if (data.error) {
-      throw httpErrors(data?.error?.status || 400, data.error?.message || "");
-    }
+    if (data.error) throw data.error;
 
     res.json(data);
   } catch (error) {
@@ -358,6 +357,31 @@ export let changeSuperAdmin = async (
     });
 
     res.json({ message: "Super admin transferred successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+export let validation = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    let body = req.body as RegisterBody;
+    const { user } = req as any;
+
+    const foundUser = await usersModel.findOne({
+      $or: [
+        { email: body.email, _id: { $ne: user._id } },
+        { username: body.username, _id: { $ne: user._id } },
+      ],
+    });
+
+    if (foundUser) {
+      throw httpErrors.Conflict("Username or email already exists");
+    }
+
+    res.json({message: 'Validation was successful'})
   } catch (error) {
     next(error);
   }

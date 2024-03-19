@@ -336,3 +336,21 @@ export let related = async (
     next(error);
   }
 };
+export let validation = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { artist, title } = req.body as AlbumBody
+    
+    const existingAlbum = await albumModel.findOne({ artist, title });
+
+    if (existingAlbum) {
+      throw httpErrors.Conflict("This album already exists");
+    }
+    res.json({message: 'Validation was successful'})
+  } catch (error) {
+    next(error);
+  }
+};

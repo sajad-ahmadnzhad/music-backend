@@ -9,6 +9,7 @@ import {
   addMusic,
   removeMusic,
   related,
+  validation,
 } from "../controllers/album";
 import isAdminMiddleware from "../middlewares/isAdmin";
 import authMiddleware from "../middlewares/auth";
@@ -30,6 +31,14 @@ router
   )
   .get(getAll);
 
+router.post(
+  "/validation",
+  authMiddleware,
+  isBanMiddlewares,
+  isAdminMiddleware,
+  validatorMiddleware(albumValidator),
+  validation
+);
 router.get("/search", search);
 router.get("/:id/related", related);
 router.post(

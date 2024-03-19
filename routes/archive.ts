@@ -1,5 +1,5 @@
 import express from "express";
-import { create, getAll, update, remove } from "../controllers/archive";
+import { create, getAll, update, remove, validation } from "../controllers/archive";
 import authMiddlewares from "../middlewares/auth";
 import isAdminMiddlewares from "../middlewares/isAdmin";
 import validatorMiddlewares from "../middlewares/validator";
@@ -19,6 +19,15 @@ router
     create
   )
   .get(getAll);
+
+router.post(
+  "/validation",
+  authMiddlewares,
+  isBanMiddlewares,
+  isAdminMiddlewares,
+  validatorMiddlewares(archiveValidator),
+  validation
+);
 
 router
   .route("/:id")

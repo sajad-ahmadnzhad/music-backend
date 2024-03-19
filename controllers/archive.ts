@@ -142,3 +142,22 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+export let validation = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const body = req.body as ArchiveBody;
+
+    const archive = await archiveModel.findOne({ title: body.title });
+
+    if (archive) {
+      throw httpErrors.Conflict("This archive already exists");
+    }
+
+    res.json({ message: "Validation was successful" });
+  } catch (error) {
+    next(error);
+  }
+};

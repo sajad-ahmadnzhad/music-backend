@@ -36,6 +36,10 @@ schema.pre("deleteMany", async function (next) {
     await categoryModel.updateMany({
       $pull: { target_ids: { $in: albumIds } },
     });
+    await serverNotificationModel.deleteMany({
+      target_id: { $in: albumIds },
+      type: "album",
+    });
     next();
   } catch (error: any) {
     next(error);
@@ -59,6 +63,10 @@ schema.pre("deleteOne", async function (next) {
     });
     await musicModel.deleteMany({
       album: deletedAlbum._id,
+    });
+    await serverNotificationModel.deleteMany({
+      target_id: deletedAlbum._id,
+      type: "album",
     });
     next();
   } catch (error: any) {

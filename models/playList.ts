@@ -4,6 +4,7 @@ import commentModel from "./comment";
 import path from "path";
 import { rimrafSync } from "rimraf";
 import categoryModel from "./category";
+import serverNotificationModel from "./serverNotification";
 const schema = new Schema(
   {
     title: { type: String, trim: true, required: true },
@@ -32,6 +33,11 @@ schema.pre(["deleteMany", "deleteOne"], async function (next) {
     await commentModel.deleteMany({ target_id: { $in: playListIds } });
     await categoryModel.updateMany({
       $pull: { target_ids: { $in: playListIds } },
+    });
+
+    await serverNotificationModel.deleteMany({
+      target_id: { $in: deletedPlaylist },
+      type: "playList",
     });
 
     next();

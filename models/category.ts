@@ -98,7 +98,10 @@ schema.pre("findOneAndUpdate", async function (next) {
 schema.pre("deleteOne", async function (next) {
   try {
     const deletedCategory = await this.model.findOne(this.getFilter());
-
+    await serverNotificationModel.deleteMany({
+      target_id: deletedCategory._id,
+      type: "category",
+    });
     rimrafSync(path.join(process.cwd(), "public", deletedCategory.image));
 
     next();
@@ -114,7 +117,12 @@ schema.pre("deleteMany", async function (next) {
     const imageCategories = deletedCategories.map(
       (category) => `${publicFolder}${category.image}`
     );
+    const categoryIds = deletedCategories.map((category) => category._id);
 
+    await serverNotificationModel.deleteMany({
+      target_id: { $in: categoryIds },
+      type: "category",
+    });
     rimrafSync(imageCategories);
 
     next();

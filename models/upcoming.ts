@@ -4,6 +4,7 @@ import { rimrafSync } from "rimraf";
 import autoArchiveModel from "./autoArchive";
 import commentModel from "./comment";
 import categoryModel from "./category";
+import serverNotificationModel from "./serverNotification";
 const schema = new Schema(
   {
     title: { type: String, trim: true, required: true },
@@ -33,6 +34,10 @@ schema.pre("deleteMany", async function (next) {
     await categoryModel.updateMany({
       $pull: { target_ids: { $in: upcomingIds } },
     });
+    await serverNotificationModel.deleteMany({
+      target_id: { $in: deletedUpcoming },
+      type: "upcoming",
+    });
 
     next();
   } catch (error: any) {
@@ -50,6 +55,10 @@ schema.pre("deleteOne", async function (next) {
     await commentModel.deleteMany({ target_id: deletedUpcoming._id });
     await categoryModel.updateMany({
       $pull: { target_ids: deletedUpcoming._id },
+    });
+    await serverNotificationModel.deleteMany({
+      target_id: deletedUpcoming,
+      type: "upcoming",
     });
 
     next();

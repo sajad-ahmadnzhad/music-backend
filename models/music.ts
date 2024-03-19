@@ -54,6 +54,10 @@ schema.pre("deleteMany", async function (next) {
     await categoryModel.updateMany({
       $pull: { target_ids: { $in: musicIds } },
     });
+    await serverNotificationModel.deleteMany({
+      target_id: { $in: musicIds },
+      type: "music",
+    });
     await userPlaylistModel.updateMany({
       $pull: { musics: { $in: musicIds } },
     });
@@ -85,7 +89,10 @@ schema.pre("deleteOne", async function (next) {
     await userPlaylistModel.updateMany({ $pull: { musics: deletedMusic._id } });
     await lyricsModel.deleteMany({ musicId: deletedMusic._id });
     await commentModel.deleteMany({ target_id: deletedMusic._id });
-
+    await serverNotificationModel.deleteMany({
+      target_id: deletedMusic._id,
+      type: "album",
+    });
     await singerArchiveModel.findOneAndUpdate(
       { artist: deletedMusic.artist },
       {
@@ -148,7 +155,8 @@ schema.pre("save", async function (next) {
         type: "music",
         receiver: item.user,
         target_id: this._id,
-        message: "New music from your favorite artist has been added to the site!",
+        message:
+          "New music from your favorite artist has been added to the site!",
       });
     });
 

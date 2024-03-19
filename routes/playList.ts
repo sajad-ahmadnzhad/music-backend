@@ -20,6 +20,7 @@ import {
   searchMusic,
   getByCountry,
   related,
+  validation,
 } from "../controllers/playList";
 const router = express.Router();
 
@@ -34,7 +35,17 @@ router
     create
   )
   .get(getAll);
-router.get("/:id/related" , related);
+
+router.post(
+  "/validation",
+  authMiddlewares,
+  isBanMiddlewares,
+  isAdminMiddlewares,
+  validatorMiddlewares(playListValidator),
+  validation
+);
+
+router.get("/:id/related", related);
 router.post("/like/:id", authMiddlewares, like);
 router.post("/unlike/:id", authMiddlewares, unlike);
 router.get("/by-country/:countryId", getByCountry);

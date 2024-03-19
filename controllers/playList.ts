@@ -509,3 +509,24 @@ export let related = async (
     next(error);
   }
 };
+export let validation = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const body = req.body as PlayListBody;
+
+    const playList = await playListModel.findOne({
+      title: body.title,
+      country: body.country,
+    });
+
+    if (playList) {
+      throw httpErrors.Conflict("This play list already exists");
+    }
+    res.json({ message: "Validation was successful" });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -15,6 +15,7 @@ import {
   getByCountry,
   getAllSingle,
   related,
+  validation,
 } from "../controllers/music";
 import authMiddlewares from "../middlewares/auth";
 import isBanMiddlewares from "../middlewares/isBan";
@@ -44,7 +45,14 @@ router
     create
   )
   .get(getAll);
-
+router.post(
+  "/validation",
+  authMiddlewares,
+  isBanMiddlewares,
+  isAdminMiddlewares,
+  validatorMiddlewares(musicValidator),
+  validation
+);
 router.get("/:id/related", related);
 router.get("/search", search);
 router.get("/single", getAllSingle);

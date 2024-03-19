@@ -563,3 +563,34 @@ export let getByGenre = async (
     next(error);
   }
 };
+export let validation = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const body = req.body as MusicBody;
+
+    const music = await musicModel.findOne({
+      title: body.title,
+      artist: body.artist,
+    });
+
+    if (music) {
+      throw httpErrors.Conflict("This music already exists");
+    }
+
+    if (body.album) {
+      const album = await albumModel.findOne({
+        _id: body.album,
+        artist: body.artist,
+      });
+
+      if (!album) throw httpErrors.NotFound("No album found for this singer");
+    }
+
+    res.json({ message: "Validation was successful" });
+  } catch (error) {
+    next(error);
+  }
+};

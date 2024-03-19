@@ -13,6 +13,7 @@ import {
   remove,
   search,
   update,
+  validation,
 } from "../controllers/upcoming";
 import imageUploader from "../utils/uploader/profile";
 import upcomingValidator from "../validators/upcoming";
@@ -29,6 +30,15 @@ router
     create
   )
   .get(getAll);
+
+router.post(
+  "/validation",
+  authMiddlewares,
+  isBanMiddlewares,
+  isAdminMiddlewares,
+  validatorMiddlewares(upcomingValidator),
+  validation
+);
 
 router.get("/search", search);
 router.get("/related/:id", related);

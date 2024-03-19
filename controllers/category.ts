@@ -528,3 +528,34 @@ export let leaveCategory = async (
     next(error);
   }
 };
+export let validation = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { collaborators, title, country } = req.body as CategoryBody;
+    const { user } = req as any;
+
+    const existingCategory = await categoryModel.findOne({
+      title,
+      country,
+    });
+
+    if (existingCategory) throw httpErrors.Conflict("Category already exists");
+
+    if (collaborators?.length) {
+      const existingAdmin = await usersModel.findOne({
+        _id: { $in: collaborators },
+      });
+
+      if (String(existingAdmin!._id) === String(user._id)) {
+        throw httpErrors.BadRequest("You cannot choose yourself as colleagues");
+      }
+    }
+    
+    res.json({ message: "Validation was successful" });
+  } catch (error) {
+    next(error);
+  }
+};

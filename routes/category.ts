@@ -14,6 +14,7 @@ import {
   search,
   unlike,
   update,
+  validation,
 } from "../controllers/category";
 import categoryUploader from "../utils/uploader/profile";
 import validatorMiddleware from "../middlewares/validator";
@@ -35,8 +36,22 @@ router
   )
   .get(getAll);
 
+router.post(
+  "/validation",
+  authMiddlewares,
+  isBanMiddlewares,
+  isAdminMiddlewares,
+  validatorMiddleware(categoryValidator),
+  validation
+);
+
 router.get("/search", search);
-router.put("/leave-category/:id" , authMiddlewares , isAdminMiddlewares , leaveCategory)
+router.put(
+  "/leave-category/:id",
+  authMiddlewares,
+  isAdminMiddlewares,
+  leaveCategory
+);
 router.put(
   "/add-to-category/:id",
   authMiddlewares,

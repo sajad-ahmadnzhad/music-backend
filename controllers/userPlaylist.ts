@@ -290,3 +290,26 @@ export let removeMusic = async (
     next(error);
   }
 };
+export let validation = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const body = req.body as userPlaylistBody;
+    const { user } = req as any;
+
+    const userPlaylist = await userPlaylistModel.findOne({
+      title: body.title,
+      createBy: user._id,
+    });
+
+    if (userPlaylist) {
+      throw httpErrors.Conflict("There is already a playlist with this title");
+    }
+
+    res.json({ message: "Validation was successful" });
+  } catch (error) {
+    next(error);
+  }
+};

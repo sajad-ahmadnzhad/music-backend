@@ -3,6 +3,7 @@ import { UserFavoriteBody } from "../interfaces/userFavorite";
 import userFavoriteModel from "../models/userFavorite";
 import albumModel from "../models/album";
 import musicModel from "../models/music";
+import singerModel from "../models/singer";
 import httpStatus from "http-status";
 import httpErrors from "http-errors";
 import { isValidObjectId } from "mongoose";
@@ -12,15 +13,16 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
     const { type, target_id } = req.body as UserFavoriteBody;
     const { user } = req as any;
 
-    const album = await albumModel.findById(target_id);
-    const music = await musicModel.findById(target_id);
+    const models: any = {
+      album: albumModel,
+      music: musicModel,
+      singer: singerModel,
+    };
 
-    if (type === "music" && !music) {
-      throw httpErrors.NotFound("Music not found");
-    }
+    const existingTargetId = await models[type].findById(target_id);
 
-    if (type === "album" && !album) {
-      throw httpErrors.NotFound("Album not found");
+    if (!existingTargetId) {
+      throw httpErrors.NotFound(`${type} not found`);
     }
 
     const userFavorite = await userFavoriteModel.findOne({
@@ -29,9 +31,7 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
     });
 
     if (userFavorite) {
-      throw httpErrors.Conflict(
-        "This album or music is already in the favorite list"
-      );
+      throw httpErrors.Conflict(`This ${type} is already in the favorite list`);
     }
 
     await userFavoriteModel.create({ type, target_id, user: user._id });
@@ -48,7 +48,6 @@ export let getAll = async (req: Request, res: Response, next: NextFunction) => {
     const { user } = req as any;
     const query = userFavoriteModel
       .find({ user: user._id })
-      .populate("target_id", "title photo cover_image download_link")
       .select("-user -__v")
       .lean();
 
@@ -100,7 +99,6 @@ export let getOne = async (req: Request, res: Response, next: NextFunction) => {
         user: user._id,
         _id: id,
       })
-      .populate("target_id", "title photo cover_image download_link")
       .select("-user -__v")
       .lean();
 

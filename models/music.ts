@@ -9,6 +9,7 @@ import upcomingModel from "./upcoming";
 import albumModel from "./album";
 import autoArchiveModel from "./autoArchive";
 import singerArchiveModel from "./singerArchive";
+import serverNotificationModel from "./serverNotification";
 import categoryModel from "./category";
 import lyricsModel from "./lyrics";
 
@@ -136,6 +137,22 @@ schema.pre("save", async function (next) {
         $push: { musics: this._id },
       }
     );
+
+    const usersFavorite = await userFavoriteModel.find({
+      type: "singer",
+      target_id: this.artist,
+    });
+
+    const sendServerNotification = usersFavorite.map((item) => {
+      return serverNotificationModel.create({
+        type: "music",
+        receiver: item.user,
+        target_id: this._id,
+        message: "New music from your favorite artist has been added to the site!",
+      });
+    });
+
+    await Promise.all(sendServerNotification);
 
     next();
   } catch (error: any) {

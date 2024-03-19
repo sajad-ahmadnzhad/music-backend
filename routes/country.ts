@@ -1,5 +1,13 @@
 import express from "express";
-import { create, getAll, getOne, remove, search, update } from "../controllers/country";
+import {
+  create,
+  getAll,
+  getOne,
+  remove,
+  search,
+  update,
+  validation,
+} from "../controllers/country";
 import authMiddlewares from "../middlewares/auth";
 import isAdminMiddlewares from "../middlewares/isAdmin";
 import countryValidator from "../validators/country";
@@ -20,7 +28,16 @@ router
   )
   .get(getAll);
 
-router.get('/search' , search)
+router.post(
+  "/validation",
+  authMiddlewares,
+  isBanMiddlewares,
+  isAdminMiddlewares,
+  validatorMiddlewares(countryValidator),
+  validation
+);
+
+router.get("/search", search);
 
 router
   .route("/:id")
@@ -31,6 +48,8 @@ router
     uploader.single("countryImage"),
     validatorMiddlewares(countryValidator),
     update
-  ).delete(authMiddlewares , isBanMiddlewares , isAdminMiddlewares , remove).get(getOne);
+  )
+  .delete(authMiddlewares, isBanMiddlewares, isAdminMiddlewares, remove)
+  .get(getOne);
 
 export default router;

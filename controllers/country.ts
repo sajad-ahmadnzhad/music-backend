@@ -155,3 +155,22 @@ export let search = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+export let validation = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const body = req.body as BodyCountry;
+
+    const country = await countryModel.findOne({ title: body.title });
+
+    if (country) {
+      throw httpErrors.NotFound("This country already exists");
+    }
+
+    res.json({ message: "Validation was successful" });
+  } catch (error) {
+    next(error);
+  }
+};

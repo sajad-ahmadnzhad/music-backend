@@ -285,3 +285,21 @@ export let unlike = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+export let validation = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const body = req.body as SingerBody;
+
+    const singer = await singerModel.findOne({ fullName: body.fullName });
+    if (singer) {
+      throw httpErrors.BadRequest("This artist already exists");
+    }
+    
+    res.json({ message: "Validation was successful" });
+  } catch (error) {
+    next(error);
+  }
+};

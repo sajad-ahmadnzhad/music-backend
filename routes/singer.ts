@@ -9,6 +9,7 @@ import {
   getOne,
   like,
   unlike,
+  validation,
 } from "../controllers/singer";
 import validatorSinger from "../validators/singer";
 import validatorMiddlewares from "../middlewares/validator";
@@ -29,6 +30,15 @@ router
     validatorMiddlewares(validatorSinger),
     create
   );
+
+router.post(
+  "/validation",
+  authMiddlewares,
+  isBanMiddlewares,
+  isAdminMiddlewares,
+  validatorMiddlewares(validatorSinger),
+  validation
+);
 
 router.get("/search", search);
 router.get("/popular", popular);

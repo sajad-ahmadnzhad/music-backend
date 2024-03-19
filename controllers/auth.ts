@@ -153,10 +153,13 @@ export let forgotPassword = async (
     const user = await usersModel.findOne({ email });
 
     if (!user) {
-      throw httpErrors.NotFound("User not found");
+      throw httpErrors.NotFound("User with email not found");
     }
 
-    const token = generateToken(user._id, "1d");
+    const token = await tokenModel.create({
+      userId: user._id,
+      token: randomBytes(32).toString("hex"),
+    });
 
     const mailOptions = {
       from: process.env.GMAIL_USER as string,
@@ -164,7 +167,7 @@ export let forgotPassword = async (
       subject: "reset your password",
       html: `<p>Link to reset your password:</p>
       <h1>Click on the link below to reset your password</h1>
-      <h2>http://${req.headers.host}/v1/auth/reset-password/${token}</h2>
+      <h2>${process.env.BASE_URL}/v1/auth/${user._id}/reset-password/${token.token}</h2>
        `,
     };
 
@@ -185,8 +188,12 @@ export let resetPassword = async (
   next: NextFunction
 ) => {
   try {
-    const { token } = req.params;
+    const { id, token } = req.params;
     const { password } = req.body;
+
+    if (!isValidObjectId(id)) {
+      throw httpErrors.BadRequest("User id is not from mongodb");
+    }
 
     if (!password || password < 8) {
       throw httpErrors.BadRequest(
@@ -194,12 +201,16 @@ export let resetPassword = async (
       );
     }
 
-    const decodedToken = jwt.verify(token, process.env.JWT_SECRET as string);
-
-    const user = usersModel.findById((decodedToken as any).id);
+    const user = await usersModel.findById(id);
 
     if (!user) {
       throw httpErrors.NotFound("User not found");
+    }
+
+    const userToken = await tokenModel.findOne({ userId: id, token });
+
+    if (!userToken) {
+      throw httpErrors.NotFound("Invalid token");
     }
 
     const hashPassword = bcrypt.hashSync(password, 10);
@@ -207,6 +218,8 @@ export let resetPassword = async (
     await user.updateOne({
       password: hashPassword,
     });
+
+    await userToken.deleteOne();
 
     res.json({ message: "Password reset successfully" });
   } catch (error) {

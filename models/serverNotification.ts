@@ -33,7 +33,7 @@ schema.pre("find", function (next) {
   try {
     this.populate({
       path: "target_id",
-      select: "title description image artist cover_image",
+      select: "title description image artist cover_image photo",
       populate: [
         {
           path: "artist",

@@ -7,6 +7,7 @@ import archiveModel from "./archive";
 import autoArchiveModel from "./autoArchive";
 import musicModel from "./music";
 import singerArchiveModel from "./singerArchive";
+import serverNotificationModel from "./serverNotification";
 import path from "path";
 import categoryModel from "./category";
 const schema = new Schema(
@@ -93,6 +94,23 @@ schema.pre("save", async function (next) {
         },
       }
     );
+
+    const usersFavorite = await userFavoriteModel.find({
+      type: "singer",
+      target_id: this.artist,
+    });
+
+    const sendServerNotification = usersFavorite.map((item) => {
+      return serverNotificationModel.create({
+        type: "album",
+        receiver: item.user,
+        target_id: this._id,
+        message:
+          "New album from your favorite artist has been added to the site!",
+      });
+    });
+
+    await Promise.all(sendServerNotification);
 
     next();
   } catch (error: any) {

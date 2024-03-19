@@ -312,3 +312,34 @@ export let getByGenre = async (
     next(error);
   }
 };
+export let validation = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const body = req.body as upcomingBody;
+
+    const upcomingMusic = await upcomingModel.findOne({
+      title: body.title,
+      artist: body.artist,
+    });
+
+    if (upcomingMusic) {
+      throw httpErrors.Conflict("This upcoming music already exists");
+    }
+
+    const music = await musicModel.findOne({
+      title: body.title,
+      artist: body.artist,
+    });
+
+    if (music) {
+      throw httpErrors.Conflict("This music is already in the music list");
+    }
+
+    res.json({ message: "Validation was successful" });
+  } catch (error) {
+    next(error);
+  }
+};

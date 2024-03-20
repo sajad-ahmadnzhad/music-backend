@@ -297,8 +297,35 @@ export let validation = async (
     if (singer) {
       throw httpErrors.BadRequest("This artist already exists");
     }
-    
+
     res.json({ message: "Validation was successful" });
+  } catch (error) {
+    next(error);
+  }
+};
+export let mySingers = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { user } = req as any;
+    const query = singerModel
+      .find({ createBy: user._id })
+      .populate("musicStyle", "title description")
+      .populate("album", "title photo")
+      .populate("likes", "name username profile")
+      .populate("createBy", "name username profile")
+      .populate("country", "title description image")
+      .select("-__v")
+      .sort({ createdAt: "desc" })
+      .lean();
+
+    const data = await pagination(req, query, singerModel);
+
+    if (data.error) throw data.error;
+
+    res.json(data);
   } catch (error) {
     next(error);
   }

@@ -10,6 +10,7 @@ import {
   like,
   unlike,
   validation,
+  mySingers,
 } from "../controllers/singer";
 import validatorSinger from "../validators/singer";
 import validatorMiddlewares from "../middlewares/validator";
@@ -38,6 +39,14 @@ router.post(
   isAdminMiddlewares,
   validatorMiddlewares(validatorSinger),
   validation
+);
+
+router.get(
+  "/my-singers",
+  authMiddlewares,
+  isBanMiddlewares,
+  isAdminMiddlewares,
+  mySingers
 );
 
 router.get("/search", search);

@@ -16,6 +16,7 @@ import {
   getAllSingle,
   related,
   validation,
+  myMusics,
 } from "../controllers/music";
 import authMiddlewares from "../middlewares/auth";
 import isBanMiddlewares from "../middlewares/isBan";
@@ -36,15 +37,17 @@ const uploader = musicUploader.fields([
 const router = express.Router();
 router
   .route("/")
-  .post(
-    authMiddlewares,
-    isBanMiddlewares,
-    isAdminMiddlewares,
-    uploader,
-    validatorMiddlewares(musicValidator),
-    create
-  )
+  .post(uploader, validatorMiddlewares(musicValidator), create)
   .get(getAll);
+
+router.get(
+  "/my-musics",
+  authMiddlewares,
+  isBanMiddlewares,
+  isAdminMiddlewares,
+  myMusics
+);
+
 router.post(
   "/validation",
   authMiddlewares,

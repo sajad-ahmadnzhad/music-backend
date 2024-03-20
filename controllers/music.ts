@@ -594,3 +594,31 @@ export let validation = async (
     next(error);
   }
 };
+export let myMusics = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const {user} = req as any
+    const query = musicModel
+      .find({createBy: user._id})
+      .populate("artist", "photo fullName")
+      .populate("country", "title description image")
+      .populate("genre", "title description")
+      .populate("createBy", "name username profile")
+      .populate("likes", "name username profile")
+      .populate("album", "title photo description")
+      .sort({ createdAt: -1 })
+      .select("-__v")
+      .lean();
+
+    const data = await pagination(req, query, musicModel);
+
+    if (data.error) throw data.error;
+
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};

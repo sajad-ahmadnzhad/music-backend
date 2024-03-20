@@ -7,7 +7,6 @@ import httpErrors from "http-errors";
 import banUserModel from "../models/banUser";
 import { sendMail } from "../helpers/sendMail";
 import generateToken from "../helpers/generateToken";
-import jwt from "jsonwebtoken";
 import tokenModel from "../models/token";
 import { randomBytes } from "crypto";
 import { isValidObjectId } from "mongoose";

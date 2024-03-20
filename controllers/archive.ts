@@ -161,3 +161,33 @@ export let validation = async (
     next(error);
   }
 };
+export let myArchives = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { user } = req as any;
+    const query = archiveModel
+      .find({ createBy: user._id })
+      .populate("createBy", "name username profile")
+      .populate("genre", "title description")
+      .populate("country", "title description image")
+      .populate({
+        path: "musics",
+        select: "-__v",
+        populate: [{ path: "artist" }],
+      })
+      .select("-__v")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const data = await pagination(req, query, archiveModel);
+
+    if (data.error) throw data.error;
+
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};

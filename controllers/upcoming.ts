@@ -340,3 +340,29 @@ export let validation = async (
     next(error);
   }
 };
+export let myUpcoming = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { user } = req as any;
+    const query = upcomingModel
+      .find({ createBy: user._id })
+      .populate("artist", "fullName photo")
+      .populate("genre", "title description")
+      .populate("country", "title description image")
+      .populate("createBy", "name username profile")
+      .sort({ createdAt: "desc" })
+      .select("-__v")
+      .lean();
+
+    const data = await pagination(req, query, upcomingModel);
+
+    if (data.error) throw data.error;
+
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};

@@ -9,6 +9,7 @@ import {
   getByCounty,
   getByGenre,
   getOne,
+  myUpcoming,
   related,
   remove,
   search,
@@ -30,6 +31,14 @@ router
     create
   )
   .get(getAll);
+
+router.get(
+  "/my-upcoming",
+  authMiddlewares,
+  isBanMiddlewares,
+  isAdminMiddlewares,
+  myUpcoming
+);
 
 router.post(
   "/validation",

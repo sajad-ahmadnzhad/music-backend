@@ -4,7 +4,14 @@ import isAdminMiddlewares from "../middlewares/auth";
 import validatorMiddlewares from "../middlewares/validator";
 import isBanMiddlewares from "../middlewares/isBan";
 import genreValidator from "../validators/genre";
-import { create, getAll, getOne, update, remove } from "../controllers/genre";
+import {
+  create,
+  getAll,
+  getOne,
+  update,
+  remove,
+  myGenres,
+} from "../controllers/genre";
 const router = express.Router();
 
 router
@@ -17,6 +24,14 @@ router
     create
   )
   .get(getAll);
+
+router.get(
+  "/my-genres",
+  authMiddlewares,
+  isBanMiddlewares,
+  isAdminMiddlewares,
+  myGenres
+);
 
 router
   .route("/:id")

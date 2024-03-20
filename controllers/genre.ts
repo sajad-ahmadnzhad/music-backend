@@ -36,12 +36,12 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
 };
 export let getAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const counties = await genreModel
+    const genres = await genreModel
       .find()
       .populate("createBy", "name username profile")
       .select("-__v")
       .lean();
-    res.json(counties);
+    res.json(genres);
   } catch (error) {
     next(error);
   }
@@ -121,6 +121,23 @@ export let getOne = async (req: Request, res: Response, next: NextFunction) => {
       throw httpErrors.NotFound("genre not found");
     }
     res.json(genre);
+  } catch (error) {
+    next(error);
+  }
+};
+export let myGenres = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const genres = await genreModel
+      .find()
+      .populate("createBy", "name username profile")
+      .select("-__v")
+      .lean();
+    
+    res.json(genres);
   } catch (error) {
     next(error);
   }

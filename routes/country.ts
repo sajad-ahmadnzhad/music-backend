@@ -3,6 +3,7 @@ import {
   create,
   getAll,
   getOne,
+  myCountries,
   remove,
   search,
   update,
@@ -27,6 +28,14 @@ router
     create
   )
   .get(getAll);
+
+router.get(
+  "/my-countries",
+  authMiddlewares,
+  isBanMiddlewares,
+  isAdminMiddlewares,
+  myCountries
+);
 
 router.post(
   "/validation",

@@ -174,3 +174,22 @@ export let validation = async (
     next(error);
   }
 };
+export let myCountries = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { user } = req as any;
+
+    const countries = await countryModel
+      .find({ createBy: user._id })
+      .populate("createBy", "name username profile")
+      .select("-__v")
+      .lean();
+
+    res.json(countries);
+  } catch (error) {
+    next(error);
+  }
+};

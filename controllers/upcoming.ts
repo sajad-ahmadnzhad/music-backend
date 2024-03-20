@@ -42,6 +42,7 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
       cover_image: coverName && `/upcomingCovers/${coverName}`,
       createBy: (req as any).user._id,
       country: singer!.country,
+      genre: body.genre || singer!.musicStyle,
     });
 
     res
@@ -95,11 +96,7 @@ export let remove = async (req: Request, res: Response, next: NextFunction) => {
       );
     }
 
-    if (upcoming.cover_image) {
-      fs.unlinkSync(path.join(process.cwd(), "public", upcoming.cover_image));
-    }
-    await upcomingModel.findByIdAndDelete(id);
-    await commentModel.deleteMany({ target_id: id });
+    await upcomingModel.deleteOne({ _id: id });
     res.json({ message: "Deleted upcoming successfully" });
   } catch (error) {
     next(error);

@@ -24,10 +24,11 @@ export default joi.object({
     .trim()
     .regex(/^[0-9a-fA-F]{24}$/)
     .message("Genre id is not from mongodb")
-    .required()
     .external(async (value, helpers) => {
-      const genre = await genreModel.findOne({ _id: value });
-      if (!genre) return helpers.error("Genre not found");
+      if (value) {
+        const genre = await genreModel.findOne({ _id: value });
+        if (!genre) return helpers.error("Genre not found");
+      }
     }),
   description: joi.string().trim().max(400).min(10),
 });

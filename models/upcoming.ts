@@ -5,6 +5,7 @@ import autoArchiveModel from "./autoArchive";
 import commentModel from "./comment";
 import categoryModel from "./category";
 import serverNotificationModel from "./serverNotification";
+import userFavoriteModel from "./userFavorite";
 const schema = new Schema(
   {
     title: { type: String, trim: true, required: true },
@@ -35,7 +36,7 @@ schema.pre("deleteMany", async function (next) {
       $pull: { target_ids: { $in: upcomingIds } },
     });
     await serverNotificationModel.deleteMany({
-      target_id: { $in: deletedUpcoming },
+      target_id: { $in: upcomingIds },
       type: "upcoming",
     });
 
@@ -57,7 +58,7 @@ schema.pre("deleteOne", async function (next) {
       $pull: { target_ids: deletedUpcoming._id },
     });
     await serverNotificationModel.deleteMany({
-      target_id: deletedUpcoming,
+      target_id: deletedUpcoming._id,
       type: "upcoming",
     });
 
@@ -86,6 +87,22 @@ schema.pre("save", async function (next) {
         target_ids: this._id,
       });
     }
+
+    const usersFavorite = await userFavoriteModel.find({
+      type: "singer",
+      target_id: this.artist,
+    });
+
+    const sendServerNotification = usersFavorite.map((item) => {
+      return serverNotificationModel.create({
+        type: "upcoming",
+        receiver: item.user,
+        target_id: this._id,
+        message: "New music from your favorite artist is coming soon!",
+      });
+    });
+
+    await Promise.all(sendServerNotification);
 
     next();
   } catch (error: any) {

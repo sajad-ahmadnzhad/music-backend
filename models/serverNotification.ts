@@ -25,6 +25,7 @@ const schema = new Schema(
       refPath: "type",
       required: true,
     },
+    createdAt: { type: Date, expires: "7d", default: Date.now },
   },
   { timestamps: true }
 );
@@ -51,4 +52,4 @@ schema.pre("find", function (next) {
   }
 });
 
-export default model("severNotification", schema);
+export default model("serverNotification", schema);

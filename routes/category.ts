@@ -7,6 +7,7 @@ import {
   getOne,
   leaveCategory,
   like,
+  myCategories,
   popular,
   related,
   remove,
@@ -35,6 +36,14 @@ router
     create
   )
   .get(getAll);
+
+router.get(
+  "/my-categories",
+  authMiddlewares,
+  isBanMiddlewares,
+  isAdminMiddlewares,
+  myCategories
+);
 
 router.post(
   "/validation",

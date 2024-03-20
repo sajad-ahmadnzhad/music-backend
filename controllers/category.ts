@@ -553,8 +553,26 @@ export let validation = async (
         throw httpErrors.BadRequest("You cannot choose yourself as colleagues");
       }
     }
-    
+
     res.json({ message: "Validation was successful" });
+  } catch (error) {
+    next(error);
+  }
+};
+export let myCategories = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { user } = req as any;
+    const query = categoryModel.find({ createBy: user._id }).lean();
+
+    const data = await pagination(req, query, categoryModel);
+
+    if (data.error) throw data.error;
+
+    res.json(data);
   } catch (error) {
     next(error);
   }

@@ -17,6 +17,14 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
     if (!req.file) {
       throw httpErrors.BadRequest("album photo is required");
     }
+    
+    const singer = await singerModel.findById(artist);
+
+    if (String(singer!.createBy) !== String(user._id) && !user.isSuperAdmin) {
+      throw httpErrors.BadRequest(
+        "Only the person who created the singer can create an album for them."
+      );
+    }
 
     const existingAlbum = await albumModel.findOne({ artist, title });
 

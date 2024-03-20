@@ -342,14 +342,35 @@ export let validation = async (
   next: NextFunction
 ) => {
   try {
-    const { artist, title } = req.body as AlbumBody
-    
+    const { artist, title } = req.body as AlbumBody;
+
     const existingAlbum = await albumModel.findOne({ artist, title });
 
     if (existingAlbum) {
       throw httpErrors.Conflict("This album already exists");
     }
-    res.json({message: 'Validation was successful'})
+    res.json({ message: "Validation was successful" });
+  } catch (error) {
+    next(error);
+  }
+};
+export let myAlbums = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { user } = req as any;
+    const albums = await albumModel
+      .find({ createBy: user._id })
+      .populate("artist", "fullName englishName photo")
+      .populate("musics", "title duration download_link cover_image")
+      .populate("createBy", "name username profile")
+      .select("-__v")
+      .sort({ createdAt: "desc" })
+      .lean();
+
+    res.json(albums);
   } catch (error) {
     next(error);
   }

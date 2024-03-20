@@ -10,6 +10,7 @@ import {
   removeMusic,
   related,
   validation,
+  myAlbums,
 } from "../controllers/album";
 import isAdminMiddleware from "../middlewares/isAdmin";
 import authMiddleware from "../middlewares/auth";
@@ -38,6 +39,13 @@ router.post(
   isAdminMiddleware,
   validatorMiddleware(albumValidator),
   validation
+);
+router.get(
+  "/my-albums",
+  authMiddleware,
+  isBanMiddlewares,
+  isAdminMiddleware,
+  myAlbums
 );
 router.get("/search", search);
 router.get("/:id/related", related);

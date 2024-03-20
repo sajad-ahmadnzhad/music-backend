@@ -17,7 +17,7 @@ export let create = async (req: Request, res: Response, next: NextFunction) => {
     if (!req.file) {
       throw httpErrors.BadRequest("album photo is required");
     }
-    
+
     const singer = await singerModel.findById(artist);
 
     if (String(singer!.createBy) !== String(user._id) && !user.isSuperAdmin) {
@@ -369,7 +369,7 @@ export let myAlbums = async (
 ) => {
   try {
     const { user } = req as any;
-    const albums = await albumModel
+    const query = albumModel
       .find({ createBy: user._id })
       .populate("artist", "fullName englishName photo")
       .populate("musics", "title duration download_link cover_image")
@@ -378,7 +378,11 @@ export let myAlbums = async (
       .sort({ createdAt: "desc" })
       .lean();
 
-    res.json(albums);
+    const data = await pagination(req, query, albumModel);
+
+    if (data.error) throw data.error;
+
+    res.json(data);
   } catch (error) {
     next(error);
   }

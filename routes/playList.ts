@@ -21,6 +21,7 @@ import {
   getByCountry,
   related,
   validation,
+  myPlayLists,
 } from "../controllers/playList";
 const router = express.Router();
 
@@ -35,6 +36,14 @@ router
     create
   )
   .get(getAll);
+
+router.get(
+  "/my-playlists",
+  authMiddlewares,
+  isBanMiddlewares,
+  isAdminMiddlewares,
+  myPlayLists
+);
 
 router.post(
   "/validation",

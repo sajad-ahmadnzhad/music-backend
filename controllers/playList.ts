@@ -530,3 +530,30 @@ export let validation = async (
     next(error);
   }
 };
+export let myPlayLists = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { user } = req as any;
+    const query = playListModel
+      .find({ createBy: user._id })
+      .populate("createBy", "name username profile")
+      .populate("musics", "title cover_image download_link")
+      .populate("likes", "name username profile")
+      .populate("genre", "title description")
+      .populate("country", "title description image")
+      .sort({ createdAt: "desc" })
+      .select("-__v")
+      .lean();
+
+    const data = await pagination(req, query, playListModel);
+
+    if (data.error) throw data.error;
+
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};
